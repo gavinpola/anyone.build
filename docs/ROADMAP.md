@@ -15,6 +15,11 @@ The wall is live in production (anyone-build.vercel.app, Convex `hushed-ladybug-
 - [x] **Proposals board.** Shipped: safe-but-big asks from signed-in people become `proposed` (a hedge-with-plan routes here too, not a dead reject); an "Up for a vote" section on the leaderboard; one upvote per signed-in person (proposalVotes table, guests can't); a daily cron (`proposals.promoteTop`, 05:07 UTC) builds the single top-voted proposal through the full safety pipeline. e2e covers propose → appear → vote. NEXT: watch a promotion build end-to-end on prod; consider a "you proposed this, it won" email (Resend); show the winner in the feed.
 - [ ] **Encode `docs/WHAT-SHIPS.md` in the judge + an eval set.** The five gates, the reinterpretation move (dreams scoped down + capped, e.g. "GTA 6" → a tiny driving game), and the edge-case table become the judge prompt and `packages/gatekeeper/evals` cases.
 
+## Reliability (learned the hard way)
+
+- [x] **Model-output schemas are lenient shapes; clamp, never throw.** Every "couldn't read that" in production traced to a schema constraint (a 201-char plan step hit `.max(200)`) or a strict provider (Azure rejected an optional field + maxLength). All `min/max/default/optional` are gone from model schemas; normalize steps clamp. `verdict-tolerance.test.ts` trips if one is re-added. Retry chain logs each attempt.
+- [ ] Watch prod logs for `judge attempt failed` for a week; if any provider still rejects a schema, add it to the tolerance test.
+
 ## Security hardening (durable fixes beyond the source-level patches already shipped)
 
 - [ ] **Render blocks in a sandboxed iframe** with a strict CSP (`connect-src 'none'`, tight `img-src`), a separate origin from the app. This is the durable fix for the realm-escape class: a denylist can't enumerate every escape, but a cross-origin sandbox with no network can't exfiltrate or read the app's cookies/localStorage regardless. The source-level bans + the existing app CSP are the interim floor.
