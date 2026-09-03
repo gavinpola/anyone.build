@@ -11,7 +11,7 @@ The wall is live in production (anyone-build.vercel.app, Convex `hushed-ladybug-
 ## Now (next tick picks the top unchecked item)
 
 - [ ] **Fast path for tiny changes.** Route tiny scope through an in-Convex coder on a cheaper/faster model instead of the sandbox; keep the validator + diff review + security pass; let CI be the typecheck. ~1¢ and <60s vs ~4-6¢ and ~2min; removes the 8-sandbox ceiling for the common case. Medium/large keep the sandbox.
-- [ ] **Games buildable.** Add `useTick(cb, {fps})` to the kit — a bounded game loop the kit owns (fps cap, cleanup on unmount, pause when hidden) so blocks never touch requestAnimationFrame (canvas already allowed; input via React props). Raise the judge output-token cap (1500 truncates big asks → the "couldn't read that" reject). Teach the coder about useTick + canvas; teach the judge to route "a game/app" to a page. Prove it by shipping a dino game on prod.
+- [x] **Games buildable.** `useTick(cb,{fps})` shipped (bounded loop the kit owns). Judge token cap raised 1500→4000; category schema loosened + coerced (a stray "large" no longer throws); concrete in-scope hedges promoted to approve. Judge verified against the real model: "build a dino game" and "make GTA 6" approve at trust 3 as a large page. Example dino runner + e2e prove the primitive. NEXT: watch a real coder build a game end-to-end on prod (a signed-in trust-3 ask), and add a couple more kit primitives if the coder needs them (useKeys, a sprite helper).
 - [ ] **Proposals board.** Unsure-or-too-big asks become `proposed` instead of rejected; signed-in users upvote (new `proposalVotes` table keyed to requestId, mirroring `votes`, no guests); a daily cron promotes the top proposal into the normal pipeline (validator + diff review + security pass still gate it). Big builds are rationed by votes → cost stays flat. Lives as a section ON the leaderboard page, in the change-ledger style, no new nav. Encodes `docs/WHAT-SHIPS.md`.
 - [ ] **Encode `docs/WHAT-SHIPS.md` in the judge + an eval set.** The five gates, the reinterpretation move (dreams scoped down + capped, e.g. "GTA 6" → a tiny driving game), and the edge-case table become the judge prompt and `packages/gatekeeper/evals` cases.
 
@@ -41,6 +41,12 @@ In order:
 - [ ] **Trust.** Public pipeline status page; per-PR cost and risk shown to customers; a written data policy; the SOC 2 path for Enterprise.
 - [ ] **Distribution.** The wall as the demo; "Built with anyone.build" (opt-out on paid plans); a gallery of shipped changes; a template repo for the internal-tools use case; the Enterprise "talk to us" needs a real inbox (hello@anyone.build) once the domain is bought.
 - [ ] **Pricing experiments.** Per-PR vs. seats vs. sites; measure Notes→Drafts conversion and PR volume per site before locking pricing.
+
+## Self-hosting models (Gavin asked)
+
+Gavin's machine: Apple M4, 16 GB, Ollama installed but no models pulled. The pipeline already reads `MODEL_BASE_URL`, so pointing judge/coder at Ollama's OpenAI-compatible endpoint (`http://localhost:11434/v1`) works. No GPU purchase needed — Apple Silicon runs models on the built-in GPU via Metal; a 7B model is comfortable at 16 GB, a 14B is tight. The catch: production Convex and the Vercel sandbox run in the cloud and can't reach localhost, so self-hosting is for the LOCAL dev stack (free, great for stress-testing) or prod via a tunnel + always-on machine (unreliable on a laptop). At ~2-3¢/change on cloud the savings are small, so: use local models for dev, keep cloud for prod.
+
+- [ ] Wire a dev profile: `MODEL_BASE_URL=http://localhost:11434/v1` + local model names so `pnpm dev` uses Ollama when it's running, falling back to cloud otherwise. Pull `qwen2.5-coder:7b` (coder) and `qwen2.5:3b` (judge/triage).
 
 ## Polish & smaller things
 
