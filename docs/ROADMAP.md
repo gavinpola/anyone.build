@@ -17,6 +17,8 @@ The wall is live in production (anyone-build.vercel.app, Convex `hushed-ladybug-
 
 ## Reliability (learned the hard way)
 
+- **Every gate must fail with a recorded reason and only on a concrete finding.** Learned three times on 2026-09-03: security review (resource-only), diff review (taste), size backstop (a clarity phrase). Judge/reviewer prompts state what the platform guarantees; deterministic backstops (`resourceOnly`, `reviewBlocks`, single-block floor) keep a model's mood from killing a build. When a new gate is added, add its regression test with the exact production text.
+
 - [x] **Model-output schemas are lenient shapes; clamp, never throw.** Every "couldn't read that" in production traced to a schema constraint (a 201-char plan step hit `.max(200)`) or a strict provider (Azure rejected an optional field + maxLength). All `min/max/default/optional` are gone from model schemas; normalize steps clamp. `verdict-tolerance.test.ts` trips if one is re-added. Retry chain logs each attempt.
 - [x] **No per-person daily caps.** Gavin hit "one ask a day as a guest." Removed: per-person daily limits are now effectively unlimited (500–5000/day), burst is 8/min (a fast human, not a script), in-flight builds per person 2/3/5, global guest cap 300/hr. Money is protected by the daily budget, per-request cost caps, and the global hourly caps — never by counting a person's asks. `limits.spec.ts` proves a guest can ask twice.
 - [x] **Composer stale-panel race.** Reopening the composer on the same spot while the previous panel was still animating out reused the instance and showed the OLD request (no textbox). Fixed with React's render-time "adjust state when a prop changes" pattern; a fresh target always means a fresh box.
