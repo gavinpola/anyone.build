@@ -139,6 +139,7 @@ const tools = {
       const build = typecheck.ok && lint.ok && validator.ok ? runBin("vite", ["build"], 240_000) : { ok: false, output: "(skipped: fix the errors above first)" };
       last = { typecheck: typecheck.ok, lint: lint.ok, validator: validator.ok, build: build.ok };
       log("checks", last);
+      for (const [name, r] of Object.entries({ typecheck, lint, validator, build })) if (!r.ok) log(`${name} output:`, r.output.slice(-600));
       const sections = [
         `typecheck: ${typecheck.ok ? "ok" : "FAIL\n" + typecheck.output}`,
         `lint: ${lint.ok ? "ok" : "FAIL\n" + lint.output}`,

@@ -33,7 +33,7 @@ export default tseslint.config(
   },
   // Agent-editable surface: hard bans, enforced identically in the sandbox, Convex, and CI.
   {
-    files: ["src/rooms/**/*.{ts,tsx}"],
+    files: ["src/rooms/**/*.{ts,tsx}", "docs/examples/blocks/**/*.tsx"],
     rules: roomRules,
   },
 );

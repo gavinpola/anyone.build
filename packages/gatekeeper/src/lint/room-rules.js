@@ -21,10 +21,11 @@ export const roomRules = {
   // Allowlist, not denylist: anything that isn't react, @/kit, motion/react, lucide-react, or a
   // sibling `./name` is rejected (that includes `@/kit/../core` and every `..` path).
   "no-restricted-imports": ["error", {
+    // An allowlist as a regex. (gitignore-style negations can't re-include "@/kit" once "**" excludes
+    // its parent segment, which is why the earlier group-based version rejected the kit itself.)
     patterns: [
-      { group: ["*", "**", "!react", "!react/jsx-runtime", "!@/kit", "!motion/react", "!lucide-react", "!./*"],
+      { regex: "^(?!(react|react/jsx-runtime|@/kit|motion/react|lucide-react|\\./[a-z0-9-]+)$).*$",
         message: "Rooms may only import from react, @/kit, motion/react, lucide-react, and sibling files (./name)." },
-      { group: ["./*/*", "./*/**", "../*", "../**", "**/../**", "**/.."], message: "Only sibling files (./name) may be imported." },
     ],
   }],
   "no-restricted-syntax": ["error",
