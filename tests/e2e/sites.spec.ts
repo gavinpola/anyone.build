@@ -18,7 +18,8 @@ async function signIn(page: Page, path = "/") {
 test("the product page reads and links", async ({ page }) => {
   await page.goto(url + "/for-your-site");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Your visitors point at things");
-  await expect(page.getByRole("heading", { name: "Notes" })).toBeVisible();
+  for (const plan of ["Notes", "Drafts", "Ships", "Enterprise"]) await expect(page.getByRole("heading", { name: plan })).toBeVisible();
+  await expect(page.getByRole("link", { name: /talk to us/i })).toBeVisible();
   await expect(page.getByText(/ask\.js/)).toBeVisible();
   await page.getByRole("link", { name: /add your site/i }).first().click();
   await expect(page).toHaveURL(/\/sites$/);

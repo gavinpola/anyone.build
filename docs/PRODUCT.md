@@ -34,6 +34,12 @@ Yes, with a narrow wedge, and it is worth being clear about both halves.
 
 Everything the wall enforces carries over unchanged: deterministic validator before any model sees code, sandbox with no egress except the model, the app never pushes to the default branch, code leaves the sandbox only as the diff, revert is one click.
 
+**Enterprise** (custom): unlimited sites and PRs, SSO and an audit log, the customer's own model keys or a private runner (their Vercel Sandbox team or a self-hosted runner), custom judge rules and review flow (required human approvers, CODEOWNERS-aware routing), SLA and priority support. Sold by conversation, priced per workspace; the floor is $1,000 a month because the private-runner and support cost is real.
+
+## The offering, not the script
+
+The script tag is a setup detail. What a customer buys is: an inbox that sorts itself, a judge with their rules, drafted pull requests, ship-on-green, internal-only mode, and a dashboard that shows what shipped and what it cost. Every page, email, and dashboard screen should sell those, and mention the tag only under "setup".
+
 ## Unit economics
 
 Per note: storage plus one flash-lite call for triage, about $0.001. Effectively free.
@@ -89,3 +95,15 @@ One footer link, one line at the bottom of the help panel, and the `/for-your-si
 3. Internal-only mode (notes accepted only from signed-in members of a GitHub org, verified through the widget with a short-lived token).
 4. Email digest of open notes (Resend is wired).
 5. Screenshot capture in the widget (html-to-image inside the shadow root; opt-in per site because of privacy).
+
+## Standing directive (Gavin, 2026-09-03)
+
+Whenever the autonomous loop runs out of plan work, spend the tick here: think about how this becomes a great, sustainable SaaS, extend this memo, and build the next concrete piece. The open questions to keep working, in order:
+
+1. **Billing.** Stripe Checkout in subscription mode for Drafts and Ships, customer portal, metered overage on PRs, a `plans` table keyed by workspace, and entitlement checks in `sites.*` and the pipeline.
+2. **Tenancy.** A `workspaces` table (owner, members, plan), sites under workspaces, per-site GitHub App installation ids, per-site judge addendum, per-site models and budgets. The pipeline takes a site instead of the env repo.
+3. **Onboarding.** Add site → paste tag → first note within a minute, with a "we got it" confirmation on the dashboard. Then "connect a repo" as the upgrade moment.
+4. **Retention.** Daily digest email (Resend) of open notes and shipped PRs; a weekly "what shipped and what it cost" mail; Slack digest on Ships.
+5. **Trust.** A public status page for the pipeline, per-PR cost and risk shown to customers, a written data policy, and the SOC 2 path for Enterprise.
+6. **Distribution.** The wall as the demo, "Built with anyone.build" on customer sites (opt-out on paid plans), a gallery of shipped changes, and a template repo for the internal-tools use case.
+7. **Pricing experiments.** Per-PR pricing vs. seats vs. sites; measure conversion from Notes to Drafts and PR volume per site before locking anything in.
