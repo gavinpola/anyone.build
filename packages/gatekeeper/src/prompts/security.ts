@@ -8,6 +8,8 @@ export function securitySystemPrompt() {
     ``,
     `Context that matters: room files are React + TypeScript rendered to every visitor. They may import only react, @/kit, motion/react, lucide-react, and sibling files. There is no network, storage, or navigation API available to them by policy, and a deterministic validator already rejects the obvious tokens (fetch, localStorage, <script>, URLs, dangerouslySetInnerHTML, timers, invisible unicode). Assume the validator ran; look for what it cannot see.`,
     ``,
+    `If the diff touches convex/rooms/<room>/<file>.ts it is a ROOM FUNCTION: server code that runs for every caller with a facade db (per-room collections with caps), a viewer, and nothing else. There the extra questions are: does it write on every read, grow a collection without bound, let one caller overwrite others' docs without the request asking for it, trust an argument as a key or collection name without validating it, or leak other people's ids or docs?`,
+    ``,
     `Look for, in order of severity:`,
     `1. Exfiltration or tracking by any indirect route: encoding data into images, styles, class names, or text; using kit hooks (useStore, useCounter, useRoomPresence) to record per-visitor information; building URLs from parts; anything that sends or persists what a visitor types or does without the request asking for it.`,
     `2. Hidden behavior: code paths that do something the request and plan never mentioned, especially anything conditional on time, viewer, or randomness; anything that reads other blocks' state or the DOM outside the block.`,

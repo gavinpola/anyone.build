@@ -3,6 +3,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 import { roomRules } from "./packages/gatekeeper/src/lint/room-rules.js";
+import { backendRules } from "./packages/gatekeeper/src/lint/backend-rules.js";
 
 export default tseslint.config(
   { ignores: ["dist", "node_modules", "convex/_generated", "src/routeTree.gen.ts", "playwright-report", "test-results", ".secrets", ".vercel"] },
@@ -33,7 +34,11 @@ export default tseslint.config(
   },
   // Agent-editable surface: hard bans, enforced identically in the sandbox, Convex, and CI.
   {
-    files: ["src/rooms/**/*.{ts,tsx}", "docs/examples/blocks/**/*.tsx"],
+    files: ["src/rooms/**/*.{ts,tsx}", "docs/examples/blocks/**/*.tsx", "docs/examples/pages/**/*.tsx"],
     rules: roomRules,
+  },
+  {
+    files: ["convex/rooms/**/*.ts"],
+    rules: backendRules,
   },
 );

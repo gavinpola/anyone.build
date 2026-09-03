@@ -326,6 +326,7 @@ export const settleOnce = internalMutation({
 
 export const setVerdict = internalMutation({
   args: {
+    touchesBackend: v.optional(v.boolean()),
     id: v.id("requests"),
     approved: v.boolean(),
     needsHuman: v.boolean(),
@@ -344,7 +345,7 @@ export const setVerdict = internalMutation({
     if (!r || r.status !== "judging") return { ok: false, reason: "not judging" };
     // Judging costs money even when the answer is no; it comes out of the day's budget as spend.
     if (a.judgeCents && a.judgeCents > 0) await ctx.runMutation(internal.budget.settle, { day: siteDay(), reservedCents: 0, spentCents: a.judgeCents });
-    const verdict = { approved: a.approved, category: a.category, hint: a.hint, scope: a.scope, confidence: a.confidence, plan: a.plan, redTeamed: a.redTeamed, model: a.model };
+    const verdict = { approved: a.approved, category: a.category, hint: a.hint, scope: a.scope, confidence: a.confidence, plan: a.plan, redTeamed: a.redTeamed, model: a.model, touchesBackend: a.touchesBackend };
     if (!a.approved) {
       await ctx.db.patch(a.id, { status: a.needsHuman ? "needs_human" : "rejected", verdict, updatedAt: Date.now() });
       return { ok: true, queued: false };

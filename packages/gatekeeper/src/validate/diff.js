@@ -1,6 +1,7 @@
 // @ts-check
 import { isAllowedNewFile, isAllowedPath, blockIdFromPath } from "./paths.js";
 import { findForbidden } from "./forbidden.js";
+import { BACKEND_FILE_RE, validateBackendFile } from "./backend.js";
 
 /** @typedef {"tiny"|"small"|"medium"|"large"} Scope */
 /** @type {Record<Scope, number>} */
@@ -75,7 +76,7 @@ export function parseUnifiedDiff(diff) {
 /**
  * @param {string} diff
  * @param {Scope} scope
- * @param {{ fullFiles?: Record<string, string> }} [opts]
+ * @param {{ fullFiles?: Record<string, string>, allowBackend?: boolean }} [opts]
  * @returns {Validation}
  */
 export function validateDiff(diff, scope, opts = {}) {
@@ -94,14 +95,21 @@ export function validateDiff(diff, scope, opts = {}) {
     if (f.isBinary) problems.push(`${f.path}: binary files are not allowed`);
     if (!isAllowedPath(f.path)) problems.push(`${f.path}: outside the editable surface`);
     if (f.oldPath && f.oldPath !== f.path) problems.push(`${f.path}: renames are not allowed`);
-    if (f.isNew && !isAllowedNewFile(f.path)) problems.push(`${f.path}: new files may only be blocks`);
+    if (f.isNew && !isAllowedNewFile(f.path)) problems.push(`${f.path}: new files may only be blocks, pages, or room functions`);
+    const backend = BACKEND_FILE_RE.test(f.path);
+    if (backend && !opts.allowBackend) problems.push(`${f.path}: backend changes weren't approved for this request`);
     if (f.isDeleted && scope === "tiny") problems.push(`${f.path}: deleting a file is not a tiny change`);
     const id = blockIdFromPath(f.path);
     if (id) blockIds.add(id);
     const hits = findForbidden(f.addedLines.join("\n"));
-    for (const h of hits) problems.push(`${f.path}: forbidden (${h.why})`);
+    for (const h of hits) {
+      if (backend && h.why.startsWith("import not allowed")) continue; // backend files have their own import allowlist
+      problems.push(`${f.path}: forbidden (${h.why})`);
+    }
     const full = opts.fullFiles?.[f.path];
-    if (full) {
+    if (full && backend) {
+      for (const p of validateBackendFile(f.path, full)) problems.push(p);
+    } else if (full) {
       const n = full.split("\n").length;
       if (n > MAX_BLOCK_LINES) problems.push(`${f.path}: ${n} lines, max ${MAX_BLOCK_LINES}`);
       const hits2 = findForbidden(full);

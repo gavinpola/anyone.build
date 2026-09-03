@@ -96,6 +96,7 @@ export default defineSchema({
     stage: v.optional(v.string()), // free-text sub-stage for the timeline ("cloning", "agent turn 4/15"…)
     verdict: v.optional(
       v.object({
+        touchesBackend: v.optional(v.boolean()),
         approved: v.boolean(),
         category: v.optional(rejectionCategory),
         hint: v.string(),

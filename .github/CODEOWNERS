@@ -2,3 +2,5 @@
 # A line with a path and no owner clears ownership for that path (GitHub semantics).
 *                     @gavinpola
 /src/rooms/
+/convex/rooms/
+/convex/kit/          @gavinpola

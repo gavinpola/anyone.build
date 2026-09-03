@@ -7,5 +7,6 @@ export { Stack, Row, Heading, Text, Label, Card, Button, Input, Textarea, Divide
 export { SafeLink, resolveSafeHref, LINK_ALLOWLIST } from "./SafeLink";
 export { PageLink } from "./PageLink";
 export { useRoomId } from "./room-context";
+export { useRoomQuery, useRoomMutation } from "./room";
 export { useViewer, useStore, useCounter, useRoomPresence, useNow } from "./hooks";
 export { cn } from "@/core/lib/cn";

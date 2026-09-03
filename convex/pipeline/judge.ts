@@ -96,9 +96,14 @@ export const run = internalAction({
     let needsHuman = first.verdict === "needs_human";
     let category = first.category ?? undefined;
     let hint = first.public_hint;
+    if (approved && first.touches_backend && !config.backendEnabled) {
+      approved = false;
+      needsHuman = true;
+      hint = "That needs a room function, which is opening soon; a maintainer will look.";
+    }
     let redTeamed = false;
     const order = ["tiny", "small", "medium", "large"];
-    const risky = /(link|url|http|image|img|form|login|auth|password|email|money|pay|crypto|track|script|iframe|admin|rule)/i.test(request.prompt);
+    const risky = /(link|url|http|image|img|form|login|auth|password|email|money|pay|crypto|track|script|iframe|admin|rule|backend|save|store|per user|per person|once|schedule)/i.test(request.prompt) || first.touches_backend;
     if (approved && (first.confidence < config.redTeamConfidenceBelow || order.indexOf(first.scope) >= 2 || risky)) {
       redTeamed = true;
       try {
@@ -133,6 +138,7 @@ export const run = internalAction({
       model: cfg.judgeModel,
       capCents,
       judgeCents,
+      touchesBackend: first.touches_backend,
     });
     if (res?.queued) await ctx.runMutation(internal.pipeline.executor.enqueue, { requestId });
   },

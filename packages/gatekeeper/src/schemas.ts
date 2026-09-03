@@ -25,6 +25,7 @@ export const JudgeVerdict = z.object({
   confidence: z.number().min(0).max(1),
   plan: z.array(z.string().max(200)).min(1).max(5).describe("2-5 concrete steps for the coder, naming files and elements"),
   touches_other_blocks: z.boolean().describe("true if blocks other than the target must change"),
+  touches_backend: z.boolean().default(false).describe("true if the change needs a room function (convex/rooms/<room>/*.ts): shared state that isn't just a document list, one-per-person rules, tallies"),
   rationale: z.string().max(600).describe("Private reasoning for maintainers; never shown to the requester"),
 });
 export type JudgeVerdict = z.infer<typeof JudgeVerdict>;

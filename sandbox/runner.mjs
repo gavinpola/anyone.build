@@ -12,8 +12,9 @@ import path from "node:path";
 import { generateText, tool, stepCountIs } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
-import { isAllowedPath, isAllowedNewFile } from "../packages/gatekeeper/src/validate/paths.js";
+import { isAllowedPath, isAllowedNewFile, BACKEND_FILE_RE } from "../packages/gatekeeper/src/validate/paths.js";
 import { findForbidden } from "../packages/gatekeeper/src/validate/forbidden.js";
+import { validateBackendFile } from "../packages/gatekeeper/src/validate/backend.js";
 
 const root = process.cwd();
 const outDir = process.env.AB_OUT ?? path.join(root, ".ab-out");
@@ -37,8 +38,15 @@ const IGNORE = new Set(["node_modules", ".git", "dist", ".ab-out", ".vercel", ".
 function guardWrite(p, content) {
   const r = p.replace(/^\.\//, "");
   if (!isAllowedPath(r)) return `Not allowed: only files under src/rooms/ may be written (${r}).`;
+  const backend = BACKEND_FILE_RE.test(r) || r.startsWith("convex/");
+  if (backend && !job.allowBackend) return `Not allowed: this request wasn't approved for backend changes (${r}).`;
   const exists = fs.existsSync(resolveInRepo(r));
-  if (!exists && !isAllowedNewFile(r)) return `Not allowed: new files must be blocks like src/rooms/main/blocks/<slug>.tsx (${r}).`;
+  if (!exists && !isAllowedNewFile(r)) return `Not allowed: new files must be blocks (src/rooms/main/blocks/<slug>.tsx), pages (src/rooms/main/pages/<slug>.tsx), or room functions (convex/rooms/main/<file>.ts) (${r}).`;
+  if (backend) {
+    const problems = validateBackendFile(r, content);
+    if (problems.length) return `Not allowed, fix before writing: ${problems.slice(0, 6).join("; ")}`;
+    return null;
+  }
   if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES) return `Too large: files are capped at ${MAX_FILE_BYTES / 1024} KB.`;
   const lines = content.split("\n").length;
   if (lines > MAX_BLOCK_LINES) return `Too long: ${lines} lines, max ${MAX_BLOCK_LINES}. Split or simplify.`;
@@ -132,9 +140,13 @@ const tools = {
     description: "Run typecheck, lint, build, and the playground validator. Call this after editing; fix anything it reports, then call it again.",
     inputSchema: z.object({}),
     execute: async () => {
-      execFileSync("git", ["add", "-A", "src/rooms"], { cwd: root });
+      execFileSync("git", ["add", "-A", "src/rooms", "convex/rooms"], { cwd: root });
+      const staged = execFileSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" });
+      const touchesBackend = /^convex\/rooms\//m.test(staged);
       const typecheck = runBin("tsc", ["-p", "tsconfig.json"], 180_000);
-      const lint = runBin("eslint", ["src/rooms"], 120_000);
+      const typecheckBackend = touchesBackend ? runBin("tsc", ["-p", "convex/tsconfig.json"], 180_000) : { ok: true, output: "" };
+      if (!typecheckBackend.ok) { typecheck.ok = false; typecheck.output += "\n(convex) " + typecheckBackend.output; }
+      const lint = runBin("eslint", touchesBackend ? ["src/rooms", "convex/rooms"] : ["src/rooms"], 120_000);
       const validator = run("node", ["scripts/validate-playground.mjs", "--staged", "--scope", job.scope ?? "large"], 60_000);
       const build = typecheck.ok && lint.ok && validator.ok ? runBin("vite", ["build"], 240_000) : { ok: false, output: "(skipped: fix the errors above first)" };
       last = { typecheck: typecheck.ok, lint: lint.ok, validator: validator.ok, build: build.ok };
@@ -193,7 +205,7 @@ if (!error && outOfTime()) error = `ran out of time after ${steps.length} steps 
 else if (!error && steps.length >= maxSteps) error = `hit the step limit (${maxSteps}) without finishing`;
 
 // Final deterministic verification regardless of what the model claimed.
-execFileSync("git", ["add", "-A", "src/rooms"], { cwd: root });
+execFileSync("git", ["add", "-A", "src/rooms", "convex/rooms"], { cwd: root });
 const diff = execFileSync("git", ["diff", "--cached", "--binary", "--no-color"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 const files = [...diff.matchAll(/^diff --git a\/(.+?) b\/(.+)$/gm)].map((m) => m[2]);
 if (diff.trim() && !(last.typecheck && last.lint && last.validator && last.build)) {

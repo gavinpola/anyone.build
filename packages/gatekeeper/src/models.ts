@@ -107,6 +107,13 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     out.category = gate.category;
     out.public_hint = gate.hint;
   }
+  if (out.touches_backend && out.verdict === "approve") {
+    if (trust < 1) {
+      out.verdict = "reject";
+      out.category = "too_big";
+      out.public_hint = trust < 0 ? "That needs a room function; sign in with GitHub and ask again." : "Room functions unlock once your first changes stay up.";
+    } else if (out.scope === "tiny") out.scope = "small";
+  }
   if (out.verdict === "reject" && !out.category) out.category = "unclear";
   if (out.verdict !== "reject") out.category = null;
   if (out.verdict === "approve" && out.plan.length === 0) {

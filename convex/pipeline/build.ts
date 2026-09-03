@@ -41,6 +41,8 @@ export const run = internalAction({
     const coderModel = process.env.CODER_MODEL || config.coderModel;
     const repoSlug = env("GITHUB_REPO");
     const scope = verdict.scope;
+    // Room functions (convex/rooms/**) only when the judge said so AND the backend tier is switched on.
+    const allowBackend = Boolean(verdict.touchesBackend) && Boolean(config.backendEnabled);
     const startedAt = Date.now();
     await set("building", "starting sandbox", { startedAt });
 
@@ -48,7 +50,8 @@ export const run = internalAction({
     const baseSha = await headSha(kit);
     const job = {
       requestId,
-      systemPrompt: coderSystemPrompt(),
+      systemPrompt: coderSystemPrompt({ backend: allowBackend }),
+      allowBackend,
       userPrompt: coderUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target }),
       model: coderModel,
       maxSteps: config.maxTurns,
@@ -124,7 +127,7 @@ export const run = internalAction({
           contents[f] = fullFiles[f]!;
         } else contents[f] = null;
       }
-      const validation = validateDiff(diff, scope, { fullFiles });
+      const validation = validateDiff(diff, scope, { fullFiles, allowBackend });
       if (!validation.ok) {
         await fail("unsafe_code", "That change didn't pass the checks.", validation.problems.join("; "), cost);
         return;

@@ -15,6 +15,8 @@ export const DEFAULTS = {
   pinSeconds: 60,
   flagsToNotify: 5,
   guestsEnabled: true,
+  // Agent-written backend functions (convex/rooms/**). Off until Convex deploys on merge (CONVEX_DEPLOY_KEY on Vercel).
+  backendEnabled: false,
   guestHourlyCap: 30,
   // Three vendors on purpose: one jailbreak shouldn't fool all three. All cheap, all fast.
   // Measured 2026-09-03 through OpenRouter (structured output + tool calls): Gemini Flash-Lite ~1s,
