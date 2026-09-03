@@ -3,6 +3,11 @@
   "framework": "vite",
   "buildCommand": "node scripts/vercel-build.mjs",
   "outputDirectory": "dist",
+  "functions": {
+    "api/og.tsx": {
+      "includeFiles": "api/_fonts/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/ask/:path*",
