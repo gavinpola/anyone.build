@@ -100,6 +100,18 @@ export const run = internalAction({
       return;
     }
 
+    // "Unclear" on an ask that has a target and some words is usually the model being lazy, not the
+    // ask being empty. One generous second look (a cheap call) before we bounce anyone.
+    if (first.verdict === "reject" && first.category === "unclear" && request.prompt.trim().split(/\s+/).length >= 4) {
+      try {
+        const nudge = "SECOND LOOK: this ask has a target and a direction. Do not ask for more detail. Pick the most reasonable concrete interpretation, write it as a 2-5 step plan, size it honestly, and approve unless it breaks a rule.";
+        const again = await judge({ ...cfg, addendum: [cfg.addendum, nudge].filter(Boolean).join("\n") }, input);
+        judgeCents += costCents(again.usage, priceFor(cfg.judgeModel));
+        if (again.verdict.verdict !== "reject" || again.verdict.category !== "unclear") first = again.verdict;
+      } catch (e) {
+        console.error("generous retry failed", e instanceof Error ? e.message.slice(0, 200) : String(e));
+      }
+    }
     // Nobody reviews an "unsure" queue, so unsure is a no with advice on how to re-ask.
     let approved = first.verdict === "approve";
     const needsHuman = false;
@@ -121,10 +133,15 @@ export const run = internalAction({
         const rtRes = await redTeam(cfg, input, first);
         judgeCents += costCents(rtRes.usage, priceFor(cfg.redTeamModel));
         const rt = rtRes.verdict;
-        if (rt.block) {
+        // The red team judges harm. Only a real harm category may veto; a block that just says
+        // "unclear"/"too_big" is the model overreaching (size and clarity are the judge's call).
+        const HARM = new Set(["unsafe_code", "not_for_everyone", "destroys_others_work", "out_of_bounds"]);
+        if (rt.block && (rt.category === null || rt.category === undefined || HARM.has(rt.category))) {
           approved = false;
-          category = rt.category ?? "unsafe_code";
+          category = (rt.category as typeof category) ?? "unsafe_code";
           hint = rt.public_hint || hint;
+        } else if (rt.block) {
+          console.warn("red team block ignored (non-harm category):", rt.category);
         }
       } catch (e) {
         console.error("red team failed", e);

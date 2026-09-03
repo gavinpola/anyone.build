@@ -11,6 +11,10 @@ export function Footer() {
         <a href="https://github.com/gavinpola" target="_blank" rel="noopener noreferrer" className={link}>
           @gavinpola
         </a>{" "}
+        and{" "}
+        <a href="https://github.com/ybshah02" target="_blank" rel="noopener noreferrer" className={link}>
+          @ybshah02
+        </a>{" "}
         · and by everyone who clicked ·{" "}
         <a href="https://github.com/gavinpola/anyone.build" target="_blank" rel="noopener noreferrer" className={link}>
           open source

@@ -15,7 +15,7 @@ Every request runs these in sequence. The first one that fails decides the outco
 1. **Safe?** No harm, deception, exfiltration, tracking, offense, targeting a person, illegal content, seizure-risk visuals, or text aimed at the machine instead of the reader. **Fail → rejected, full stop.** Never a proposal, never appealable by votes. The deterministic validator, the red team, and the security pass enforce this no matter what the judge says.
 2. **For everyone?** It makes the wall better for whoever visits, not just the requester. Ads, promotion, links out, "my startup", vanity tags, "make me admin". **Fail → rejected** ("patrons pay for that", or "the wall itself is what you change"). Not a proposal: this is a no, not an unsure.
 3. **Actionable?** There is something concrete to build. Pure noise ("make it cooler", "do something") with no target and nothing to scope. **Fail → rejected with advice** on what to say. But an ambitious-yet-scopeable ask does **not** fail here — see Reinterpretation.
-4. **How big?** The judge estimates scope. Small enough for the requester's trust → **auto-ship**. Bigger than their trust allows, or medium and up, or ambitious → **proposal, up for a vote**, with a hard budget cap.
+4. **How big?** The judge estimates scope. Up to medium **just goes** for everyone — the rule is "people can do stuff." Large ships straight away for trusted people; a large build from a newcomer, or anything the judge can only reinterpret into a large plan → **proposal, up for a vote**, with a hard budget cap.
 5. **Worth the credits now?** Auto-ship only within the day's budget (else it waits or becomes a proposal). Proposals cost nothing to post; only the winner spends. Duplicate asks fold into one proposal with more votes.
 
 ## The four outcomes
@@ -86,8 +86,8 @@ Who's asking sets the auto-ship ceiling, not what's allowed to be proposed.
 
 | Trust | Who | Auto-ships up to | Can propose |
 | --- | --- | --- | --- |
-| −1 | guest (no account) | small | yes — anyone can propose; only signed-in people vote, and nothing builds without votes |
-| 0 | new account | small | yes |
+| −1 | guest (no account) | medium | yes — anyone can propose; only signed-in people vote, and nothing builds without votes |
+| 0 | new account | medium | yes |
 | 1 | builder (a change stayed up) | medium | yes |
 | 2 | trusted | large | yes |
 | 3 | maintainer | anything | yes |

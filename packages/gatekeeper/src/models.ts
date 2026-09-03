@@ -70,7 +70,7 @@ export async function redTeam(cfg: ModelConfig, input: JudgeInput, first: JudgeV
     system: redTeamSystemPrompt(),
     prompt: redTeamUserPrompt(input, first),
     temperature: 0,
-    maxOutputTokens: 1200,
+    maxOutputTokens: 2500, // reasoning models spend tokens before answering; 1200 came back empty
     maxRetries: 2,
   });
   const rt = r.object;
@@ -101,7 +101,10 @@ export async function reviewDiff(cfg: ModelConfig, input: { prompt: string; plan
 
 const SCOPE_ORDER = ["tiny", "small", "medium", "large"] as const;
 /** Max scope per trust: −1 guest, 0 new, 1 builder, 2 trusted, 3 maintainer. Guests and new accounts can add a small block; medium needs standing. */
-const MAX_SCOPE: Record<string, JudgeVerdict["scope"]> = { "-1": "small", "0": "small", "1": "small", "2": "medium", "3": "large" };
+// Gavin: "I want people to be able to do stuff — mostly they can just go; big-big changes get voted."
+// So medium ships for everyone (money is guarded by per-request caps and the daily budget), large
+// ships for trusted people, and only large-from-newcomers goes to the vote board.
+const MAX_SCOPE: Record<string, JudgeVerdict["scope"]> = { "-1": "medium", "0": "medium", "1": "medium", "2": "large", "3": "large" };
 
 /**
  * The deterministic trust gate on scope, shared by the real judge, the mock judge, and tests.
@@ -113,9 +116,9 @@ export function scopeGate(trust: number, scope: JudgeVerdict["scope"]): { allowe
   const max = MAX_SCOPE[t] ?? "tiny";
   if (SCOPE_ORDER.indexOf(scope) <= SCOPE_ORDER.indexOf(max)) return { allowed: true, needsHuman: false, category: null, hint: "" };
   // Too big to auto-ship for this trust level → it goes up for a vote (setVerdict routes too_big to the board).
-  if (trust < 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's bigger than a guest can ship alone — it's up for a vote. Sign in to vote for it." };
-  if (trust === 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's big — it's up for a vote. Bigger auto-ships unlock as your work stays up." };
-  return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's bigger than we auto-ship — it's up for a vote." };
+  if (trust < 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's a big build — it's up for a vote. Sign in to vote for it." };
+  if (trust === 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's a big build — it's up for a vote. Big builds ship straight away once your work stays up." };
+  return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's a big build — it's up for a vote." };
 }
 
 /** Deterministic guardrails on top of the model's answer. */
@@ -131,6 +134,11 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     touches_other_blocks: Boolean(v.touches_other_blocks),
   };
   const trust = input.requester.trust;
+  // A change to ONE block can't be "large": block files are capped at 400 lines. Models inflate
+  // creative asks ("a really cool visual") to large; cap at medium unless it touches other blocks
+  // or builds a page (a whole route can legitimately be large).
+  const buildsPage = /\bpages?\//i.test(out.plan.join(" ")) || /\b(a|new|whole) page\b/i.test(out.plan.join(" "));
+  if (out.scope === "large" && !out.touches_other_blocks && !buildsPage) out.scope = "medium";
   const gate = scopeGate(trust, out.scope);
   if (out.verdict === "approve" && !gate.allowed) {
     out.verdict = "reject";
