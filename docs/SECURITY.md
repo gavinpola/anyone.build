@@ -4,7 +4,7 @@ anyone.build lets strangers ask an AI to change a live website. That is the whol
 
 ## Report a vulnerability
 
-Email **security@anyone.build** or open a [private security advisory](https://github.com/anyone-build/anyone.build/security/advisories/new). Please don't file public issues for exploits, and don't test against other people's data. We'll credit you on the leaderboard if you want.
+Email **security@anyone.build** or open a [private security advisory](https://github.com/gavinpola/anyone.build/security/advisories/new). Please don't file public issues for exploits, and don't test against other people's data. We'll credit you on the leaderboard if you want.
 
 ## What actually holds
 

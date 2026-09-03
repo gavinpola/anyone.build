@@ -169,7 +169,8 @@ export const run = internalAction({
     } catch (e) {
       if (e instanceof Aborted) return; // cancelled; nothing to report
       const msg = e instanceof Error ? e.message : String(e);
-      await fail("build_failed", "Something broke while building. Try again in a minute.", msg, cost);
+      const timedOut = /stream was closed|timed out|timeout/i.test(msg);
+      await fail("build_failed", timedOut ? "The build took too long. Try again; it's usually faster the second time." : "Something broke while building. Try again in a minute.", msg, cost);
     } finally {
       await sandbox.stop().catch(() => {});
     }

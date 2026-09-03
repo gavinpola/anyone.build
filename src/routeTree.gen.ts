@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ForYourSiteRouteImport } from './routes/for-your-site'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as SitesRouteImport } from './routes/sites'
 import { Route as TermsRouteImport } from './routes/terms'
 
 const IndexRoute = IndexRouteImport.update({
@@ -32,6 +34,11 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForYourSiteRoute = ForYourSiteRouteImport.update({
+  id: '/for-your-site',
+  path: '/for-your-site',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
@@ -47,6 +54,11 @@ const RulesRoute = RulesRouteImport.update({
   path: '/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitesRoute = SitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -57,18 +69,22 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/faq': typeof FaqRoute
+  '/for-your-site': typeof ForYourSiteRoute
   '/leaderboard': typeof LeaderboardRoute
   '/privacy': typeof PrivacyRoute
   '/rules': typeof RulesRoute
+  '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/faq': typeof FaqRoute
+  '/for-your-site': typeof ForYourSiteRoute
   '/leaderboard': typeof LeaderboardRoute
   '/privacy': typeof PrivacyRoute
   '/rules': typeof RulesRoute
+  '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
 }
 export interface FileRoutesById {
@@ -76,26 +92,46 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/faq': typeof FaqRoute
+  '/for-your-site': typeof ForYourSiteRoute
   '/leaderboard': typeof LeaderboardRoute
   '/privacy': typeof PrivacyRoute
   '/rules': typeof RulesRoute
+  '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/admin' | '/faq' | '/leaderboard' | '/privacy' | '/rules' | '/terms'
+    | '/'
+    | '/admin'
+    | '/faq'
+    | '/for-your-site'
+    | '/leaderboard'
+    | '/privacy'
+    | '/rules'
+    | '/sites'
+    | '/terms'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/admin' | '/faq' | '/leaderboard' | '/privacy' | '/rules' | '/terms'
+    | '/'
+    | '/admin'
+    | '/faq'
+    | '/for-your-site'
+    | '/leaderboard'
+    | '/privacy'
+    | '/rules'
+    | '/sites'
+    | '/terms'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/faq'
+    | '/for-your-site'
     | '/leaderboard'
     | '/privacy'
     | '/rules'
+    | '/sites'
     | '/terms'
   fileRoutesById: FileRoutesById
 }
@@ -103,9 +139,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   FaqRoute: typeof FaqRoute
+  ForYourSiteRoute: typeof ForYourSiteRoute
   LeaderboardRoute: typeof LeaderboardRoute
   PrivacyRoute: typeof PrivacyRoute
   RulesRoute: typeof RulesRoute
+  SitesRoute: typeof SitesRoute
   TermsRoute: typeof TermsRoute
 }
 
@@ -132,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-your-site': {
+      id: '/for-your-site'
+      path: '/for-your-site'
+      fullPath: '/for-your-site'
+      preLoaderRoute: typeof ForYourSiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
@@ -153,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RulesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sites': {
+      id: '/sites'
+      path: '/sites'
+      fullPath: '/sites'
+      preLoaderRoute: typeof SitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -167,9 +219,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   FaqRoute: FaqRoute,
+  ForYourSiteRoute: ForYourSiteRoute,
   LeaderboardRoute: LeaderboardRoute,
   PrivacyRoute: PrivacyRoute,
   RulesRoute: RulesRoute,
+  SitesRoute: SitesRoute,
   TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport

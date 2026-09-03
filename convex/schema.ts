@@ -313,6 +313,39 @@ export default defineSchema({
     sessionHash: v.string(), // per-tab random id, hashed; never an IP
   }).index("by_day_session", ["day", "sessionHash"]),
 
+  // "For your site": a customer's site that embeds ask.js. The key is public; the origin is the fence.
+  sites: defineTable({
+    ownerId: v.id("users"),
+    key: v.string(),
+    name: v.string(),
+    origin: v.string(),
+    tier: v.union(v.literal("notes"), v.literal("drafts"), v.literal("ships")),
+    notes: v.number(),
+    open: v.number(),
+    createdAt: v.number(),
+    lastNoteAt: v.optional(v.number()),
+  })
+    .index("by_key", ["key"])
+    .index("by_owner", ["ownerId"]),
+
+  // A visitor pointed at something on a customer's site and said what should change.
+  notes: defineTable({
+    siteId: v.id("sites"),
+    url: v.string(),
+    path: v.string(),
+    title: v.optional(v.string()),
+    selector: v.string(),
+    elementText: v.string(),
+    html: v.string(),
+    note: v.string(),
+    viewport: v.optional(v.string()),
+    status: v.union(v.literal("new"), v.literal("done"), v.literal("dismissed")),
+    triage: v.optional(v.object({ kind: v.string(), summary: v.string(), model: v.string() })),
+    createdAt: v.number(),
+  })
+    .index("by_site", ["siteId", "createdAt"])
+    .index("by_site_status", ["siteId", "status", "createdAt"]),
+
   webhookEvents: defineTable({
     source: v.union(v.literal("github"), v.literal("vercel"), v.literal("stripe")),
     eventId: v.string(),

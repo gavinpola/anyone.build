@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useLiveStats } from "@/core/lib/useLiveStats";
 
 const steps = [
@@ -72,6 +73,12 @@ export function HelpPanel({ open, onClose }: { open: boolean; onClose: () => voi
             </dl>
             <p className="mt-8 text-[13px] text-muted">
               Open source, rules included. A change costs a few cents; patrons keep the budget full.
+            </p>
+            <p className="mt-2 text-[13px] text-muted">
+              Want this on your own site?{" "}
+              <Link to="/for-your-site" onClick={onClose} className="text-accent hover:underline underline-offset-2">
+                It's one script tag.
+              </Link>
             </p>
           </motion.aside>
         </>

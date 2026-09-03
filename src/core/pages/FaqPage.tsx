@@ -16,6 +16,10 @@ const faq: Array<[string, string]> = [
   ["Where does the money go?", "Half of each winning bid tops up that day's public AI budget, which is what turns requests into code. The rest keeps the lights on."],
   ["What does a change cost you?", "A few cents. Cheap, fast models do the judging and the coding; the expensive part is the sandbox, and that's cents too."],
   ["Can I run this myself?", "Yes. It's MIT licensed and runs locally with no accounts. See the README."],
+  [
+    "Can I put this on my own site?",
+    "Yes. One script tag gives your visitors the same point-and-ask; notes land in your inbox. Pull requests on your repo are invite-only for now. See For your site.",
+  ],
 ];
 
 export function FaqPage() {

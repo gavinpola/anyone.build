@@ -25,7 +25,7 @@ export const DEFAULTS = {
   securityModel: "google/gemini-3.1-flash-lite",
   coderModel: "deepseek/deepseek-v4-flash-0731",
   maxTurns: 40,
-  sandboxTimeoutMs: 6 * 60 * 1000,
+  sandboxTimeoutMs: 12 * 60 * 1000,
 } as const;
 
 export type ConfigKey = keyof typeof DEFAULTS;

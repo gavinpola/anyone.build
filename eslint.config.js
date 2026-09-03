@@ -6,6 +6,14 @@ import { roomRules } from "./packages/gatekeeper/src/lint/room-rules.js";
 
 export default tseslint.config(
   { ignores: ["dist", "node_modules", "convex/_generated", "src/routeTree.gen.ts", "playwright-report", "test-results", ".secrets", ".vercel"] },
+  // the embeddable widget and its demo page run in browsers, not Node
+  {
+    files: ["public/**/*.js"],
+    languageOptions: {
+      sourceType: "script",
+      globals: { window: "readonly", document: "readonly", location: "readonly", navigator: "readonly", matchMedia: "readonly", fetch: "readonly", URL: "readonly", URLSearchParams: "readonly", setTimeout: "readonly", clearTimeout: "readonly", addEventListener: "readonly", innerWidth: "readonly", innerHeight: "readonly", console: "readonly" },
+    },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

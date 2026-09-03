@@ -12,7 +12,7 @@ export function Footer() {
           @gavinpola
         </a>{" "}
         · and by everyone who clicked ·{" "}
-        <a href="https://github.com/anyone-build/anyone.build" target="_blank" rel="noopener noreferrer" className={link}>
+        <a href="https://github.com/gavinpola/anyone.build" target="_blank" rel="noopener noreferrer" className={link}>
           open source
         </a>
       </p>
@@ -25,7 +25,9 @@ export function Footer() {
         <span className="mx-2">·</span>
         <Link to="/privacy" className={link}>Privacy</Link>
         <span className="mx-2">·</span>
-        <a href="https://github.com/anyone-build/anyone.build/blob/main/docs/CONSTITUTION.md" target="_blank" rel="noopener noreferrer" className={link}>
+        <Link to="/for-your-site" className={link}>For your site</Link>
+        <span className="mx-2">·</span>
+        <a href="https://github.com/gavinpola/anyone.build/blob/main/docs/CONSTITUTION.md" target="_blank" rel="noopener noreferrer" className={link}>
           The judge's rules
         </a>
       </p>

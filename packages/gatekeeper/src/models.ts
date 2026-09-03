@@ -1,9 +1,11 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateObject } from "ai";
+import { z } from "zod";
 import { JudgeVerdict, RedTeamVerdict, DiffReview } from "./schemas";
 import { judgeSystemPrompt, judgeUserPrompt, type JudgeInput } from "./prompts/judge";
 import { redTeamSystemPrompt, redTeamUserPrompt } from "./prompts/redteam";
 import { reviewSystemPrompt, reviewUserPrompt } from "./prompts/review";
+import { triageSystemPrompt, triageUserPrompt } from "./prompts/triage";
 
 export type ModelConfig = {
   apiKey: string;
@@ -17,7 +19,7 @@ export type ModelConfig = {
 
 export type Usage = { inputTokens: number; outputTokens: number; model: string };
 
-function provider(cfg: ModelConfig) {
+function provider(cfg: Pick<ModelConfig, "apiKey" | "baseURL">) {
   return createOpenRouter({
     apiKey: cfg.apiKey,
     baseURL: cfg.baseURL,
@@ -113,4 +115,25 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     out.public_hint = out.verdict === "approve" ? "Looks good for everyone." : "That one doesn't fit the wall's rules.";
   }
   return out;
+}
+
+export const NoteTriage = z.object({
+  kind: z.enum(["bug", "copy", "design", "feature", "question", "spam"]),
+  summary: z.string().max(160),
+});
+export type NoteTriage = z.infer<typeof NoteTriage>;
+
+/** "For your site": one cheap call that labels a visitor's note. Best effort; the inbox works without it. */
+export async function triageNote(
+  cfg: Pick<ModelConfig, "apiKey" | "baseURL"> & { model: string },
+  input: { note: string; elementText: string; path: string; siteName: string },
+): Promise<{ triage: NoteTriage; usage: Usage }> {
+  const r = await generateObject({
+    model: provider(cfg)(cfg.model),
+    schema: NoteTriage,
+    maxOutputTokens: 200,
+    system: triageSystemPrompt,
+    prompt: triageUserPrompt(input),
+  });
+  return { triage: r.object, usage: usageOf(r, cfg.model) };
 }

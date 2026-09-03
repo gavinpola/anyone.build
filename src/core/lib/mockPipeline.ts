@@ -76,7 +76,7 @@ export async function submit(input: { prompt: string; target: Target; handle: st
   await wait(1800);
   patch(id, {
     status: "preview",
-    run: { previewUrl: "https://anyone-build-preview.vercel.app", prUrl: "https://github.com/anyone-build/anyone.build/pull/1", linesAdded: 14, linesRemoved: 3, summary: "Did the thing you asked, and nothing else." },
+    run: { previewUrl: "https://anyone-build-preview.vercel.app", prUrl: "https://github.com/gavinpola/anyone.build/pull/1", linesAdded: 14, linesRemoved: 3, summary: "Did the thing you asked, and nothing else." },
   });
   await wait(4000);
   patch(id, { status: "merging", stage: "rebasing on main" });

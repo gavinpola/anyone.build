@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as analytics from "../analytics.js";
+import type * as ask from "../ask.js";
 import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
 import type * as config from "../config.js";
@@ -21,6 +22,7 @@ import type * as leaderboard from "../leaderboard.js";
 import type * as lib_claim from "../lib/claim.js";
 import type * as lib_days from "../lib/days.js";
 import type * as lib_guest from "../lib/guest.js";
+import type * as lib_notes from "../lib/notes.js";
 import type * as maintenance from "../maintenance.js";
 import type * as patrons from "../patrons.js";
 import type * as payments from "../payments.js";
@@ -33,6 +35,8 @@ import type * as pipeline_state from "../pipeline/state.js";
 import type * as presence from "../presence.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as requests from "../requests.js";
+import type * as sites from "../sites.js";
+import type * as sitesTriage from "../sitesTriage.js";
 import type * as stats from "../stats.js";
 import type * as store from "../store.js";
 import type * as turnstile from "../turnstile.js";
@@ -51,6 +55,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   analytics: typeof analytics;
+  ask: typeof ask;
   auth: typeof auth;
   budget: typeof budget;
   config: typeof config;
@@ -62,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "lib/claim": typeof lib_claim;
   "lib/days": typeof lib_days;
   "lib/guest": typeof lib_guest;
+  "lib/notes": typeof lib_notes;
   maintenance: typeof maintenance;
   patrons: typeof patrons;
   payments: typeof payments;
@@ -74,6 +80,8 @@ declare const fullApi: ApiFromModules<{
   presence: typeof presence;
   rateLimits: typeof rateLimits;
   requests: typeof requests;
+  sites: typeof sites;
+  sitesTriage: typeof sitesTriage;
   stats: typeof stats;
   store: typeof store;
   turnstile: typeof turnstile;

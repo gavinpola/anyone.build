@@ -22,6 +22,10 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   storeWriteAnon: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
   // flags
   flag: { kind: "fixed window", rate: 20, period: DAY },
+  // "for your site": notes from visitors, per site and overall; sites per owner
+  siteNote: { kind: "token bucket", rate: 300, period: DAY, capacity: 60 },
+  notesGlobal: { kind: "fixed window", rate: 5000, period: DAY },
+  siteCreate: { kind: "fixed window", rate: 5, period: DAY },
 });
 
 export function submitLimitFor(trust: number) {

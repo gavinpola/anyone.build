@@ -9,3 +9,6 @@ export { isAllowedPath, isAllowedNewFile, blockIdFromPath, ALLOWED_PREFIXES, BLO
 export { findForbidden, FORBIDDEN_PATTERNS, SECRET_PATTERNS } from "./validate/forbidden.js";
 export { validateDiff, parseUnifiedDiff, SCOPE_LINE_LIMITS, MAX_FILES, MAX_BLOCK_LINES } from "./validate/diff.js";
 export { SCOPE_CAP_CENTS, costCents, priceFor, PRICES } from "./budget";
+
+export { triageNote, NoteTriage } from "./models";
+export { triageSystemPrompt, triageUserPrompt } from "./prompts/triage";

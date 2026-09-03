@@ -8,6 +8,10 @@
 
 Everything here is open source, including the judge's rules (`packages/gatekeeper`). Please read [`docs/SECURITY.md`](docs/SECURITY.md) before poking at it, and [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) before opening a PR.
 
+## For your site
+
+The same point-and-ask, on any site: `public/ask.js` is a 250-line, dependency-free widget. Visitors hold ⇧⌘ (or tap Ask on a phone), click anything, and say it; notes land in the owner's inbox at `/sites` with the page, the element, and a one-line AI label. Pull requests on the owner's repo are the next tier. The thinking, pricing, and access model are in [`docs/PRODUCT.md`](docs/PRODUCT.md).
+
 ## Run it locally (no accounts needed)
 
 ```bash
