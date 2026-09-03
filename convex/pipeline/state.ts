@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation, internalQuery } from "../_generated/server";
-import { siteDay } from "../lib/days";
 
 /** Pipeline state transitions that the Node actions (build/github) call into. */
 
@@ -27,7 +26,7 @@ export const fail = internalMutation({
   args: { id: v.id("requests"), category: v.string(), hint: v.string(), error: v.optional(v.string()), costCents: v.optional(v.number()) },
   handler: async (ctx, { id, category, hint, error, costCents }) => {
     const r = await ctx.db.get(id);
-    if (!r || ["live", "cancelled"].includes(r.status)) return;
+    if (!r || ["live", "cancelled", "failed", "rejected"].includes(r.status)) return;
     await ctx.db.patch(id, {
       status: "failed",
       stage: undefined,
@@ -35,7 +34,8 @@ export const fail = internalMutation({
       run: { ...(r.run ?? {}), error, finishedAt: Date.now(), costCents: costCents ?? r.run?.costCents },
       updatedAt: Date.now(),
     });
-    await ctx.runMutation(internal.budget.settle, { day: siteDay(r.createdAt), reservedCents: r.budgetCents, spentCents: costCents ?? r.run?.costCents ?? 0 });
+    await ctx.runMutation(internal.requests.settleOnce, { id, spentCents: costCents ?? r.run?.costCents ?? 0 });
+    await ctx.runMutation(internal.pipeline.executor.release, { requestId: id });
   },
 });
 
@@ -48,12 +48,22 @@ export const setPreview = internalMutation({
   },
 });
 
+/** merging → preview, only if still merging (a transient merge error). */
+export const unmerge = internalMutation({
+  args: { id: v.id("requests") },
+  handler: async (ctx, { id }) => {
+    const r = await ctx.db.get(id);
+    if (!r || r.status !== "merging") return;
+    await ctx.db.patch(id, { status: "preview", stage: "merge retry", updatedAt: Date.now() });
+  },
+});
+
 export const acquireMergeLock = internalMutation({
   args: { id: v.id("requests") },
   handler: async (ctx, { id }) => {
     const lock = await ctx.db.query("mergeLock").withIndex("by_key", (q) => q.eq("key", "main")).unique();
     const stale = lock?.lockedAt && Date.now() - lock.lockedAt > 5 * 60 * 1000;
-    if (lock && lock.requestId && lock.requestId !== id && !stale) return false;
+    if (lock && lock.requestId && !stale) return false; // not re-entrant: one merge at a time, even for the same request
     if (lock) await ctx.db.patch(lock._id, { requestId: id, lockedAt: Date.now() });
     else await ctx.db.insert("mergeLock", { key: "main", requestId: id, lockedAt: Date.now() });
     return true;
@@ -92,6 +102,7 @@ export const markLiveBySha = internalMutation({
       await ctx.db.insert("changes", {
         requestId: r._id,
         userId: r.userId,
+        guestId: r.guestId,
         roomId: r.roomId,
         blockIds: run.blockIds ?? (r.target.blockId && r.target.blockId !== "__new__" ? [r.target.blockId] : []),
         primaryBlockId: run.blockIds?.[0] ?? (r.target.blockId !== "__new__" ? r.target.blockId : undefined),
@@ -106,9 +117,9 @@ export const markLiveBySha = internalMutation({
         flagCount: 0,
         votes: 0,
       });
-      await ctx.runMutation(internal.users.adjustStats, { userId: r.userId, liveChanges: 1, linesChanged: (run.linesAdded ?? 0) + (run.linesRemoved ?? 0) });
+      if (r.userId) await ctx.runMutation(internal.users.adjustStats, { userId: r.userId, liveChanges: 1, linesChanged: (run.linesAdded ?? 0) + (run.linesRemoved ?? 0) });
       await ctx.runMutation(internal.stats.bump, { changes: 1 });
-      await ctx.runMutation(internal.budget.settle, { day: siteDay(r.createdAt), reservedCents: r.budgetCents, spentCents: run.costCents ?? 0 });
+      await ctx.runMutation(internal.requests.settleOnce, { id: r._id, spentCents: run.costCents ?? 0 });
       await ctx.runMutation(internal.pipeline.executor.release, { requestId: r._id });
     }
   },
@@ -119,7 +130,7 @@ export const changeById = internalQuery({
   handler: async (ctx, { id }) => {
     const c = await ctx.db.get(id);
     if (!c) return null;
-    const u = await ctx.db.get(c.userId);
-    return { change: c, handle: u?.handle ?? "someone" };
+    const u = c.userId ? await ctx.db.get(c.userId) : null;
+    return { change: c, handle: u?.handle ?? "a guest" };
   },
 });

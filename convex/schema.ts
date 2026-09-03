@@ -56,8 +56,33 @@ export default defineSchema({
     .index("by_liveChanges", ["liveChanges"])
     .index("by_linesChanged", ["linesChanged"]),
 
+  // Anyone can ask without an account. A guest is a browser-held secret id with a public tag;
+  // signing in later binds the guest to the user and credits their earlier changes.
+  guests: defineTable({
+    guestId: v.string(), // secret to the browser; bearer token
+    tag: v.string(), // public, shown as "guest · a3f9"
+    userId: v.optional(v.id("users")), // set on claim; bound forever
+    claimedAt: v.optional(v.number()),
+    requests: v.number(),
+    banned: v.optional(v.boolean()),
+    createdAt: v.number(),
+    lastSeenAt: v.number(),
+  })
+    .index("by_guestId", ["guestId"])
+    .index("by_user", ["userId"]),
+
+  guestTickets: defineTable({
+    ticket: v.string(),
+    guestId: v.string(),
+    expiresAt: v.number(),
+    used: v.boolean(),
+  })
+    .index("by_ticket", ["ticket"])
+    .index("by_expiresAt", ["expiresAt"]),
+
   requests: defineTable({
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")),
+    guestId: v.optional(v.string()),
     roomId: v.string(),
     prompt: v.string(),
     target: v.object({
@@ -104,6 +129,8 @@ export default defineSchema({
       }),
     ),
     budgetCents: v.number(), // reserved cap for this request
+    budgetDay: v.optional(v.string()), // the ET day the reservation was booked on
+    settled: v.optional(v.boolean()), // budget settled exactly once
     plusOnes: v.number(),
     pinnedUntil: v.optional(v.number()),
     workflowId: v.optional(v.string()),
@@ -113,11 +140,13 @@ export default defineSchema({
     .index("by_createdAt", ["createdAt"])
     .index("by_status", ["status", "createdAt"])
     .index("by_user", ["userId", "createdAt"])
+    .index("by_guest", ["guestId", "createdAt"])
     .index("by_room", ["roomId", "createdAt"]),
 
   changes: defineTable({
     requestId: v.id("requests"),
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")),
+    guestId: v.optional(v.string()),
     roomId: v.string(),
     blockIds: v.array(v.string()),
     primaryBlockId: v.optional(v.string()),
@@ -136,6 +165,7 @@ export default defineSchema({
   })
     .index("by_mergedAt", ["mergedAt"])
     .index("by_user", ["userId", "mergedAt"])
+    .index("by_guest", ["guestId", "mergedAt"])
     .index("by_block", ["primaryBlockId", "mergedAt"])
     .index("by_request", ["requestId"]),
 

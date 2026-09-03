@@ -13,7 +13,7 @@ const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFracti
 type Props = { open: boolean; onClose: () => void; suggestedCents: number; minCents: number; slotDay: string };
 
 export function BidDialog(props: Props) {
-  return <AnimatePresence>{props.open ? <BidForm key={props.suggestedCents} {...props} /> : null}</AnimatePresence>;
+  return <AnimatePresence>{props.open ? <BidForm key="bid" {...props} /> : null}</AnimatePresence>;
 }
 
 function BidForm({ onClose, suggestedCents, minCents, slotDay }: Props) {

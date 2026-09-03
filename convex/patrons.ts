@@ -164,7 +164,13 @@ export const markHeld = internalMutation({
   handler: async (ctx, { checkoutSessionId, paymentIntentId, email }) => {
     const bid = await ctx.db.query("bids").withIndex("by_session", (q) => q.eq("checkoutSessionId", checkoutSessionId)).unique();
     if (!bid) return null;
-    if (bid.status !== "pending") return { bidId: bid._id, already: true, outbid: null, replaced: [] as Array<{ id: Id<"bids">; paymentIntentId?: string }> };
+    if (bid.status !== "pending") return { bidId: bid._id, already: true, late: false, outbid: null, replaced: [] as Array<{ id: Id<"bids">; paymentIntentId?: string }> };
+    const meta = await ctx.db.query("patronDays").withIndex("by_day", (q) => q.eq("day", bid.slotDay)).unique();
+    if (meta?.closed || bid.slotDay < siteDay()) {
+      // Paid after the auction closed: never enters the running; the hold is released right away.
+      await ctx.db.patch(bid._id, { status: "cancelled", paymentIntentId, resolvedAt: Date.now() });
+      return { bidId: bid._id, already: false, late: true, outbid: null, replaced: [] as Array<{ id: Id<"bids">; paymentIntentId?: string }>, email: email ?? bid.email ?? null, name: bid.name, amount: bid.amountCents };
+    }
     const before = await heldBids(ctx, bid.slotDay);
     const prevHigh = before[0] ?? null;
     await ctx.db.patch(bid._id, { status: "held", paymentIntentId, email: email ?? bid.email, heldAt: Date.now() });
@@ -176,7 +182,7 @@ export const markHeld = internalMutation({
       }
     }
     const outbid = prevHigh && prevHigh.userId !== bid.userId && prevHigh.amountCents < bid.amountCents ? { id: prevHigh._id, email: prevHigh.email ?? null, name: prevHigh.name, amountCents: prevHigh.amountCents } : null;
-    return { bidId: bid._id, already: false, outbid, replaced, newAmount: bid.amountCents, slotDay: bid.slotDay, name: bid.name, email: bid.email ?? email ?? null };
+    return { bidId: bid._id, already: false, late: false, outbid, replaced, newAmount: bid.amountCents, slotDay: bid.slotDay, name: bid.name, email: bid.email ?? email ?? null };
   },
 });
 
@@ -217,7 +223,8 @@ export const tallyFunded = internalMutation({
     const meta = await ctx.db.query("patronDays").withIndex("by_day", (q) => q.eq("day", day)).unique();
     if (!meta) return;
     const start = siteDayStart(day);
-    const changes = await ctx.db.query("changes").withIndex("by_mergedAt", (q) => q.gte("mergedAt", start).lt("mergedAt", start + 86400000)).collect();
+    const end = nextSiteMidnight(start);
+    const changes = await ctx.db.query("changes").withIndex("by_mergedAt", (q) => q.gte("mergedAt", start).lt("mergedAt", end)).collect();
     await ctx.db.patch(meta._id, { changesFunded: changes.filter((c) => !c.revertedAt).length });
   },
 });

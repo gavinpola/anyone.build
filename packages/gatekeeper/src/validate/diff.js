@@ -27,8 +27,10 @@ export function parseUnifiedDiff(diff) {
   const files = [];
   /** @type {ParsedFile | null} */
   let cur = null;
+  let inHunk = false;
   for (const raw of diff.split("\n")) {
     if (raw.startsWith("diff --git ")) {
+      inHunk = false;
       const m = raw.match(/^diff --git a\/(.+?) b\/(.+)$/);
       cur = {
         path: m?.[2] ?? "",
@@ -44,10 +46,14 @@ export function parseUnifiedDiff(diff) {
       continue;
     }
     if (!cur) continue;
+    if (raw.startsWith("@@")) {
+      inHunk = true;
+      continue;
+    }
     if (raw.startsWith("new file mode")) cur.isNew = true;
     else if (raw.startsWith("deleted file mode")) cur.isDeleted = true;
     else if (raw.startsWith("Binary files") || raw.startsWith("GIT binary patch")) cur.isBinary = true;
-    else if (raw.startsWith("+++ ") || raw.startsWith("--- ")) continue;
+    else if (!inHunk && (raw.startsWith("+++ ") || raw.startsWith("--- "))) continue;
     else if (raw.startsWith("+")) {
       cur.added++;
       cur.addedLines.push(raw.slice(1));

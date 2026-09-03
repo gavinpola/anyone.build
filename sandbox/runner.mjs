@@ -109,7 +109,7 @@ const tools = {
       const n = cur.split(old_string).length - 1;
       if (n === 0) return "old_string not found. Read the file again and copy the exact text.";
       if (n > 1) return `old_string matches ${n} times; include more surrounding context so it matches once.`;
-      const next = cur.replace(old_string, new_string);
+      const next = cur.replace(old_string, () => new_string);
       const err = guardWrite(p, next);
       if (err) return err;
       fs.writeFileSync(abs, next);
@@ -161,6 +161,7 @@ try {
     prompt: job.userPrompt,
     tools,
     stopWhen: [stepCountIs(maxSteps), ({ steps: s }) => usageSoFar(s) > maxTokens],
+    maxOutputTokens: 8000, // per step; OpenRouter pre-reserves the max against the account balance
     temperature: 0.2,
     maxRetries: 2,
     onStepFinish: (s) => log("step", s.toolCalls?.map((c) => c.toolName).join(",") || "(text)", s.usage),

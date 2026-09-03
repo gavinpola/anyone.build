@@ -18,6 +18,9 @@ export const PRICES: Record<string, { inPerM: number; outPerM: number }> = {
   "qwen/qwen3-coder-next": { inPerM: 0.12, outPerM: 0.8 },
   "minimax/minimax-m3": { inPerM: 0.3, outPerM: 1.2 },
   "openai/gpt-5-nano": { inPerM: 0.05, outPerM: 0.4 },
+  "google/gemini-2.5-flash-lite": { inPerM: 0.1, outPerM: 0.4 },
+  "google/gemini-3.1-flash-lite": { inPerM: 0.25, outPerM: 1.5 },
+  "google/gemini-2.5-flash": { inPerM: 0.3, outPerM: 2.5 },
 };
 export function priceFor(model: string) {
   return PRICES[model] ?? { inPerM: 2, outPerM: 8 };

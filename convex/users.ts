@@ -2,6 +2,9 @@ import { v } from "convex/values";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { authComponent, type AuthUserLike } from "./auth";
+import { findGuest, makeGuestTag, parseGuestId } from "./lib/guest";
+import { claimGuestRows } from "./lib/claim";
+import { rateLimiter } from "./rateLimits";
 
 const THIRTY_DAYS = 30 * 24 * 3600 * 1000;
 
@@ -30,6 +33,8 @@ export async function mirrorAuthUser(ctx: MutationCtx, authUser: AuthUserLike) {
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "-");
   const isMaintainer = maintainerHandles().has(handle);
+  // Dev-only anonymous sign-ins stand in for real GitHub accounts: treat them as builders.
+  const devAnon = process.env.DEV_ANON_AUTH === "1" && authUser.name === "Anonymous";
   const base = {
     authId: authUser._id,
     githubId: authUser.githubId ?? undefined,
@@ -42,13 +47,14 @@ export async function mirrorAuthUser(ctx: MutationCtx, authUser: AuthUserLike) {
     lastSeenAt: Date.now(),
   };
   if (existing) {
-    const trust = isMaintainer ? 3 : Math.max(existing.trust, computeTrust(base));
+    // Never undo a strike demotion on a profile refresh.
+    const trust = isMaintainer ? 3 : existing.strikes >= 3 ? 0 : Math.max(existing.trust, devAnon ? 1 : computeTrust(base));
     await ctx.db.patch(existing._id, { ...base, trust });
     return existing._id;
   }
   return await ctx.db.insert("users", {
     ...base,
-    trust: isMaintainer ? 3 : computeTrust(base),
+    trust: isMaintainer ? 3 : devAnon ? 1 : computeTrust(base),
     strikes: 0,
     liveChanges: 0,
     linesChanged: 0,
@@ -135,6 +141,39 @@ export const adjustStats = internalMutation({
 
 export type PublicUser = ReturnType<typeof publicUser>;
 export type UserId = Id<"users">;
+
+/** How much this browser did as a guest that isn't credited to anyone yet. */
+export const claimable = query({
+  args: { guestId: v.optional(v.string()) },
+  handler: async (ctx, { guestId }) => {
+    const user = await getViewerUser(ctx);
+    const gid = parseGuestId(guestId);
+    if (!user || !gid) return null;
+    const guest = await findGuest(ctx, gid);
+    if (!guest) return null;
+    if (guest.userId && guest.userId !== user._id) return { requests: 0, changes: 0, claimedByOther: true };
+    const reqs = await ctx.db.query("requests").withIndex("by_guest", (q) => q.eq("guestId", gid)).take(500);
+    const chs = await ctx.db.query("changes").withIndex("by_guest", (q) => q.eq("guestId", gid)).take(500);
+    return { requests: reqs.filter((r) => !r.userId).length, changes: chs.filter((c) => !c.userId).length, claimedByOther: false };
+  },
+});
+
+/** Bind this browser's guest id to me and credit its changes. */
+export const claim = mutation({
+  args: { guestId: v.string() },
+  handler: async (ctx, { guestId }) => {
+    const user = await requireUser(ctx);
+    const gid = parseGuestId(guestId);
+    if (!gid) throw new Error("Bad guest id");
+    await rateLimiter.limit(ctx, "claim", { key: user._id, throws: true });
+    let guest = await findGuest(ctx, gid);
+    if (!guest) {
+      const id = await ctx.db.insert("guests", { guestId: gid, tag: makeGuestTag(), userId: user._id, claimedAt: Date.now(), requests: 0, createdAt: Date.now(), lastSeenAt: Date.now() });
+      guest = (await ctx.db.get(id))!;
+    }
+    return await claimGuestRows(ctx, user, guest);
+  },
+});
 
 export const touch = mutation({
   args: {},

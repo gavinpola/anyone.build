@@ -42,9 +42,10 @@ export const summary = query({
   handler: async (ctx, { days }) => {
     const n = Math.min(days ?? 30, 90);
     const out: Array<{ day: string; views: number; uniques: number; clicks: number }> = [];
-    const now = Date.now();
+    const [ty, tm, td] = siteDay().split("-").map(Number) as [number, number, number];
     for (let i = n - 1; i >= 0; i--) {
-      const day = siteDay(now - i * 86400000);
+      const d = new Date(Date.UTC(ty, tm - 1, td - i));
+      const day = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
       const s = await ctx.db.query("dayStats").withIndex("by_day", (q) => q.eq("day", day)).unique();
       out.push({ day, views: s?.views ?? 0, uniques: s?.uniques ?? 0, clicks: s?.clicks ?? 0 });
     }

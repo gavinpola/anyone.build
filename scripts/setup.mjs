@@ -23,7 +23,7 @@ You (accounts, money):
   6. GitHub App: open this URL, click Create, install on the repo, note App ID / Installation ID / private key:
      https://github.com/organizations/${org}/settings/apps/new?state=anyone&manifest=${encodeURIComponent(JSON.stringify(manifest))}
   7. GitHub OAuth app (login): callback ${convexSite}/api/auth/callback/github
-  8. Polar: org + product "Patron of the day" (custom price) → POLAR_ACCESS_TOKEN, POLAR_PRODUCT_ID, webhook ${convexSite}/webhooks/polar
+  8. Stripe: STRIPE_SECRET_KEY, then a webhook endpoint ${convexSite}/webhooks/stripe for checkout.session.completed, checkout.session.expired, payment_intent.canceled → STRIPE_WEBHOOK_SECRET
   9. Vercel webhook (deployment.succeeded) → ${convexSite}/webhooks/vercel, VERCEL_WEBHOOK_SECRET
  10. Repo settings: rulesets on main (PR + checks + smoke required), squash merges, auto-delete branches, secret scanning on, labels playground/revert.
 

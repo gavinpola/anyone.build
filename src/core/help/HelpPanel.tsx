@@ -8,7 +8,7 @@ const steps = [
   ["Ask", "Say what should change. One thing at a time."],
   ["Judged", "Good for everyone? It ships. Not? It doesn't. Unsure? A human looks."],
   ["Built", "An agent writes the code, checks it, and opens a pull request."],
-  ["Live", "It merges and deploys. Your name is on the commit."],
+  ["Live", "It merges and deploys. Sign in and your name is on the commit."],
 ];
 
 const rules = [

@@ -46,6 +46,8 @@ export const put = mutation({
       .withIndex("by_namespace_key", (q) => q.eq("namespace", namespace).eq("key", key))
       .unique();
 
+    // Only the author (or a maintainer) may overwrite an existing doc; shared counters have no author.
+    if (existing?.byUserId && existing.byUserId !== viewer?._id && (viewer?.trust ?? 0) < 3) throw new Error("Not yours");
     const countDelta = existing ? 0 : 1;
     const bytesDelta = bytes - (existing?.bytes ?? 0);
     const nextCount = (ns?.count ?? 0) + countDelta;

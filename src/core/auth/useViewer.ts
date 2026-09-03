@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
 import { authClient, devAnonAuth } from "./auth-client";
+import { guestId } from "@/core/lib/session";
 
 export type ViewerState = {
   signedIn: boolean;
@@ -10,6 +11,8 @@ export type ViewerState = {
   handle: string;
   avatarUrl: string | null;
   trust: number;
+  /** stable per-browser guest id; a bearer secret, never displayed */
+  guestId: string;
   signIn: () => void;
   signOut: () => void;
 };
@@ -28,7 +31,7 @@ function useViewerMock(): ViewerState {
     mockSignedIn = v;
     for (const l of ls) l();
   };
-  return { signedIn, loading: false, handle: signedIn ? "you" : "anon", avatarUrl: null, trust: signedIn ? 1 : 0, signIn: () => flip(true), signOut: () => flip(false) };
+  return { signedIn, loading: false, handle: signedIn ? "you" : "guest", avatarUrl: null, trust: signedIn ? 1 : -1, guestId: guestId(), signIn: () => flip(true), signOut: () => flip(false) };
 }
 
 // --- convex + better auth ---
@@ -39,9 +42,10 @@ function useViewerConvex(): ViewerState {
   return {
     signedIn,
     loading: me === undefined,
-    handle: me?.handle ?? "anon",
+    handle: me?.handle ?? "guest",
     avatarUrl: me?.avatarUrl ?? null,
-    trust: me?.trust ?? 0,
+    trust: me?.trust ?? -1,
+    guestId: guestId(),
     signIn: () => {
       if (!authClient) return;
       if (devAnonAuth) {

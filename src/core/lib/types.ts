@@ -37,7 +37,7 @@ export type Target = {
 
 export type FeedRequest = {
   id: string;
-  user: { handle: string; avatarUrl: string | null };
+  user: { handle: string; avatarUrl: string | null; guest?: boolean };
   prompt: string;
   target: Target;
   status: RequestStatus;

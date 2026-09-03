@@ -18,7 +18,7 @@ async function signIn(page: Page) {
   await ready(page);
   const signOut = page.getByRole("button", { name: /sign out/i });
   if (await signOut.isVisible()) return;
-  await page.getByRole("button", { name: /sign in with github/i }).click();
+  await page.getByRole("button", { name: /^sign in/i }).click();
   await expect(signOut).toBeVisible({ timeout: 20_000 });
 }
 
@@ -43,7 +43,7 @@ test.describe("header + navigation", () => {
     await page.keyboard.press("Escape");
     await signIn(page);
     await page.getByRole("button", { name: /sign out/i }).click();
-    await expect(page.getByRole("button", { name: /sign in with github/i })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: /^sign in/i })).toBeVisible({ timeout: 10_000 });
   });
 
   test("404 page", async ({ page }) => {

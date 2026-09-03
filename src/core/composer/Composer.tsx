@@ -71,10 +71,6 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
   async function send() {
     const p = prompt.trim();
     if (!p || sending) return;
-    if (!viewer.signedIn) {
-      viewer.signIn();
-      return;
-    }
     setSending(true);
     setError(null);
     const { rect: _r, element: _e, point: _p, granularity: _g, ...target } = t;
@@ -145,32 +141,30 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
           {error ? <p role="alert" className="mt-2 rounded-md bg-bad-soft px-3 py-2 text-[13px] text-bad">{error}</p> : null}
           <div className="mt-2 flex items-center gap-2">
             <span className="placard">
-              {viewer.signedIn ? (
+              <kbd className="rounded border border-line bg-paper-2 px-1">{isMac ? "⌘" : "Ctrl"}</kbd>
+              <kbd className="ml-0.5 rounded border border-line bg-paper-2 px-1">↵</kbd> to send
+              {!viewer.signedIn ? (
                 <>
-                  <kbd className="rounded border border-line bg-paper-2 px-1">{isMac ? "⌘" : "Ctrl"}</kbd>
-                  <kbd className="ml-0.5 rounded border border-line bg-paper-2 px-1">↵</kbd> to send · esc to close
+                  {" "}· no account needed ·{" "}
+                  <button type="button" onClick={viewer.signIn} className="underline hover:text-ink">
+                    sign in to keep credit
+                  </button>
                 </>
               ) : (
-                "Browsing is free. Changing needs a GitHub account."
+                " · esc to close"
               )}
             </span>
             <span className="ml-auto placard tabular-nums">{prompt.length}/600</span>
             <button
               type="button"
               onClick={() => void send()}
-              disabled={sending || (!prompt.trim() && viewer.signedIn)}
+              disabled={sending || !prompt.trim()}
               className={cn(
                 "inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition",
                 "bg-accent text-accent-ink hover:brightness-95 disabled:opacity-40",
               )}
             >
-              {viewer.signedIn ? (
-                <>
-                  Send <ArrowUp size={14} />
-                </>
-              ) : (
-                "Sign in with GitHub"
-              )}
+              Send <ArrowUp size={14} />
             </button>
           </div>
         </div>
@@ -192,6 +186,16 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
               <div className="w-full rounded-md bg-ok-soft p-3">
                 <p className="text-[14px] font-medium text-ok">It's live.</p>
                 <p className="mt-0.5 text-[13px] text-ink-2">Your change is on the wall for everyone. Watch the feed for the diff.</p>
+              </div>
+            ) : request?.status === "needs_human" ? (
+              <div className="w-full rounded-md bg-warn-soft p-3">
+                <p className="text-[14px] font-medium text-warn">A human will look.</p>
+                <p className="mt-0.5 text-[13px] text-ink-2">{request.verdict?.hint || "This one is bigger or blurrier than the machine ships on its own."}</p>
+              </div>
+            ) : request?.status === "failed" || request?.status === "cancelled" ? (
+              <div className="w-full rounded-md bg-paper-2 p-3">
+                <p className="text-[14px] font-medium">{request.status === "failed" ? "It didn't make it." : "Cancelled."}</p>
+                <p className="mt-0.5 text-[13px] text-ink-2">{request.verdict?.hint || "Try a smaller ask."}</p>
               </div>
             ) : (
               <div className="w-full rounded-md bg-ok-soft p-3">

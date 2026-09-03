@@ -40,7 +40,8 @@ export const pickerStore = {
   },
   hover(t: PickerTarget | null) {
     const h = state.hover;
-    if (t?.element === h?.element && t?.text === h?.text && t?.granularity === h?.granularity) return;
+    const sameRect = !!t && !!h && t.rect.top === h.rect.top && t.rect.left === h.rect.left && t.rect.width === h.rect.width && t.rect.height === h.rect.height;
+    if (t?.element === h?.element && t?.text === h?.text && t?.granularity === h?.granularity && sameRect) return;
     set({ hover: t });
   },
   select(t: PickerTarget | null) {

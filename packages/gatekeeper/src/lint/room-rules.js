@@ -8,6 +8,9 @@ const bannedGlobals = [
   "fetch", "XMLHttpRequest", "WebSocket", "EventSource", "navigator", "localStorage",
   "sessionStorage", "indexedDB", "caches", "eval", "Function", "importScripts", "open",
   "postMessage", "crypto", "Worker", "SharedWorker", "ServiceWorker",
+  // browser globals as a whole: refs are enough for a block
+  "window", "document", "location", "top", "parent", "opener", "frames", "history", "globalThis", "self", "screen", "frameElement",
+  "setTimeout", "setInterval", "requestAnimationFrame", "queueMicrotask", "URL", "URLSearchParams",
 ];
 
 export const roomRules = {
@@ -15,13 +18,13 @@ export const roomRules = {
     name,
     message: `"${name}" is not allowed in rooms. Use the kit (useStore, useViewer, SafeLink) instead.`,
   }))],
+  // Allowlist, not denylist: anything that isn't react, @/kit, motion/react, lucide-react, or a
+  // sibling `./name` is rejected (that includes `@/kit/../core` and every `..` path).
   "no-restricted-imports": ["error", {
     patterns: [
-      { group: ["convex", "convex/*", "@/core", "@/core/*", "@/kit/internal", "@/kit/internal/*", "../../core", "../../core/*", "../../../core/*"],
-        message: "Rooms may only import from react, @/kit, motion, lucide-react, and relative files inside the room." },
-      { group: ["http:*", "https:*", "//*"], message: "Remote imports are not allowed." },
-      { group: ["node:*", "fs", "path", "child_process", "os", "net", "http", "https"],
-        message: "Node built-ins are not allowed in rooms." },
+      { group: ["*", "**", "!react", "!react/jsx-runtime", "!@/kit", "!motion/react", "!lucide-react", "!./*"],
+        message: "Rooms may only import from react, @/kit, motion/react, lucide-react, and sibling files (./name)." },
+      { group: ["./*/*", "./*/**", "../*", "../**", "**/../**", "**/.."], message: "Only sibling files (./name) may be imported." },
     ],
   }],
   "no-restricted-syntax": ["error",
@@ -44,10 +47,8 @@ export const roomRules = {
     { selector: "ImportExpression", message: "Dynamic import() is banned in rooms." },
     { selector: "MemberExpression[object.name='document'][property.name='cookie']", message: "document.cookie is banned in rooms." },
     { selector: "MemberExpression[object.name='window'][property.name=/^(location|open|fetch|localStorage|sessionStorage|indexedDB|navigator|postMessage|crypto|Worker)$/]", message: "That window API is banned in rooms." },
-    { selector: "MemberExpression[object.name='document'][property.name=/^(write|writeln|createElement|location|domain)$/]", message: "That document API is banned in rooms. Render with React." },
-    { selector: "MemberExpression[object.name='globalThis']", message: "globalThis is banned in rooms." },
-    { selector: "MemberExpression[object.name='self']", message: "self is banned in rooms." },
-    { selector: "CallExpression[callee.name='setInterval'][arguments.1.value<250]", message: "Intervals under 250ms are banned in rooms." },
+    { selector: "MemberExpression[property.name=/^(innerHTML|outerHTML|insertAdjacentHTML|createContextualFragment|srcdoc|outerText)$/]", message: "HTML injection sinks are banned in rooms." },
+    { selector: "MemberExpression[computed=true][object.name=/^(window|document|globalThis|self|top|parent)$/]", message: "Computed access to browser globals is banned in rooms." },
     { selector: "TemplateLiteral > TemplateElement[value.raw=/https?:\\/\\//]", message: "URLs in template literals are banned in rooms. Use <SafeLink>." },
     { selector: "Literal[value=/^https?:\\/\\//]", message: "URL literals are banned in rooms. Use <SafeLink> with an allowlisted domain." },
     { selector: "JSXAttribute[name.name='style'] Literal[value=/url\\(/]", message: "CSS url() is banned in rooms." },

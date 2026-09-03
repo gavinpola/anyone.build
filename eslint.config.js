@@ -5,7 +5,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import { roomRules } from "./packages/gatekeeper/src/lint/room-rules.js";
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules", "convex/_generated", "src/routeTree.gen.ts", "playwright-report", "test-results"] },
+  { ignores: ["dist", "node_modules", "convex/_generated", "src/routeTree.gen.ts", "playwright-report", "test-results", ".secrets", ".vercel"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

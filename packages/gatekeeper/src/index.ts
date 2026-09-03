@@ -1,6 +1,6 @@
 export { CONSTITUTION, CONSTITUTION_VERSION } from "./constitution";
 export * from "./schemas";
-export { judge, redTeam, reviewDiff, normalizeJudge, type ModelConfig, type Usage } from "./models";
+export { judge, redTeam, reviewDiff, normalizeJudge, scopeGate, type ModelConfig, type Usage } from "./models";
 export { judgeSystemPrompt, judgeUserPrompt, type JudgeInput } from "./prompts/judge";
 export { redTeamSystemPrompt, redTeamUserPrompt } from "./prompts/redteam";
 export { reviewSystemPrompt, reviewUserPrompt } from "./prompts/review";

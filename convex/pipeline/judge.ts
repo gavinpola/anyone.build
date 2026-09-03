@@ -2,15 +2,18 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
-import { judge, redTeam, type JudgeInput, type ModelConfig } from "../../packages/gatekeeper/src/index";
+import { judge, redTeam, costCents, priceFor, scopeGate, type JudgeInput, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { fetchManifest, fetchSnippet } from "./source";
 
 export const run = internalAction({
   args: { requestId: v.id("requests") },
   handler: async (ctx, { requestId }) => {
     const data = await ctx.runQuery(internal.requests.getInternal, { id: requestId });
-    if (!data || !data.user || data.request.status !== "judging") return;
-    const { request, user } = data;
+    if (!data || data.request.status !== "judging") return;
+    const { request, user, guest } = data;
+    const requester = user
+      ? { handle: user.handle, trust: user.trust, liveChanges: user.liveChanges }
+      : { handle: guest?.handle ?? "guest", trust: -1, liveChanges: 0 };
     const config = await ctx.runQuery(internal.config.all, {});
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -23,12 +26,13 @@ export const run = internalAction({
         : /(script|iframe|track|cookie|fetch|api key|secret|convex)/.test(p) ? ("unsafe_code" as const)
         : null;
       const scope = request.target.path.endsWith("/") ? ("small" as const) : ("tiny" as const);
+      const gate = scopeGate(requester.trust, scope);
       const res = await ctx.runMutation(internal.requests.setVerdict, {
         id: requestId,
-        approved: !bad,
-        needsHuman: false,
-        category: bad ?? undefined,
-        hint: bad ? "That one doesn't fit the wall's rules." : "Looks good for everyone.",
+        approved: !bad && gate.allowed,
+        needsHuman: !bad && !gate.allowed && gate.needsHuman,
+        category: bad ?? (gate.allowed ? undefined : (gate.category ?? undefined)),
+        hint: bad ? "That one doesn't fit the wall's rules." : gate.allowed ? "Looks good for everyone." : gate.hint,
         scope,
         confidence: 0.9,
         plan: [request.target.path.endsWith("/") ? "Create a new block that does what was asked." : `Edit ${request.target.path} near line ${request.target.line} as asked.`],
@@ -68,13 +72,16 @@ export const run = internalAction({
       snippet,
       manifest,
       recentChanges,
-      requester: { handle: user.handle, trust: user.trust, liveChanges: user.liveChanges },
+      requester,
       addendum: cfg.addendum,
     };
 
     let first;
+    let judgeCents = 0;
     try {
-      first = (await judge(cfg, input)).verdict;
+      const j = await judge(cfg, input);
+      first = j.verdict;
+      judgeCents += costCents(j.usage, priceFor(cfg.judgeModel));
     } catch (e) {
       await ctx.runMutation(internal.requests.setVerdict, {
         id: requestId, approved: false, needsHuman: true, hint: "The judge stumbled; a maintainer will look.", scope: "tiny", confidence: 0, plan: [], redTeamed: false, model: cfg.judgeModel, capCents: 0,
@@ -93,7 +100,9 @@ export const run = internalAction({
     if (approved && (first.confidence < config.redTeamConfidenceBelow || order.indexOf(first.scope) >= 2 || risky)) {
       redTeamed = true;
       try {
-        const rt = (await redTeam(cfg, input, first)).verdict;
+        const rtRes = await redTeam(cfg, input, first);
+        judgeCents += costCents(rtRes.usage, priceFor(cfg.redTeamModel));
+        const rt = rtRes.verdict;
         if (rt.block) {
           approved = false;
           needsHuman = rt.confidence < 0.6;
@@ -121,6 +130,7 @@ export const run = internalAction({
       redTeamed,
       model: cfg.judgeModel,
       capCents,
+      judgeCents,
     });
     if (res?.queued) await ctx.runMutation(internal.pipeline.executor.enqueue, { requestId });
   },

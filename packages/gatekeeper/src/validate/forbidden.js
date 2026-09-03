@@ -19,14 +19,15 @@ export const FORBIDDEN_PATTERNS = [
   { re: /\burl\s*\(/i, why: "css url()" },
   { re: /javascript\s*:/i, why: "javascript: URL" },
   { re: /\bdata\s*:\s*[a-z]+\//i, why: "data: URL" },
-  { re: /window\s*\.\s*(location|open|fetch|localStorage|sessionStorage|indexedDB|navigator|postMessage|crypto|top|parent|frames|opener)/, why: "window API" },
-  { re: /document\s*\.\s*(write|writeln|createElement|location|domain|execCommand)/, why: "document API" },
-  { re: /\bglobalThis\b|\bself\s*\./, why: "global access" },
-  { re: /\bnavigator\s*\./, why: "navigator" },
+  // Browser globals are off limits entirely: React refs are enough for a block, and every one of
+  // these is a route to navigation, storage, or exfiltration (window["fe"+"tch"], location.replace…).
+  { re: /\b(window|document|location|top|parent|opener|frames|history|navigator|globalThis|self|screen|frameElement)\b(?!\s*:)/, why: "browser global" },
+  { re: /\b(innerHTML|outerHTML|insertAdjacentHTML|createContextualFragment|srcdoc|outerText)\b/, why: "HTML injection sink" },
+  { re: /\bnew\s+URL\s*\(|\bURL\s*\.|\bURLSearchParams\b/, why: "URL construction" },
   { re: /\bprocess\s*\.\s*env\b/, why: "process.env" },
-  { re: /from\s+["'](convex|@\/core|\.\.\/\.\.\/core|@\/kit\/internal|node:|fs|path|child_process|os|net|http|https|crypto)/, why: "banned import" },
   { re: /require\s*\(/, why: "require" },
-  { re: /setInterval\s*\([^,]+,\s*(\d{1,2})\s*\)/, why: "interval under 100ms" },
+  { re: /setInterval\s*\([^,]+,\s*(\d{1,3})\s*\)/, why: "interval under 1000ms" },
+  { re: /\b(setTimeout|setInterval|requestAnimationFrame|queueMicrotask)\b/, why: "raw timer (use the kit's useNow/useCountdown)" },
   { re: /[\u200B-\u200F\u2028-\u202F\u2060-\u206F\uFEFF]/, why: "invisible unicode" },
   { re: /\\u00[0-9a-f]{2}\\u00[0-9a-f]{2}\\u00[0-9a-f]{2}/i, why: "escaped-string obfuscation" },
   { re: /atob\s*\(|btoa\s*\(|fromCharCode/, why: "encoding helpers" },
@@ -47,6 +48,31 @@ export const SECRET_PATTERNS = [
 ];
 
 /** @param {string} source @returns {Array<{ why: string; line: number }>} */
+/** Rooms may import only these. Non-canonical paths (`@/kit/../core`) are rejected by shape, not by resolution. */
+const IMPORT_ALLOW = [/^react$/, /^react\/jsx-runtime$/, /^@\/kit$/, /^motion\/react$/, /^lucide-react$/, /^\.\/[a-z0-9-]+$/];
+/** @param {string} spec */
+export function isAllowedImport(spec) {
+  return IMPORT_ALLOW.some((re) => re.test(spec));
+}
+
+/** @param {string} source @returns {Array<{ why: string; line: number }>} */
+export function findBadImports(source) {
+  /** @type {Array<{ why: string; line: number }>} */
+  const hits = [];
+  const lines = source.split("\n");
+  const re = /\b(?:import|export)\b[^"'`;]*?\bfrom\s*["'`]([^"'`]+)["'`]|\bimport\s*["'`]([^"'`]+)["'`]/g;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i] ?? "";
+    let m;
+    while ((m = re.exec(l))) {
+      const spec = m[1] ?? m[2] ?? "";
+      if (!isAllowedImport(spec)) hits.push({ why: `import not allowed: ${spec}`, line: i + 1 });
+    }
+  }
+  return hits;
+}
+
+/** @param {string} source @returns {Array<{ why: string; line: number }>} */
 export function findForbidden(source) {
   /** @type {Array<{ why: string; line: number }>} */
   const hits = [];
@@ -56,5 +82,6 @@ export function findForbidden(source) {
     for (const p of FORBIDDEN_PATTERNS) if (p.re.test(l)) hits.push({ why: p.why, line: i + 1 });
     for (const p of SECRET_PATTERNS) if (p.re.test(l)) hits.push({ why: "secret: " + p.why, line: i + 1 });
   }
+  hits.push(...findBadImports(source));
   return hits;
 }

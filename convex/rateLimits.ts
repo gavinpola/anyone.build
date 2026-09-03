@@ -9,6 +9,10 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   submitTrust1: { kind: "fixed window", rate: 10, period: DAY },
   submitTrust2: { kind: "fixed window", rate: 25, period: DAY },
   submitTrust3: { kind: "fixed window", rate: 1000, period: DAY },
+  // guests (no account): one a day per browser, plus a global cap (Convex mutations can't see IPs)
+  submitGuest: { kind: "fixed window", rate: 1, period: DAY },
+  guestPlusOne: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
+  claim: { kind: "fixed window", rate: 20, period: DAY },
   // burst protection
   submitBurst: { kind: "token bucket", rate: 3, period: MINUTE, capacity: 3 },
   // global approvals per hour (cost control)

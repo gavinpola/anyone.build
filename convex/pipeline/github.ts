@@ -106,6 +106,7 @@ export const tryMerge = internalAction({
     const data = await ctx.runQuery(internal.requests.getInternal, { id: requestId });
     const r = data?.request;
     if (!r || r.status !== "preview" || !r.run?.prNumber || !r.run.headSha) return;
+    if (data?.request.settled) return;
     const kit = await octokit();
     const state = await checksGreen(kit, r.run.headSha);
     if (state === "pending") return;
@@ -129,14 +130,15 @@ export const tryMerge = internalAction({
         await ctx.runMutation(internal.pipeline.executor.release, { requestId });
         return;
       }
-      await ctx.runMutation(internal.requests.setStatus, { id: requestId, status: "merging", stage: "merging" });
+      const won = await ctx.runMutation(internal.requests.beginMerge, { id: requestId });
+      if (!won) return; // someone else is merging it (or it was cancelled meanwhile)
       const merged = await kit.rest.pulls.merge({
         owner,
         repo,
         pull_number: r.run.prNumber,
         merge_method: "squash",
         commit_title: `${r.run.summary ?? "Change on the wall"} (#${r.run.prNumber})`,
-        commit_message: `Requested by @${data?.user?.handle ?? "someone"} on anyone.build\n\n${r.prompt}`,
+        commit_message: `Requested by ${data?.user ? "@" + data.user.handle : (data?.guest?.handle ?? "a guest")} on anyone.build\n\n${r.prompt}`,
       });
       await ctx.runMutation(internal.pipeline.state.markMerged, { id: requestId, mergeSha: merged.data.sha });
       await kit.rest.git.deleteRef({ owner, repo, ref: `heads/${r.run.branch}` }).catch(() => {});
@@ -147,7 +149,8 @@ export const tryMerge = internalAction({
         await closePullRequest(kit, r.run.prNumber, r.run.branch);
         await ctx.runMutation(internal.pipeline.executor.release, { requestId });
       } else {
-        await ctx.runMutation(internal.requests.setStatus, { id: requestId, status: "preview", stage: "merge retry" });
+        // Transient: put it back to preview (setStatus refuses if it went terminal) and retry.
+        await ctx.runMutation(internal.pipeline.state.unmerge, { id: requestId });
         await ctx.scheduler.runAfter(15_000, internal.pipeline.github.tryMerge, { requestId });
       }
     } finally {

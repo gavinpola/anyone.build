@@ -20,7 +20,7 @@ export const toggle = mutation({
       await ctx.db.patch(changeId, { votes });
       return { voted: false, votes };
     }
-    if (c.userId === user._id) throw new Error("You can't vote for your own change.");
+    if (c.userId && c.userId === user._id) throw new Error("You can't vote for your own change.");
     await ctx.db.insert("votes", { changeId, userId: user._id, createdAt: Date.now() });
     const votes = (c.votes ?? 0) + 1;
     await ctx.db.patch(changeId, { votes });
@@ -37,7 +37,7 @@ export const recentChanges = query({
     const out = [];
     for (const c of rows) {
       if (c.revertedAt) continue;
-      const u = await ctx.db.get(c.userId);
+      const u = c.userId ? await ctx.db.get(c.userId) : null;
       let myVote = false;
       if (viewer) {
         const vrow = await ctx.db
@@ -49,7 +49,7 @@ export const recentChanges = query({
       out.push({
         id: c._id,
         summary: c.summary,
-        by: { handle: u?.handle ?? "someone", avatarUrl: u?.avatarUrl ?? null },
+        by: { handle: u?.handle ?? "a guest", avatarUrl: u?.avatarUrl ?? null },
         mine: viewer ? c.userId === viewer._id : false,
         blockIds: c.blockIds,
         linesAdded: c.linesAdded,

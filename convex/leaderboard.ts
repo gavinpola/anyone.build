@@ -13,7 +13,7 @@ export const top = query({
     const recent = await ctx.db.query("changes").withIndex("by_mergedAt").order("desc").take(2000);
     const latestByBlock = new Map<string, string>();
     for (const c of recent) {
-      if (c.revertedAt || !c.primaryBlockId) continue;
+      if (c.revertedAt || !c.primaryBlockId || !c.userId) continue;
       if (!latestByBlock.has(c.primaryBlockId)) latestByBlock.set(c.primaryBlockId, c.userId);
     }
     const standing = new Map<string, number>();
@@ -31,7 +31,7 @@ export const top = query({
     const agg = new Map<string, { changes: number; lines: number }>();
     for (const c of recent) {
       if (c.mergedAt < since) break;
-      if (c.revertedAt) continue;
+      if (c.revertedAt || !c.userId) continue; // guests count once they claim
       const a = agg.get(c.userId) ?? { changes: 0, lines: 0 };
       a.changes++;
       a.lines += c.linesAdded + c.linesRemoved;
@@ -87,8 +87,8 @@ export const blockProvenance = query({
       for (const b of c.blockIds) {
         const cur = out[b];
         if (!cur) {
-          const u = await ctx.db.get(c.userId);
-          out[b] = { lastBy: u?.handle ?? "someone", changes: 1 };
+          const u = c.userId ? await ctx.db.get(c.userId) : null;
+          out[b] = { lastBy: u?.handle ?? "a guest", changes: 1 };
         } else cur.changes++;
       }
     }

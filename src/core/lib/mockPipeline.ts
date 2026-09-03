@@ -46,7 +46,7 @@ export async function submit(input: { prompt: string; target: Target; handle: st
   const now = Date.now();
   const req: FeedRequest = {
     id,
-    user: { handle: input.handle, avatarUrl: input.avatarUrl },
+    user: { handle: input.handle, avatarUrl: input.avatarUrl, guest: input.handle === "guest" },
     prompt: input.prompt,
     target: input.target,
     status: "judging",

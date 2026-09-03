@@ -23,13 +23,17 @@ export const run = internalAction({
   args: { requestId: v.id("requests") },
   handler: async (ctx, { requestId }) => {
     const data = await ctx.runQuery(internal.requests.getInternal, { id: requestId });
-    if (!data || !data.user || data.request.status !== "queued" || !data.request.verdict) return;
-    const { request, user } = data;
+    if (!data || data.request.status !== "queued" || !data.request.verdict) return;
+    const { request, user, guest } = data;
+    const requesterHandle = user?.handle ?? guest?.handle ?? "a guest";
     const verdict = request.verdict;
     if (!verdict) return;
     const config = await ctx.runQuery(internal.config.all, {});
-    const set = (status: "building" | "validating" | "reviewing" | "preview", stage?: string, run?: Record<string, unknown>) =>
-      ctx.runMutation(internal.requests.setStatus, { id: requestId, status, stage, run });
+    class Aborted extends Error {}
+    const set = async (status: "building" | "validating" | "reviewing" | "preview", stage?: string, run?: Record<string, unknown>) => {
+      const res = await ctx.runMutation(internal.requests.setStatus, { id: requestId, status, stage, run });
+      if (!res.ok) throw new Aborted(`request is ${res.status ?? "gone"}`); // cancelled mid-build: stop quietly
+    };
     const fail = (category: string, hint: string, error: string, cost = 0) =>
       ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category, hint, error, costCents: cost });
 
@@ -48,7 +52,8 @@ export const run = internalAction({
       userPrompt: coderUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target }),
       model: coderModel,
       maxSteps: config.maxTurns,
-      maxTokens: 600_000,
+      // The run may not spend more than its reservation: tokens ≈ cap / blended price.
+      maxTokens: Math.max(60_000, Math.min(600_000, Math.floor(((request.budgetCents / 100) / ((priceFor(coderModel).inPerM + priceFor(coderModel).outPerM) / 2)) * 1e6))),
       scope,
     };
 
@@ -137,12 +142,12 @@ export const run = internalAction({
       // Commit + PR, from here, with the App token that never entered the sandbox.
       await set("building", "opening pull request");
       const branch = `playground/${requestId}`;
-      const coauthor = user.handle ? { name: user.handle, email: `${data.request.userId}+${user.handle}@users.noreply.github.com` } : undefined;
+      const coauthor = user ? { name: user.handle, email: `${user.id}+${user.handle}@users.noreply.github.com` } : undefined;
       const headShaNew = await commitFiles(kit, { baseSha, branch, files: contents, message: review.summary || result.summary, coauthor });
       const pr = await openPullRequest(kit, {
         branch,
         title: review.summary || result.summary,
-        body: [`**Request** by @${user.handle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)}`, ``, `Opened automatically by anyone.build.`].join("\n"),
+        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)}`, ``, `Opened automatically by anyone.build.`].join("\n"),
         labels: ["playground"],
       });
       await set("preview", undefined, {
@@ -162,6 +167,7 @@ export const run = internalAction({
       // CI + preview deploy webhooks take it from here (tryMerge), with a safety poll in case a webhook is missed.
       await ctx.scheduler.runAfter(90_000, internal.pipeline.github.tryMerge, { requestId });
     } catch (e) {
+      if (e instanceof Aborted) return; // cancelled; nothing to report
       const msg = e instanceof Error ? e.message : String(e);
       await fail("build_failed", "Something broke while building. Try again in a minute.", msg, cost);
     } finally {

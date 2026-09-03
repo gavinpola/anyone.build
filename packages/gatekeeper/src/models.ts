@@ -38,6 +38,7 @@ export async function judge(cfg: ModelConfig, input: JudgeInput): Promise<{ verd
     system: judgeSystemPrompt(cfg.addendum),
     prompt: judgeUserPrompt(input),
     temperature: 0,
+    maxOutputTokens: 1500,
     maxRetries: 2,
   });
   return { verdict: normalizeJudge(r.object, input), usage: usageOf(r, cfg.judgeModel) };
@@ -52,6 +53,7 @@ export async function redTeam(cfg: ModelConfig, input: JudgeInput, first: JudgeV
     system: redTeamSystemPrompt(),
     prompt: redTeamUserPrompt(input, first),
     temperature: 0,
+    maxOutputTokens: 1200,
     maxRetries: 2,
   });
   return { verdict: r.object, usage: usageOf(r, cfg.redTeamModel) };
@@ -66,23 +68,39 @@ export async function reviewDiff(cfg: ModelConfig, input: { prompt: string; plan
     system: reviewSystemPrompt(),
     prompt: reviewUserPrompt(input),
     temperature: 0,
+    maxOutputTokens: 1200,
     maxRetries: 2,
   });
   return { review: r.object, usage: usageOf(r, cfg.reviewModel) };
+}
+
+const SCOPE_ORDER = ["tiny", "small", "medium", "large"] as const;
+/** Max scope per trust: −1 guest, 0 new, 1 builder, 2 trusted, 3 maintainer. Guests and new accounts can add a small block; medium needs standing. */
+const MAX_SCOPE: Record<string, JudgeVerdict["scope"]> = { "-1": "small", "0": "small", "1": "small", "2": "medium", "3": "large" };
+
+/**
+ * The deterministic trust gate on scope, shared by the real judge, the mock judge, and tests.
+ * Guests (−1) may add or edit something small; bigger asks say "sign in". New accounts (0) are
+ * tiny-only. Builders (1+) get a human look instead of a no.
+ */
+export function scopeGate(trust: number, scope: JudgeVerdict["scope"]): { allowed: boolean; needsHuman: boolean; category: "too_big" | null; hint: string } {
+  const t = String(Math.min(3, Math.max(-1, trust)));
+  const max = MAX_SCOPE[t] ?? "tiny";
+  if (SCOPE_ORDER.indexOf(scope) <= SCOPE_ORDER.indexOf(max)) return { allowed: true, needsHuman: false, category: null, hint: "" };
+  if (trust < 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "Guests can make small changes. Sign in with GitHub for bigger ones." };
+  if (trust === 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "Start small; bigger changes unlock as your work stays up." };
+  return { allowed: false, needsHuman: true, category: null, hint: "That's a bigger change than we auto-ship; a maintainer will look." };
 }
 
 /** Deterministic guardrails on top of the model's answer. */
 export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict {
   const out = { ...v };
   const trust = input.requester.trust;
-  // Trust gates on scope
-  const maxScope: Record<number, JudgeVerdict["scope"]> = { 0: "tiny", 1: "small", 2: "medium", 3: "large" };
-  const order = ["tiny", "small", "medium", "large"] as const;
-  const allowed = maxScope[Math.min(3, Math.max(0, trust))] ?? "tiny";
-  if (out.verdict === "approve" && order.indexOf(out.scope) > order.indexOf(allowed)) {
-    out.verdict = trust >= 1 ? "needs_human" : "reject";
-    out.category = trust >= 1 ? null : "too_big";
-    out.public_hint = trust >= 1 ? "That's a bigger change than we auto-ship; a maintainer will look." : "Start with something small; bigger changes unlock as your work stays up.";
+  const gate = scopeGate(trust, out.scope);
+  if (out.verdict === "approve" && !gate.allowed) {
+    out.verdict = gate.needsHuman ? "needs_human" : "reject";
+    out.category = gate.category;
+    out.public_hint = gate.hint;
   }
   if (out.verdict === "reject" && !out.category) out.category = "unclear";
   if (out.verdict !== "reject") out.category = null;

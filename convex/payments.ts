@@ -61,6 +61,11 @@ export const onHoldPlaced = internalAction({
     const r = await ctx.runMutation(internal.patrons.markHeld, { checkoutSessionId, paymentIntentId, email });
     if (!r || r.already) return;
     const s = stripe();
+    if (r.late) {
+      if (s && !paymentIntentId.startsWith("fake_")) await s.paymentIntents.cancel(paymentIntentId).catch(() => {});
+      if (r.email) await sendEmail(r.email, releasedEmail({ name: r.name ?? "", cents: r.amount ?? 0, slotDay: siteDay(), winningCents: 0 }));
+      return;
+    }
     for (const old of r.replaced) if (old.paymentIntentId && s) await s.paymentIntents.cancel(old.paymentIntentId).catch(() => {});
     if (r.outbid?.email) {
       await sendEmail(r.outbid.email, outbidEmail({ name: r.outbid.name, theirCents: r.outbid.amountCents, newCents: r.newAmount ?? 0, slotDay: r.slotDay ?? "" }));

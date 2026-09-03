@@ -16,7 +16,7 @@ export function Header() {
   const [help, setHelp] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur supports-[backdrop-filter]:bg-paper/70">
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-2 px-3 sm:gap-3 sm:px-6">
         <Link to="/" className="text-[19px] font-bold leading-none tracking-tight">
           anyone<span className="text-accent">.</span>build
         </Link>
@@ -27,7 +27,7 @@ export function Header() {
             <Link
               key={n.to}
               to={n.to}
-              className={cn("rounded-md px-3 py-1.5 text-[13px] text-ink-2 hover:bg-paper-2 hover:text-ink")}
+              className={cn("rounded-md px-2 py-1.5 text-[13px] text-ink-2 hover:bg-paper-2 hover:text-ink sm:px-3")}
               activeProps={{ className: "bg-paper-2 text-ink" }}
               activeOptions={{ exact: n.to === "/" }}
             >

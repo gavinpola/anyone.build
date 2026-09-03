@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction, internalMutation } from "../_generated/server";
-import { siteDay } from "../lib/days";
 import { getAllConfig } from "../config";
 
 /**
@@ -35,6 +34,7 @@ export const pump = internalMutation({
     const queued = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "queued")).order("asc").take(50);
     for (const r of queued) {
       if (running >= c.maxConcurrentBuilds) break;
+      if (held.has(`run:${r._id}`)) continue; // already started
       const key = r.target.blockId && r.target.blockId !== "__new__" ? `block:${r.roomId}:${r.target.blockId}` : `new:${r._id}`;
       if (held.has(key)) continue; // someone else is changing this block; wait
       held.add(key);
@@ -64,10 +64,13 @@ export const start = internalAction({
       return;
     }
     if (process.env.EXECUTOR === "sandbox") {
+      let outcome: string | undefined;
       try {
         await ctx.runAction(internal.pipeline.build.run, { requestId });
+        outcome = (await ctx.runQuery(internal.requests.getInternal, { id: requestId }))?.request.status;
       } finally {
-        await ctx.runMutation(internal.pipeline.executor.release, { requestId });
+        // The block lock lives until the change is live or dead (state.markLiveBySha / state.fail / cancel release it).
+        if (!outcome || !["preview", "merging"].includes(outcome)) await ctx.runMutation(internal.pipeline.executor.release, { requestId });
       }
       return;
     }
@@ -111,6 +114,7 @@ export const mockStep = internalMutation({
       await ctx.db.insert("changes", {
         requestId,
         userId: r.userId,
+        guestId: r.guestId,
         roomId: r.roomId,
         blockIds: r.target.blockId ? [r.target.blockId] : [],
         primaryBlockId: r.target.blockId,
@@ -124,9 +128,9 @@ export const mockStep = internalMutation({
         mergedAt: Date.now(),
         flagCount: 0,
       });
-      await ctx.runMutation(internal.users.adjustStats, { userId: r.userId, liveChanges: 1, linesChanged: (run.linesAdded ?? 0) + (run.linesRemoved ?? 0) });
+      if (r.userId) await ctx.runMutation(internal.users.adjustStats, { userId: r.userId, liveChanges: 1, linesChanged: (run.linesAdded ?? 0) + (run.linesRemoved ?? 0) });
       await ctx.runMutation(internal.stats.bump, { changes: 1 });
-      await ctx.runMutation(internal.budget.settle, { day: siteDay(r.createdAt), reservedCents: r.budgetCents, spentCents: run.costCents });
+      await ctx.runMutation(internal.requests.settleOnce, { id: requestId, spentCents: run.costCents });
     }
     await ctx.db.patch(requestId, { status: s.status, stage: s.stage, run, updatedAt: Date.now(), ...(s.status === "live" ? { pinnedUntil: Date.now() + 60_000 } : {}) });
     if (step + 1 < MOCK_STEPS.length) {

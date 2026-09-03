@@ -28,8 +28,8 @@ export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
       className={cn("frame p-3", pinned && "border-accent/60", live && "bg-ok-soft/40", rejected && "opacity-90")}
     >
       <div className="flex items-center gap-2">
-        <Avatar handle={r.user.handle} url={r.user.avatarUrl} />
-        <span className="text-[13px] font-medium">@{r.user.handle}</span>
+        <Avatar handle={r.user.guest ? "g" : r.user.handle} url={r.user.avatarUrl} />
+        <span className="text-[13px] font-medium">{r.user.guest ? <span className="text-ink-2">{r.user.handle.replace("guest-", "guest · ")}</span> : `@${r.user.handle}`}</span>
         <span className="placard">{timeAgo(r.createdAt, now)}</span>
         <StatusPill r={r} now={now} />
       </div>
