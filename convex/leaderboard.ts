@@ -81,14 +81,16 @@ export const blockProvenance = query({
   args: { roomId: v.optional(v.string()) },
   handler: async (ctx, { roomId }) => {
     const recent = await ctx.db.query("changes").withIndex("by_mergedAt").order("desc").take(1000);
-    const out: Record<string, { lastBy: string; changes: number }> = {};
+    // lastBy is a GitHub handle (shown as @handle); guests show as their public tag.
+    const out: Record<string, { lastBy: string | null; guestTag: string | null; changes: number }> = {};
     for (const c of recent) {
       if (c.roomId !== (roomId ?? "main") || c.revertedAt) continue;
       for (const b of c.blockIds) {
         const cur = out[b];
         if (!cur) {
           const u = c.userId ? await ctx.db.get(c.userId) : null;
-          out[b] = { lastBy: u?.handle ?? "a guest", changes: 1 };
+          const g = !u && c.guestId ? await ctx.db.query("guests").withIndex("by_guestId", (q) => q.eq("guestId", c.guestId!)).unique() : null;
+          out[b] = { lastBy: u?.handle ?? null, guestTag: g?.tag ?? (c.guestId ? "guest" : null), changes: 1 };
         } else cur.changes++;
       }
     }

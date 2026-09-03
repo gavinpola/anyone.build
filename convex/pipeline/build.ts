@@ -103,7 +103,12 @@ export const run = internalAction({
       const price = priceFor(coderModel);
       cost = result ? costCents({ inputTokens: result.inputTokens, outputTokens: result.outputTokens }, price) : 0;
       if (!result || !result.ok) {
-        await fail("build_failed", "The agent couldn't make it work cleanly. Try a smaller ask.", result?.error ?? "runner produced no result: " + (await runner.stderr()).slice(-1500), cost);
+        // Keep only the runner's own log lines in the stored error; the model SDK's stderr is noise.
+        const runnerLog = (await runner.stderr()).split("\n").filter((l) => l.startsWith("[runner")).join("\n").slice(-1500);
+        const why = result
+          ? (result.error ?? `checks failed: ${Object.entries(result.checks ?? {}).filter(([, ok]) => !ok).map(([k]) => k).join(", ") || "unknown"}`)
+          : "runner produced no result";
+        await fail("build_failed", "The agent couldn't make it work cleanly. Try a smaller ask.", `${why}\n${runnerLog}`, cost);
         return;
       }
 

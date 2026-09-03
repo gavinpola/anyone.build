@@ -180,7 +180,7 @@ try {
     maxOutputTokens: 8000, // per step; OpenRouter pre-reserves the max against the account balance
     temperature: 0.2,
     maxRetries: 2,
-    onStepFinish: (s) => log("step", s.toolCalls?.map((c) => c.toolName).join(",") || "(text)", s.usage),
+    onStepFinish: (s) => log("step", s.toolCalls?.map((c) => c.toolName).join(",") || "(text)", `in=${s.usage?.inputTokens ?? 0} out=${s.usage?.outputTokens ?? 0}`),
   });
   text = result.text ?? "";
   steps = result.steps ?? [];
