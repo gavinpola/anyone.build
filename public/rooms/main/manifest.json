@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-03T15:44:21.049Z",
+  "generatedAt": "2026-09-03T19:02:39.126Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -17,6 +17,30 @@
       "size": "full",
       "order": 1,
       "path": "src/rooms/main/blocks/welcome-message.tsx"
+    },
+    {
+      "id": "hello-note-6e0z",
+      "title": "Hello Note",
+      "description": "A tiny hello note 6e0z at the bottom of the wall.",
+      "size": "full",
+      "order": 2,
+      "path": "src/rooms/main/blocks/hello-note-6e0z.tsx"
+    },
+    {
+      "id": "thanks-for-visiting",
+      "title": "Thanks for visiting",
+      "description": "A small note thanking anyone who stops by the wall.",
+      "size": "full",
+      "order": 2,
+      "path": "src/rooms/main/blocks/thanks-for-visiting.tsx"
+    },
+    {
+      "id": "electric-message",
+      "title": "Electric",
+      "description": "A short spark of a message on the wall.",
+      "size": "full",
+      "order": 3,
+      "path": "src/rooms/main/blocks/electric-message.tsx"
     }
   ],
   "pages": []

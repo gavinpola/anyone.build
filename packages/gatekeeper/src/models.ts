@@ -237,7 +237,19 @@ export async function securityReview(
   return { review: { ...r.object, findings: clampList(r.object.findings, 6, 240), summary: clampStr(r.object.summary, 160) }, usage: usageOf(r, model) };
 }
 
-/** Medium or high risk never ships, whatever the model's block flag says. */
+/**
+ * Resource-only findings (growth, flooding, spam volume, missing limits) are the server's job: the kit
+ * caps storage and rate-limits writes. They are notes, never a reason to fail a build. Production
+ * regression: a collaborative art block was failed for "unbounded growth of the collection".
+ */
+const RESOURCE_WORDS = /\b(unbounded|without (a )?(bound|limit|cap)|grow(s|th|ing)?|flood(s|ing)?|rate[- ]?limit(s|ing|ed)?|too many|large number|exhaust(s|ion|ing)?|spam(ming)?|denial of service|dos|quota|storage|prun(e|ing)|limit the number|access control(s)?)\b/i;
+const HARM_WORDS = /\b(exfil\w*|leak\w*|steal\w*|track\w*|fingerprint\w*|secret\w*|token\w*|password\w*|credential\w*|phish\w*|decei\w*|deception|imperson\w*|inject\w*|hidden|obfusc\w*|encod\w*|keystroke\w*|typed|types|record(s|ed|ing)?|per[- ]visitor|personal|private|pii|email\w*|other (people|user|visitor)s?'?|overwrit\w*|delet\w*|remov\w*|expos\w*|ignore previous|system:|url\w*|link\w*|navigat\w*)\b/i;
+export function resourceOnly(findings: string[]): boolean {
+  return findings.length > 0 && findings.every((f) => RESOURCE_WORDS.test(f) && !HARM_WORDS.test(f));
+}
+
+/** Medium or high risk never ships, whatever the model's block flag says, unless every finding is resource-only. */
 export function securityBlocks(review: SecurityReview): boolean {
+  if (resourceOnly(review.findings)) return false;
   return review.block || review.risk === "medium" || review.risk === "high";
 }

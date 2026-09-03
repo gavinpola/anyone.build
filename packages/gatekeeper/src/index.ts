@@ -12,7 +12,7 @@ export { SCOPE_CAP_CENTS, costCents, priceFor, PRICES } from "./budget";
 
 export { triageNote, NoteTriage } from "./models";
 export { triageSystemPrompt, triageUserPrompt } from "./prompts/triage";
-export { securityReview, securityBlocks } from "./models";
+export { securityReview, securityBlocks, resourceOnly } from "./models";
 export { SecurityReview } from "./schemas";
 export { securitySystemPrompt, securityUserPrompt } from "./prompts/security";
 export { validateBackendFile, BACKEND_FILE_RE } from "./validate/backend.js";

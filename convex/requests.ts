@@ -400,6 +400,30 @@ export const recentChanges = internalQuery({
   },
 });
 
+/** Re-run a failed build under the same request: same requester, same verdict, a fresh budget reservation. Internal (CLI) only. */
+export const rebuildFailed = internalMutation({
+  args: { id: v.id("requests") },
+  handler: async (ctx, { id }) => {
+    const r = await ctx.db.get(id);
+    if (!r || r.status !== "failed" || !r.verdict) throw new Error("Not a failed request with a verdict");
+    const c = await getAllConfig(ctx);
+    const cap = c.scopeCapsCents[r.verdict.scope];
+    const reserved = await reserve(ctx, cap);
+    if (!reserved) throw new Error("No budget left today");
+    await ctx.db.patch(id, {
+      status: "queued",
+      stage: undefined,
+      settled: false,
+      run: undefined,
+      verdict: { ...r.verdict, approved: true, category: undefined, hint: "Approved. Building now." },
+      budgetCents: cap,
+      budgetDay: siteDay(),
+      updatedAt: Date.now(),
+    });
+    await ctx.runMutation(internal.pipeline.executor.enqueue, { requestId: id });
+  },
+});
+
 /** Maintainer decision on a needs_human request. */
 export const decide = mutation({
   args: { id: v.id("requests"), approve: v.boolean(), note: v.optional(v.string()) },

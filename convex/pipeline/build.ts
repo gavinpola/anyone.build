@@ -3,7 +3,7 @@ import { Sandbox } from "@vercel/sandbox";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
-import { coderSystemPrompt, coderUserPrompt, reviewDiff, securityReview, securityBlocks, validateDiff, costCents, priceFor, type ModelConfig } from "../../packages/gatekeeper/src/index";
+import { coderSystemPrompt, coderUserPrompt, reviewDiff, securityReview, securityBlocks, resourceOnly, validateDiff, costCents, priceFor, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { octokit, headSha, commitFiles, openPullRequest } from "./github";
 
 type RunnerResult = { ok: boolean; summary: string; files: string[]; steps: number; inputTokens: number; outputTokens: number; checks: Record<string, boolean>; error?: string };
@@ -154,6 +154,8 @@ export const run = internalAction({
       await set("reviewing", "security review");
       const sec = await securityReview(cfg, { prompt: request.prompt, plan: verdict.plan, diff, fullFiles });
       cost += costCents(sec.usage, priceFor(cfg.securityModel || cfg.reviewModel));
+      const resourceNotes = resourceOnly(sec.review.findings) && (sec.review.block || sec.review.risk === "medium" || sec.review.risk === "high");
+      if (resourceNotes) console.warn("security review: resource-only findings do not block (the kit caps storage):", sec.review.findings.join("; ").slice(0, 300));
       if (securityBlocks(sec.review)) {
         await fail("unsafe_code", "The security review flagged that change.", `${sec.review.risk}: ${sec.review.findings.join("; ") || sec.review.summary}`, cost);
         return;
@@ -167,7 +169,7 @@ export const run = internalAction({
       const pr = await openPullRequest(kit, {
         branch,
         title: review.summary || result.summary,
-        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)} · security: ${sec.review.risk}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`, ``, `Opened automatically by anyone.build.`].join("\n"),
+        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`, ``, `Opened automatically by anyone.build.`].join("\n"),
         labels: ["playground"],
       });
       await set("preview", undefined, {
