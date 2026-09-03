@@ -152,7 +152,7 @@ export const submit = mutation({
     }
 
     const actorKey = user ? user._id : `g:${guest!.guestId}`;
-    // Rate limits: burst, then per-trust daily (guests: one a day per browser, plus a global cap)
+    // Rate limits: a burst brake (anti-script), a global guest cap, and a very high daily ceiling.
     await rateLimiter.limit(ctx, "submitBurst", { key: actorKey, throws: true });
     if (!user) {
       if (turnstileTicket !== undefined || process.env.TURNSTILE_SECRET) {
@@ -167,7 +167,7 @@ export const submit = mutation({
       const id = await insert(ctx, { user, guestId: actorGuestId }, roomKey, clean, target, 0);
       await ctx.db.patch(id, {
         status: "rejected",
-        verdict: { approved: false, category: "slow_down", hint: user ? "You've hit your limit for today. Back at midnight ET." : "One change a day as a guest. Sign in with GitHub for more.", scope: "tiny", confidence: 1, plan: [], redTeamed: false, model: "rate-limit" },
+        verdict: { approved: false, category: "slow_down", hint: "That's a lot of asks for one day from one place. Try again tomorrow.", scope: "tiny", confidence: 1, plan: [], redTeamed: false, model: "rate-limit" },
       });
       return id;
     }
@@ -176,8 +176,9 @@ export const submit = mutation({
     const inflight = user
       ? await ctx.db.query("requests").withIndex("by_user", (q) => q.eq("userId", user._id)).order("desc").take(10)
       : await ctx.db.query("requests").withIndex("by_guest", (q) => q.eq("guestId", guest!.guestId)).order("desc").take(10);
-    if (inflight.filter((r) => ACTIVE.has(r.status)).length >= (user ? (user.trust >= 2 ? 3 : 2) : 1)) {
-      throw new Error("Let your current change land first.");
+    // A few builds in flight per person (builds are the paid part); not a daily count.
+    if (inflight.filter((r) => ACTIVE.has(r.status)).length >= (user ? (user.trust >= 2 ? 5 : 3) : 2)) {
+      throw new Error("A couple of your changes are still building. Let one land first.");
     }
 
     // Same ask, same block, already approved and in flight within the last 20 minutes → +1 instead

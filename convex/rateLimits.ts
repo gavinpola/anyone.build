@@ -4,17 +4,20 @@ import { components } from "./_generated/api";
 const DAY = 24 * HOUR;
 
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
-  // requests per user per day, by trust level
-  submitTrust0: { kind: "fixed window", rate: 2, period: DAY },
-  submitTrust1: { kind: "fixed window", rate: 10, period: DAY },
-  submitTrust2: { kind: "fixed window", rate: 25, period: DAY },
-  submitTrust3: { kind: "fixed window", rate: 1000, period: DAY },
-  // guests (no account): one a day per browser, plus a global cap (Convex mutations can't see IPs)
-  submitGuest: { kind: "fixed window", rate: 1, period: DAY },
+  // No per-person daily cap (Gavin: "no limit"). Money is protected by the daily budget, per-request
+  // cost caps, and the global hourly caps — not by counting a person's asks. These stay generous so
+  // a human can't hit them; the burst bucket below is the only per-person brake (anti-script).
+  submitTrust0: { kind: "fixed window", rate: 500, period: DAY },
+  submitTrust1: { kind: "fixed window", rate: 1000, period: DAY },
+  submitTrust2: { kind: "fixed window", rate: 2000, period: DAY },
+  submitTrust3: { kind: "fixed window", rate: 5000, period: DAY },
+  // guests (no account): the browser-minted id is not an abuse boundary anyway; the real guest
+  // brakes are the burst bucket, the global hourly guest cap, and the daily budget.
+  submitGuest: { kind: "fixed window", rate: 500, period: DAY },
   guestPlusOne: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
   claim: { kind: "fixed window", rate: 20, period: DAY },
   // burst protection
-  submitBurst: { kind: "token bucket", rate: 3, period: MINUTE, capacity: 3 },
+  submitBurst: { kind: "token bucket", rate: 8, period: MINUTE, capacity: 8 }, // a human iterating fast, not a script
   // global approvals per hour (cost control)
   approvalsGlobal: { kind: "fixed window", rate: 240, period: HOUR },
   // kit store writes

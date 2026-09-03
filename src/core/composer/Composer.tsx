@@ -39,6 +39,17 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
+  // A re-select on the same spot while the previous panel is still animating out reuses this
+  // instance (same key), so the previous request's state would otherwise survive. Each new target
+  // object means a new open: reset during render (React's "adjust state when a prop changes"
+  // pattern), which is cheaper than an effect and never cascades.
+  const [forTarget, setForTarget] = useState(t);
+  if (forTarget !== t) {
+    setForTarget(t);
+    setSubmittedId(null);
+    setError(null);
+    setSending(false);
+  }
   const request = useRequest(submittedId);
   const ref = useRef<HTMLTextAreaElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
