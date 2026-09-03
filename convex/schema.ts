@@ -126,6 +126,7 @@ export default defineSchema({
         error: v.optional(v.string()),
         blockIds: v.optional(v.array(v.string())),
         mergeSha: v.optional(v.string()),
+        securityRisk: v.optional(v.string()), // none | low | medium | high, from the security pass
       }),
     ),
     budgetCents: v.number(), // reserved cap for this request
