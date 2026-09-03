@@ -43,7 +43,7 @@ export async function judge(cfg: ModelConfig, input: JudgeInput): Promise<{ verd
     system: judgeSystemPrompt(cfg.addendum),
     prompt: judgeUserPrompt(input),
     temperature: 0,
-    maxOutputTokens: 1500,
+    maxOutputTokens: 4000, // big/ambitious asks need room to plan; 1500 truncated into a parse-fail reject
     maxRetries: 2,
   });
   return { verdict: normalizeJudge(r.object, input), usage: usageOf(r, cfg.judgeModel) };

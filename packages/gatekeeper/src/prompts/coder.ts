@@ -20,6 +20,7 @@ export function coderSystemPrompt(opts: { backend?: boolean } = {}) {
     `- A page is one file in src/rooms/main/pages/<slug>.tsx exporting a default component and \`export const page: PageMeta = { slug, title, description }\`; it renders at /r/main/<slug> with the same kit. Link to a page from a block with <PageLink to="slug">. Use a page when the ask is a whole screen; otherwise use a block.`,
     `- A block is one file in src/rooms/main/blocks/<slug>.tsx exporting a default component and \`export const block: BlockMeta = { id, title, description, order, size }\`. To add a block, create a new file; never edit the room layout.`,
     `- Mobile matters: use the kit's Stack/Row/Card/Button and Tailwind utility classes that already exist in the codebase.`,
+    `- Animation and games: never use requestAnimationFrame/setInterval (banned). Use useTick(dt => {...}, { fps: 60 }) from @/kit for a game loop — dt is seconds since the last frame. Draw with a <canvas ref={...}> and its 2d context, or move DOM/SVG with React state. Keep per-frame state in useRef and call setState only when the screen must change. Read input with React props on a focusable element: <div tabIndex={0} onKeyDown={...} onPointerDown={...}>.`,
     `- Write real copy for the people who will see it, short and in plain words. Never paste the request text or the plan into the UI; the request says what to make, not what it should say.`,
     ``,
     ...backend,

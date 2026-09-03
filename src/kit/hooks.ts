@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
@@ -101,4 +101,53 @@ export function useNow(intervalMs = 1000) {
     return () => clearInterval(t);
   }, [intervalMs]);
   return now;
+}
+
+/**
+ * A bounded game loop the kit owns, so blocks can animate without ever touching requestAnimationFrame
+ * (which is banned in rooms as a CPU-abuse / exfiltration route). The callback gets `dt`, the seconds
+ * since the last frame (clamped, so a background tab can't produce a huge jump). Capped at 60fps,
+ * cleaned up on unmount, and paused while the tab is hidden. If the callback throws, the loop stops
+ * so a broken frame can't spin.
+ */
+export function useTick(callback: (dt: number) => void, opts: { fps?: number; active?: boolean } = {}): void {
+  const fps = Math.max(1, Math.min(60, opts.fps ?? 60));
+  const active = opts.active ?? true;
+  const cb = useRef(callback);
+  useEffect(() => {
+    cb.current = callback; // keep the loop calling the latest callback without restarting it
+  });
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    let last = performance.now();
+    let acc = 0;
+    const step = 1000 / fps;
+    let stopped = false;
+    const frame = (now: number) => {
+      if (stopped) return;
+      raf = requestAnimationFrame(frame);
+      if (typeof document !== "undefined" && document.hidden) {
+        last = now;
+        return;
+      }
+      acc += now - last;
+      last = now;
+      if (acc < step) return;
+      const dt = Math.min(acc, 100) / 1000; // clamp to 100ms so a stall never jumps the world
+      acc = 0;
+      try {
+        cb.current(dt);
+      } catch (e) {
+        stopped = true;
+        cancelAnimationFrame(raf);
+        throw e; // let the block's error boundary show it, instead of looping on a bad frame
+      }
+    };
+    raf = requestAnimationFrame(frame);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [fps, active]);
 }
