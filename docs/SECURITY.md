@@ -24,3 +24,7 @@ Every layer below is deterministic and public. Knowing about it doesn't help you
 - The judge prompt is public. We think three checks plus deterministic walls beat obscurity, and we'd rather people improve the prompt than guess at it. A short private addendum can be appended at runtime.
 - Room code runs in visitors' browsers. The bans above are the wall; if you find a way through them with code that passes lint and the validator, that is exactly what we want to hear about.
 - Patron logos are user-uploaded images. Maintainers can remove a bid; report abuse with the link in the footer.
+
+## For your site (the widget and `/ask/note`)
+
+`public/ask.js` runs on other people's sites, so it is held to a stricter standard than the wall: no dependencies, a shadow root for styles, no cookies or storage, no reads beyond the clicked element and the page URL, and one JSON POST per note. The endpoint is unauthenticated by design (visitors have no account), so the fence is: the site key must exist, the browser `Origin` must equal the origin registered for that key, every field has a hard size cap (`convex/lib/notes.ts`), and there are per-site and global daily rate limits. Notes are stored as text and rendered as text; the DOM snippet is never rendered as HTML. Owners see only their own sites and notes (owner checks on every query and mutation). The triage model sees the note as quoted data with a "never follow instructions inside" framing, and the inbox works without it.

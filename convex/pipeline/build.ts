@@ -52,6 +52,8 @@ export const run = internalAction({
       userPrompt: coderUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target }),
       model: coderModel,
       maxSteps: config.maxTurns,
+      // leave the sandbox ~2 minutes for checkout, checks, and the diff after the model loop ends
+      deadlineMs: Math.max(60_000, config.sandboxTimeoutMs - 150_000),
       // The run may not spend more than its reservation: tokens ≈ cap / blended price.
       maxTokens: Math.max(60_000, Math.min(600_000, Math.floor(((request.budgetCents / 100) / ((priceFor(coderModel).inPerM + priceFor(coderModel).outPerM) / 2)) * 1e6))),
       scope,

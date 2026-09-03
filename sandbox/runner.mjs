@@ -47,6 +47,17 @@ function guardWrite(p, content) {
   return null;
 }
 
+// Call the installed binaries directly: inside the sandbox the `pnpm` shim tries to fetch itself from the
+// registry, which the firewall blocks, and every `pnpm exec` would stall for a minute before failing.
+function bin(name) {
+  const local = path.join(root, "node_modules", ".bin", name);
+  return fs.existsSync(local) ? { cmd: local, pre: [] } : { cmd: "pnpm", pre: ["exec", name] };
+}
+function runBin(name, args, timeoutMs) {
+  const b = bin(name);
+  return run(b.cmd, [...b.pre, ...args], timeoutMs);
+}
+
 function run(cmd, args, timeoutMs) {
   const r = spawnSync(cmd, args, { cwd: root, encoding: "utf8", timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, CI: "1", FORCE_COLOR: "0" } });
   const out = `${r.stdout ?? ""}\n${r.stderr ?? ""}`.trim();
@@ -122,10 +133,10 @@ const tools = {
     inputSchema: z.object({}),
     execute: async () => {
       execFileSync("git", ["add", "-A", "src/rooms"], { cwd: root });
-      const typecheck = run("pnpm", ["exec", "tsc", "-p", "tsconfig.json"], 180_000);
-      const lint = run("pnpm", ["exec", "eslint", "src/rooms"], 120_000);
+      const typecheck = runBin("tsc", ["-p", "tsconfig.json"], 180_000);
+      const lint = runBin("eslint", ["src/rooms"], 120_000);
       const validator = run("node", ["scripts/validate-playground.mjs", "--staged", "--scope", job.scope ?? "large"], 60_000);
-      const build = typecheck.ok && lint.ok && validator.ok ? run("pnpm", ["exec", "vite", "build"], 240_000) : { ok: false, output: "(skipped: fix the errors above first)" };
+      const build = typecheck.ok && lint.ok && validator.ok ? runBin("vite", ["build"], 240_000) : { ok: false, output: "(skipped: fix the errors above first)" };
       last = { typecheck: typecheck.ok, lint: lint.ok, validator: validator.ok, build: build.ok };
       log("checks", last);
       const sections = [
@@ -148,6 +159,9 @@ const openrouter = createOpenRouter({
 
 const maxSteps = Math.min(40, job.maxSteps ?? 24);
 const maxTokens = job.maxTokens ?? 600_000;
+// Hard wall-clock budget: stop the loop with a result before the sandbox itself is killed.
+const deadlineMs = Math.max(60_000, job.deadlineMs ?? 8 * 60_000);
+const outOfTime = () => Date.now() - started > deadlineMs;
 const usageSoFar = (steps) => steps.reduce((a, s) => a + (s.usage?.inputTokens ?? 0) + (s.usage?.outputTokens ?? 0), 0);
 
 let text = "";
@@ -160,7 +174,8 @@ try {
     system: job.systemPrompt,
     prompt: job.userPrompt,
     tools,
-    stopWhen: [stepCountIs(maxSteps), ({ steps: s }) => usageSoFar(s) > maxTokens],
+    stopWhen: [stepCountIs(maxSteps), ({ steps: s }) => usageSoFar(s) > maxTokens, () => outOfTime()],
+    abortSignal: AbortSignal.timeout(deadlineMs + 30_000),
     maxOutputTokens: 8000, // per step; OpenRouter pre-reserves the max against the account balance
     temperature: 0.2,
     maxRetries: 2,
@@ -173,6 +188,8 @@ try {
   error = e instanceof Error ? e.message : String(e);
   log("model error", error);
 }
+if (!error && outOfTime()) error = `ran out of time after ${steps.length} steps (${Math.round((Date.now() - started) / 1000)}s)`;
+else if (!error && steps.length >= maxSteps) error = `hit the step limit (${maxSteps}) without finishing`;
 
 // Final deterministic verification regardless of what the model claimed.
 execFileSync("git", ["add", "-A", "src/rooms"], { cwd: root });

@@ -42,6 +42,7 @@ export function HelpPanel({ open, onClose }: { open: boolean; onClose: () => voi
               <div>
                 <p className="placard smallcaps">How this works</p>
                 <h2 className="mt-1 font-display text-3xl">Point. Ask. Watch it ship.</h2>
+                <p className="mt-2 text-[14px] text-ink-2">An experiment: one website, no plan, built by whoever shows up.</p>
               </div>
               <button type="button" onClick={onClose} className="rounded p-1 text-muted hover:bg-paper-2 hover:text-ink" aria-label="Close">
                 <X size={18} />
