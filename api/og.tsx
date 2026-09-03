@@ -4,7 +4,7 @@
  */
 import { ImageResponse } from "@vercel/og";
 import { createElement as h } from "react";
-import { byLine, fetchShare, tidy } from "./_share";
+import { byLine, fetchShare, tidy } from "./_share.js";
 
 // Node runtime on purpose: the edge bundler picks this library's Node build (it imports a Node builtin)
 // and refuses it; the Node build ships its own font and WASM and needs nothing else.

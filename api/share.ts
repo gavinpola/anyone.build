@@ -4,8 +4,8 @@
  * builder's name, and a person who opens it gets the app at the same URL (the SPA route focuses the
  * block). Anything missing or failing degrades to the plain app, never to an error page.
  */
-import { INDEX_HTML } from "./_index";
-import { fetchShare, injectMeta, shareMeta } from "./_share";
+import { INDEX_HTML } from "./_index.js";
+import { fetchShare, injectMeta, shareMeta } from "./_share.js";
 
 export const config = { runtime: "edge" };
 
