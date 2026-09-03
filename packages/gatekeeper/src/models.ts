@@ -136,8 +136,16 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     out.public_hint = "Couldn't turn that into concrete steps. Say what should change, and where.";
   }
   // Never let a hint leak the machinery
-  if (/constitution|system prompt|instruction|judge|gatekeeper/i.test(out.public_hint)) {
-    out.public_hint = out.verdict === "approve" ? "Looks good for everyone." : "That one doesn't fit the wall's rules.";
+  if (/constitution|system prompt|instruction|judge|gatekeeper|ask a human|human for help|a maintainer|maintainer will|too complex for automatic/i.test(out.public_hint)) {
+    // No human queue exists: never tell the requester to ask one. Give a clean, on-brand line.
+    out.public_hint =
+      out.verdict === "approve"
+        ? "Looks good for everyone."
+        : out.category === "too_big"
+          ? "This one's big — it'll go up for a vote."
+          : out.category === "out_of_bounds"
+            ? "Only the wall itself can change, not the machinery behind it."
+            : "That one doesn't quite fit the wall's rules. Try saying it a different way.";
   }
   return out;
 }

@@ -21,7 +21,7 @@ export const DEFAULTS = {
   // Three vendors on purpose: one jailbreak shouldn't fool all three. All cheap, all fast.
   // Measured 2026-09-03 through OpenRouter (structured output + tool calls): Gemini Flash-Lite ~1s,
   // DeepSeek V4 Flash ~3s per coding step, GLM 5.3 Flash ~20-36s (too slow for the loop).
-  judgeModel: "google/gemini-2.5-flash-lite", // the verdict has to feel instant
+  judgeModel: "google/gemini-2.5-flash", // reliable intent+scope calls; flash-lite mis-judged reasonable asks
   redTeamModel: "openai/gpt-5-nano", // only on risky asks; a different vendor from the judge
   reviewModel: "qwen/qwen3-coder-next",
   securityModel: "google/gemini-3.1-flash-lite",

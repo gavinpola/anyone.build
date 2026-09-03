@@ -252,3 +252,15 @@ test.describe("mobile", () => {
     await expect(page.getByRole("dialog", { name: /live feed/i })).toBeVisible();
   });
 });
+
+test("the composer closes when you navigate to another page", async ({ page }) => {
+  await page.goto(url);
+  await expect(page.locator('html[data-convex="ready"]')).toBeAttached({ timeout: 20_000 });
+  await page.getByRole("button", { name: /change something/i }).click();
+  await page.locator('[data-ab-block="__new__"]').click({ position: { x: 100, y: 60 } });
+  const box = page.getByRole("dialog", { name: /ask for a change/i });
+  await expect(box).toBeVisible();
+  await page.getByRole("link", { name: "Leaderboard" }).click();
+  await expect(box).toBeHidden();
+  await expect(page).toHaveURL(/\/leaderboard$/);
+});
