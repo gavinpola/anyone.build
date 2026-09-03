@@ -84,6 +84,13 @@ export function validateBackendFile(path, source) {
     if (re.test(source)) problems.push(`${path}: "${t.replace("\\.", ".")}" is not allowed in room functions (${why})`);
   }
 
+  // Realm escape via split-string constructor access: ([])["constr"+"uctor"]["constr"+"uctor"] reaches
+  // Function without the literal token that BANNED matches. Catch the obfuscated computed access.
+  if (/\.\s*(constructor|prototype|__proto__)\b/.test(source)) problems.push(`${path}: .constructor/.prototype/.__proto__ access is banned in room functions (realm escape)`);
+  if (/\[[^\]]*['"`][^\]]*\+/.test(source)) problems.push(`${path}: computed string-concat property access is banned in room functions (obfuscation)`);
+  if (/\[\s*['"`](constructor|prototype|__proto__)/.test(source)) problems.push(`${path}: computed access to constructor/prototype is banned in room functions`);
+  if (/\[\s*`[^`]*\$\{/.test(source)) problems.push(`${path}: computed template-literal property access is banned in room functions`);
+
   // resource rules
   if (/\bwhile\s*\(\s*true\s*\)/.test(source) || /\bfor\s*\(\s*;\s*;\s*\)/.test(source)) problems.push(`${path}: unbounded loops are not allowed`);
   const listRe = /\.list(?:<[^>]*>)?\s*\(([^)]*)\)/g;

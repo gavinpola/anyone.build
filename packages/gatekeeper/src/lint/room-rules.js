@@ -50,6 +50,15 @@ export const roomRules = {
     { selector: "MemberExpression[object.name='window'][property.name=/^(location|open|fetch|localStorage|sessionStorage|indexedDB|navigator|postMessage|crypto|Worker)$/]", message: "That window API is banned in rooms." },
     { selector: "MemberExpression[property.name=/^(innerHTML|outerHTML|insertAdjacentHTML|createContextualFragment|srcdoc|outerText)$/]", message: "HTML injection sinks are banned in rooms." },
     { selector: "MemberExpression[computed=true][object.name=/^(window|document|globalThis|self|top|parent)$/]", message: "Computed access to browser globals is banned in rooms." },
+    // Realm escape + obfuscation: [].constructor.constructor(...) and x["fe"+"tch"] reach Function/
+    // globals with no banned identifier. Ban the meta-properties and any non-static computed key.
+    { selector: "MemberExpression[property.name=/^(constructor|prototype|__proto__)$/]", message: "Accessing .constructor/.prototype/.__proto__ is banned in rooms (realm escape)." },
+    { selector: "MemberExpression[computed=true][property.value=/^(constructor|prototype|__proto__)$/]", message: "Computed access to constructor/prototype is banned in rooms (realm escape)." },
+    { selector: "MemberExpression[computed=true][property.type='BinaryExpression']", message: "Computed member access with a built-up string key is banned in rooms (obfuscation)." },
+    { selector: "MemberExpression[computed=true][property.type='TemplateLiteral']", message: "Computed member access with a template-literal key is banned in rooms (obfuscation)." },
+    { selector: "JSXSpreadAttribute", message: "Spread props ({...x}) are banned in rooms: they can smuggle src/href onto an element. List props explicitly." },
+    { selector: "CallExpression[callee.property.name='createElement']", message: "React.createElement is banned in rooms. Use JSX so element names stay static." },
+    { selector: "CallExpression[callee.name='createElement']", message: "createElement is banned in rooms. Use JSX so element names stay static." },
     { selector: "TemplateLiteral > TemplateElement[value.raw=/https?:\\/\\//]", message: "URLs in template literals are banned in rooms. Use <SafeLink>." },
     { selector: "Literal[value=/^https?:\\/\\//]", message: "URL literals are banned in rooms. Use <SafeLink> with an allowlisted domain." },
     { selector: "JSXAttribute[name.name='style'] Literal[value=/url\\(/]", message: "CSS url() is banned in rooms." },

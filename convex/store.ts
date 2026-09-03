@@ -8,11 +8,21 @@ const MAX_NAMESPACE_DOCS = 5000;
 const MAX_NAMESPACE_BYTES = 1024 * 1024;
 const NAMESPACE_RE = /^[a-z0-9:_-]{1,64}$/;
 
+// This public store shares the storeDocs table with the room-function kit (convex/kit/room.ts,
+// which owns "room:*") and the counter system ("counter:*", integrity-guarded by bump()). The public
+// API must never address those, or the kit's per-room isolation and one-vote-per-person guarantees
+// leak. Blocks use plain, unprefixed namespaces; these prefixes are reserved for server code.
+const RESERVED_PREFIXES = ["room:", "counter:"];
+function assertPublicNamespace(namespace: string): void {
+  if (!NAMESPACE_RE.test(namespace)) throw new Error("Bad namespace");
+  if (RESERVED_PREFIXES.some((p) => namespace.startsWith(p))) throw new Error("Reserved namespace");
+}
+
 /** Read a namespace (newest first, capped). Public. */
 export const list = query({
   args: { namespace: v.string(), limit: v.optional(v.number()) },
   handler: async (ctx, { namespace, limit }) => {
-    if (!NAMESPACE_RE.test(namespace)) return [];
+    if (!NAMESPACE_RE.test(namespace) || RESERVED_PREFIXES.some((p) => namespace.startsWith(p))) return [];
     const docs = await ctx.db
       .query("storeDocs")
       .withIndex("by_namespace", (q) => q.eq("namespace", namespace))
@@ -22,20 +32,19 @@ export const list = query({
   },
 });
 
-/** Upsert one doc. Signed-in only (anonymous gets a tiny allowance for counters). */
+/** Upsert one doc. Signed-in only. (anonId is still accepted for call compatibility but unused now.) */
 export const put = mutation({
   args: { namespace: v.string(), key: v.string(), value: v.any(), anonId: v.optional(v.string()) },
-  handler: async (ctx, { namespace, key, value, anonId }) => {
-    if (!NAMESPACE_RE.test(namespace)) throw new Error("Bad namespace");
+  handler: async (ctx, { namespace, key, value }) => {
+    assertPublicNamespace(namespace); // counters go through bump(); room:* is the kit's alone
     if (key.length > 128) throw new Error("Key too long");
     const bytes = JSON.stringify(value ?? null).length;
     if (bytes > MAX_DOC_BYTES) throw new Error("Value too large (4 KB max)");
 
     const viewer = await getViewerUser(ctx);
-    const isCounter = namespace.startsWith("counter:");
-    if (!viewer && !isCounter) throw new Error("Sign in to write");
-    const limitKey = viewer ? `u:${viewer._id}` : `a:${anonId ?? "anon"}`;
-    await rateLimiter.limit(ctx, viewer ? "storeWrite" : "storeWriteAnon", { key: limitKey, throws: true });
+    if (!viewer) throw new Error("Sign in to write"); // counters (the old anon path) go through bump()
+    const limitKey = `u:${viewer._id}`;
+    await rateLimiter.limit(ctx, "storeWrite", { key: limitKey, throws: true });
 
     const ns = await ctx.db
       .query("storeNamespaces")
@@ -101,6 +110,7 @@ export const bump = mutation({
 export const remove = mutation({
   args: { namespace: v.string(), key: v.string() },
   handler: async (ctx, { namespace, key }) => {
+    assertPublicNamespace(namespace); // was unchecked: room:*/counter:* were removable through here
     const viewer = await getViewerUser(ctx);
     if (!viewer) throw new Error("Sign in first");
     const existing = await ctx.db

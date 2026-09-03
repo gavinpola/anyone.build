@@ -150,7 +150,9 @@ export const setNoteStatus = mutation({
   },
 });
 
-/** Called by the /ask/note HTTP endpoint after shape validation. Origin is the fence. */
+/** Called by the /ask/note HTTP endpoint after shape validation. The Origin match is anti-CSRF
+ * hygiene, not authorization (the key is public, the header is spoofable); the fence is the metered
+ * triage budget and the per-site/global rate limits, not the origin check. */
 export const ingest = internalMutation({
   args: {
     origin: v.string(),
@@ -195,7 +197,10 @@ export const ingest = internalMutation({
       createdAt: now,
     });
     await ctx.db.patch(site._id, { notes: site.notes + 1, open: site.open + 1, lastNoteAt: now });
-    await ctx.scheduler.runAfter(0, internal.sitesTriage.run, { noteId: id });
+    // Triage is best-effort and the only paid step here; only schedule it within a hard daily budget.
+    const tg = await rateLimiter.limit(ctx, "triageGlobal", { key: "global" });
+    const ts = await rateLimiter.limit(ctx, "triageSite", { key: site.key });
+    if (tg.ok && ts.ok) await ctx.scheduler.runAfter(0, internal.sitesTriage.run, { noteId: id });
     return { ok: true, status: 200 };
   },
 });

@@ -31,6 +31,14 @@ export const FORBIDDEN_PATTERNS = [
   { re: /[\u200B-\u200F\u2028-\u202F\u2060-\u206F\uFEFF]/, why: "invisible unicode" },
   { re: /\\u00[0-9a-f]{2}\\u00[0-9a-f]{2}\\u00[0-9a-f]{2}/i, why: "escaped-string obfuscation" },
   { re: /atob\s*\(|btoa\s*\(|fromCharCode/, why: "encoding helpers" },
+  // Realm escape: [].constructor.constructor("return this")() reaches Function/globalThis with no
+  // banned identifier. Ban the property outright (dot or computed) and any string-key obfuscation.
+  { re: /\.\s*(constructor|prototype|__proto__)\b/, why: "constructor/prototype access" },
+  { re: /\[\s*['"`](constructor|prototype|__proto__)/, why: "constructor via computed access" },
+  { re: /\[[^\]]*['"`][^\]]*\+/, why: "computed string-concat property (obfuscation)" },
+  { re: /\[\s*`[^`]*\$\{/, why: "computed template-literal property (obfuscation)" },
+  { re: /\bcreateElement\s*\(/, why: "React.createElement (use JSX)" },
+  { re: /\{\s*\.\.\.[^}]*(src|href|action|dangerouslySetInnerHTML)/, why: "spread props with a banned attribute" },
   { re: /(ignore|disregard|forget|override)\s+(all\s+|any\s+)?(the\s+|your\s+)?(previous|prior|above|earlier|system|these)?\s*(rules|instructions|prompts?|guidelines)/i, why: "prompt-injection text" },
   { re: /(you are now|act as|pretend to be|as the (admin|maintainer|judge|gatekeeper))/i, why: "prompt-injection text" },
 ];
@@ -82,6 +90,12 @@ export function findForbidden(source) {
     for (const p of FORBIDDEN_PATTERNS) if (p.re.test(l)) hits.push({ why: p.why, line: i + 1 });
     for (const p of SECRET_PATTERNS) if (p.re.test(l)) hits.push({ why: "secret: " + p.why, line: i + 1 });
   }
+  // A second pass over whitespace-collapsed source: catches patterns split across lines to dodge the
+  // per-line check (e.g. `eval\n(...)`, a multi-line import, `[].constructor .constructor`).
+  const flat = source.replace(/\s+/g, " ");
+  const seen = new Set(hits.map((h) => h.why));
+  for (const p of FORBIDDEN_PATTERNS) if (!seen.has(p.why) && p.re.test(flat)) hits.push({ why: p.why, line: 0 });
   hits.push(...findBadImports(source));
+  hits.push(...findBadImports(flat).filter((h) => !hits.some((x) => x.why === h.why)));
   return hits;
 }

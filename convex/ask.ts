@@ -3,7 +3,9 @@ import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { validateNote } from "./lib/notes";
 
-// No credentials are involved, so a wildcard is right: the site key + Origin check happen server-side.
+// The site key is public and the Origin header is spoofable by non-browser clients, so this is CSRF
+// hygiene, not authorization: the endpoint is anonymous by design and the triage cost is metered
+// (rateLimits.triageGlobal/triageSite). A wildcard CORS is fine because there is nothing to protect here.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

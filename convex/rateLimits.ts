@@ -25,6 +25,10 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // "for your site": notes from visitors, per site and overall; sites per owner
   siteNote: { kind: "token bucket", rate: 300, period: DAY, capacity: 60 },
   notesGlobal: { kind: "fixed window", rate: 5000, period: DAY },
+  // The triage LLM call is the only paid work in the note path; cap it hard and globally so a note
+  // flood (the site key is public and the Origin header is spoofable) can't become a free LLM faucet.
+  triageGlobal: { kind: "fixed window", rate: 1000, period: DAY },
+  triageSite: { kind: "token bucket", rate: 100, period: DAY, capacity: 30 },
   siteCreate: { kind: "fixed window", rate: 5, period: DAY },
 });
 
