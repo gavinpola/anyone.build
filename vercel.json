@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/og.tsx": {
-      "includeFiles": "api/_fonts/**"
+      "includeFiles": "{api/_fonts/**,node_modules/.pnpm/harfbuzzjs@*/node_modules/harfbuzzjs/hb.wasm}"
     }
   },
   "rewrites": [
