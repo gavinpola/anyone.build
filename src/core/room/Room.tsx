@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { BlockModule } from "@/kit";
 import { PageLink } from "@/kit/PageLink";
 import { RoomContext } from "@/kit/room-context";
@@ -5,6 +6,7 @@ import { pagesFor } from "./pages";
 import { cn } from "@/core/lib/cn";
 import { BlockBoundary } from "@/core/lib/BlockBoundary";
 import { room } from "@/rooms/main/room";
+import { Cursors } from "./Cursors";
 
 // Every file in src/rooms/main/blocks is a block. Adding one never touches another file.
 const modules = import.meta.glob<BlockModule>("/src/rooms/main/blocks/*.tsx", {
@@ -41,9 +43,11 @@ const span: Record<string, string> = {
 export function Room() {
   const empty = blocks.length === 0;
   const pages = pagesFor(room.id);
+  const wallRef = useRef<HTMLDivElement | null>(null);
   return (
     <RoomContext.Provider value={room.id}>
-      <div className="grid grid-cols-12 gap-5" data-room={room.id}>
+      <div ref={wallRef} className="relative grid grid-cols-12 gap-5" data-room={room.id}>
+        <Cursors roomId={room.id} boxRef={wallRef} />
         {pages.length > 0 ? (
           <nav
             aria-label="Pages"

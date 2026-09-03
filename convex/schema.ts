@@ -284,6 +284,20 @@ export default defineSchema({
   }).index("by_key", ["key"]),
 
   // Presence without fan-out: one doc per tab (upserted once a minute) + per-minute counters.
+  // Live cursors: one throttled row per active tab, positioned as a fraction (0..1) of the wall so it
+  // maps across screen sizes. Swept with presence. Rendering is capped client-side; this is not a
+  // firehose transport (see the roadmap note on a dedicated channel for true scale).
+  cursors: defineTable({
+    roomId: v.string(),
+    sessionId: v.string(),
+    x: v.number(),
+    y: v.number(),
+    hue: v.number(),
+    at: v.number(),
+  })
+    .index("by_room_session", ["roomId", "sessionId"])
+    .index("by_room_at", ["roomId", "at"]),
+
   presenceSessions: defineTable({
     roomId: v.string(),
     sessionId: v.string(),

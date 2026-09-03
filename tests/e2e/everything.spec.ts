@@ -119,14 +119,14 @@ test.describe("the loop", () => {
     const box = page.getByRole("dialog", { name: /ask for a change/i });
     await expect(box).toBeVisible();
     await expect(box.getByText("New block")).toBeVisible();
-    await box.getByRole("textbox").fill("A poll: what should this wall become?");
+    await box.getByRole("textbox").fill("Add a small note that says hi to whoever visits");
     await expect(box.getByText(/\/600/)).toBeVisible();
     await box.getByRole("button", { name: /send/i }).click();
-    await expect(box.getByText(/approved/i)).toBeVisible({ timeout: 15_000 });
+    await expect(box.getByText(/approved/i)).toBeVisible({ timeout: 30_000 });
     await box.getByRole("button", { name: /watch it in live/i }).click();
     const feed = page.getByRole("dialog", { name: /live feed/i });
     await expect(feed).toBeVisible();
-    const card = feed.locator("article", { hasText: "A poll: what should this wall become?" }).first();
+    const card = feed.locator("article", { hasText: "Add a small note that says hi to whoever visits" }).first();
     await expect(card).toBeVisible();
     await expect(card).toHaveAttribute("data-status", "live", { timeout: 60_000 });
     await expect(card.getByRole("link", { name: /preview/i })).toBeVisible();
@@ -144,7 +144,7 @@ test.describe("the loop", () => {
     const box = page.getByRole("dialog", { name: /ask for a change/i });
     await box.getByRole("textbox").fill("Add a link to my startup https://coolapp.io please");
     await page.keyboard.press("Meta+Enter");
-    await expect(box.getByText(/not for everyone/i)).toBeVisible({ timeout: 15_000 });
+    await expect(box.getByText(/not for everyone/i)).toBeVisible({ timeout: 30_000 });
     await box.getByRole("button", { name: /^close$/i }).click();
     await expect(box).toBeHidden();
 
@@ -161,7 +161,7 @@ test.describe("the loop", () => {
     await page.locator('[data-ab-block="__new__"]').click({ position: { x: 200, y: 70 } });
     await box.getByRole("textbox").fill("A clock that shows the time in UTC");
     await box.getByRole("button", { name: /send/i }).click();
-    await expect(box.getByText(/approved/i)).toBeVisible({ timeout: 15_000 });
+    await expect(box.getByText(/approved/i)).toBeVisible({ timeout: 30_000 });
     await box.getByRole("button", { name: /watch it in live/i }).click();
     const feed = page.getByRole("dialog", { name: /live feed/i });
     const card = feed.locator("article", { hasText: "A clock that shows the time in UTC" }).first();

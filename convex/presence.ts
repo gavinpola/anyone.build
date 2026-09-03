@@ -56,5 +56,8 @@ export const sweep = internalMutation({
     for (const s of stale) if (s.minute < cutoff) await ctx.db.delete(s._id);
     const old = await ctx.db.query("presenceBuckets").take(2000);
     for (const b of old) if (b.minute < cutoff) await ctx.db.delete(b._id);
+    const cursorCutoff = Date.now() - 10_000;
+    const cursors = await ctx.db.query("cursors").take(3000);
+    for (const c of cursors) if (c.at < cursorCutoff) await ctx.db.delete(c._id);
   },
 });

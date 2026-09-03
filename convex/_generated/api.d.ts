@@ -15,6 +15,7 @@ import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
 import type * as config from "../config.js";
 import type * as crons from "../crons.js";
+import type * as cursors from "../cursors.js";
 import type * as emails from "../emails.js";
 import type * as flags from "../flags.js";
 import type * as http from "../http.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   budget: typeof budget;
   config: typeof config;
   crons: typeof crons;
+  cursors: typeof cursors;
   emails: typeof emails;
   flags: typeof flags;
   http: typeof http;
