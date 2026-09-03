@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+/* Theme: "gallery wall". Light = warm paper, dark = near-black. One accent. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --paper: #f3efe6;
+  --paper-2: #ebe6da;
+  --card: #faf8f2;
+  --ink: #16140f;
+  --ink-2: #4c473d;
+  --muted: #7d7768;
+  --line: #d9d2c2;
+  --line-2: #c8bfab;
+  --accent: #ff5a1f;
+  --accent-ink: #ffffff;
+  --accent-soft: #ffe6dc;
+  --ok: #1f7a4d;
+  --ok-soft: #dff3e8;
+  --warn: #9a6b00;
+  --warn-soft: #fff1cc;
+  --bad: #b42318;
+  --bad-soft: #fde2df;
+  --shadow: 0 1px 0 rgba(0,0,0,.04), 0 12px 32px -18px rgba(20,18,12,.35);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f0e0b;
+    --paper-2: #151310;
+    --card: #17150f;
+    --ink: #ede8db;
+    --ink-2: #b9b2a2;
+    --muted: #8a8374;
+    --line: #2a2720;
+    --line-2: #3a362d;
+    --accent: #ff6a33;
+    --accent-ink: #14100c;
+    --accent-soft: #3a1c10;
+    --ok: #4cc38a;
+    --ok-soft: #12291d;
+    --warn: #e2b53d;
+    --warn-soft: #2e2510;
+    --bad: #f0685c;
+    --bad-soft: #35150f;
+    --shadow: 0 1px 0 rgba(255,255,255,.03), 0 16px 40px -24px rgba(0,0,0,.9);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f0e0b;
+  --paper-2: #151310;
+  --card: #17150f;
+  --ink: #ede8db;
+  --ink-2: #b9b2a2;
+  --muted: #8a8374;
+  --line: #2a2720;
+  --line-2: #3a362d;
+  --accent: #ff6a33;
+  --accent-ink: #14100c;
+  --accent-soft: #3a1c10;
+  --ok: #4cc38a;
+  --ok-soft: #12291d;
+  --warn: #e2b53d;
+  --warn-soft: #2e2510;
+  --bad: #f0685c;
+  --bad-soft: #35150f;
+  --shadow: 0 1px 0 rgba(255,255,255,.03), 0 16px 40px -24px rgba(0,0,0,.9);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Schibsted Grotesk", "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Schibsted Grotesk", "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --shadow-frame: var(--shadow);
+  --radius-frame: 12px;
+}
+
+/* Display type: heavy grotesk, tight, like a sports page */
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+}
+@utility num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html, body { height: 100%; }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+
+/* Placard: museum-label typography used for all metadata */
+.placard {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .02em;
+  color: var(--muted);
+  text-transform: none;
+}
+.smallcaps {
+  font-variant-caps: all-small-caps;
+  letter-spacing: .08em;
+}
+
+/* Frames: how blocks hang on the wall */
+.frame {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-frame);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.frame:has(> .frame-body > [data-ab]:hover) { border-color: var(--line-2); }
+
+/* Picker mode */
+body[data-picking] { cursor: crosshair !important; }
+body[data-picking] * { cursor: crosshair !important; }
+body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--accent) 35%, transparent); outline-offset: 2px; }
+.picker-outline {
+  position: fixed;
+  pointer-events: none;
+  z-index: 60;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--paper), inset 0 0 0 1px var(--paper);
+}
+.picker-outline.is-selected { animation: pickflash .55s ease-out 2; }
+@keyframes pickflash {
+  0%   { box-shadow: 0 0 0 1px var(--paper), inset 0 0 0 1px var(--paper), 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent); }
+  50%  { box-shadow: 0 0 0 1px var(--paper), inset 0 0 0 1px var(--paper), 0 0 0 8px color-mix(in oklab, var(--accent) 22%, transparent); }
+  100% { box-shadow: 0 0 0 1px var(--paper), inset 0 0 0 1px var(--paper), 0 0 0 0 color-mix(in oklab, var(--accent) 0%, transparent); }
+}
+/* corner brackets, in ink, sitting just outside the box */
+.picker-outline::before, .picker-outline::after,
+.picker-outline > i::before, .picker-outline > i::after {
+  content: ""; position: absolute; width: 11px; height: 11px; border: 3px solid var(--ink);
+}
+.picker-outline::before { top: -7px; left: -7px; border-right: 0; border-bottom: 0; }
+.picker-outline::after { top: -7px; right: -7px; border-left: 0; border-bottom: 0; }
+.picker-outline > i::before { bottom: -7px; left: -7px; border-right: 0; border-top: 0; }
+.picker-outline > i::after { bottom: -7px; right: -7px; border-left: 0; border-top: 0; }
+.picker-placard {
+  position: fixed; z-index: 61; pointer-events: none;
+  background: var(--ink); color: var(--paper);
+  padding: 5px 8px; border-radius: 5px;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.3;
+  max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  box-shadow: 0 8px 24px -12px rgba(0,0,0,.5);
+}
+
+/* Live dot */
+@keyframes pulse { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.6); opacity: .45 } }
+.live-dot { display:inline-block; width:7px; height:7px; border-radius:999px; background: var(--ok); animation: pulse 1.8s ease-in-out infinite; }
+.judging-dot { display:inline-block; width:7px; height:7px; border-radius:999px; background: var(--warn); animation: pulse 1s ease-in-out infinite; }
+
+/* Thin scrollbars in rails */
+.rail { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+
+/* Focus */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

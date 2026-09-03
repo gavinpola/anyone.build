@@ -1,0 +1,104 @@
+import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { hasConvex } from "@/core/lib/providers";
+import { tabSessionId } from "@/core/lib/session";
+import { useViewer as useCoreViewer } from "@/core/auth/useViewer";
+import { useRoomPresenceCount } from "@/core/lib/usePresence";
+
+/**
+ * Kit hooks: the only "backend" a block can touch. Backed by Convex when configured; an
+ * in-memory fallback keeps a fresh clone working with zero setup.
+ */
+export type Viewer = { handle: string; avatarUrl: string | null; signedIn: boolean };
+
+export function useViewer(): Viewer {
+  const v = useCoreViewer();
+  return { handle: v.handle, avatarUrl: v.avatarUrl, signedIn: v.signedIn };
+}
+
+export type StoreDoc<T> = { key: string; value: T; by: string | null; at: number };
+
+// ---- in-memory fallback ----
+const memory = new Map<string, StoreDoc<unknown>[]>();
+const listeners = new Map<string, Set<() => void>>();
+function emit(ns: string) {
+  for (const l of listeners.get(ns) ?? []) l();
+}
+function useStoreMock<T>(namespace: string) {
+  const [docs, setDocs] = useState<StoreDoc<T>[]>(() => (memory.get(namespace) ?? []) as StoreDoc<T>[]);
+  useEffect(() => {
+    const set = listeners.get(namespace) ?? new Set();
+    const l = () => setDocs([...(memory.get(namespace) ?? [])] as StoreDoc<T>[]);
+    set.add(l);
+    listeners.set(namespace, set);
+    return () => {
+      set.delete(l);
+    };
+  }, [namespace]);
+  const put = useCallback(
+    (key: string, value: T) => {
+      const next = (memory.get(namespace) ?? []).filter((d) => d.key !== key);
+      next.push({ key, value, by: "you", at: Date.now() });
+      memory.set(namespace, next.slice(-5000));
+      emit(namespace);
+    },
+    [namespace],
+  );
+  const remove = useCallback(
+    (key: string) => {
+      memory.set(namespace, (memory.get(namespace) ?? []).filter((d) => d.key !== key));
+      emit(namespace);
+    },
+    [namespace],
+  );
+  return { docs, put, remove, ready: true };
+}
+
+// ---- convex ----
+function useStoreConvex<T>(namespace: string) {
+  const rows = useQuery(api.store.list, { namespace });
+  const putM = useMutation(api.store.put);
+  const removeM = useMutation(api.store.remove);
+  const put = useCallback((key: string, value: T) => void putM({ namespace, key, value, anonId: tabSessionId() }).catch(() => {}), [putM, namespace]);
+  const remove = useCallback((key: string) => void removeM({ namespace, key }).catch(() => {}), [removeM, namespace]);
+  return { docs: (rows ?? []) as StoreDoc<T>[], put, remove, ready: rows !== undefined };
+}
+
+/**
+ * A tiny per-namespace document store: public read, signed-in write.
+ * Limits: 5,000 docs and 1 MB per namespace, 4 KB per doc, rate-limited writes.
+ */
+export const useStore: <T = unknown>(namespace: string) => { docs: StoreDoc<T>[]; put: (key: string, value: T) => void; remove: (key: string) => void; ready: boolean } =
+  hasConvex ? useStoreConvex : useStoreMock;
+
+function useCounterMock(name: string) {
+  const { docs, put } = useStoreMock<number>("counter:" + name);
+  const value = docs.find((d) => d.key === "value")?.value ?? 0;
+  const bump = useCallback((by = 1) => put("value", value + by), [put, value]);
+  return { value, bump };
+}
+function useCounterConvex(name: string) {
+  const rows = useQuery(api.store.list, { namespace: "counter:" + name });
+  const bumpM = useMutation(api.store.bump);
+  const value = (rows?.find((d) => d.key === "value")?.value as number | undefined) ?? 0;
+  const bump = useCallback((by = 1) => void bumpM({ name, by, anonId: tabSessionId() }).catch(() => {}), [bumpM, name]);
+  return { value, bump };
+}
+/** A shared counter. `bump()` increments for everyone; anonymous visitors may press too. */
+export const useCounter: (name: string) => { value: number; bump: (by?: number) => void } = hasConvex ? useCounterConvex : useCounterMock;
+
+/** How many people are in the room right now. */
+export function useRoomPresence(): { count: number } {
+  return { count: useRoomPresenceCount("main") };
+}
+
+/** A ticking clock, capped at 4 Hz so blocks can't spin. */
+export function useNow(intervalMs = 1000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), Math.max(250, intervalMs));
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return now;
+}

@@ -1,0 +1,44 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test -- --run
+      - run: pnpm build
+      - name: Playground validator (PRs only)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Every PR must keep the agent-editable surface within the rules. Non-playground PRs
+          # (touching core/backend) are gated by CODEOWNERS review instead, so only run when the
+          # diff touches src/rooms.
+          if git diff --name-only ${{ github.event.pull_request.base.sha }}...HEAD | grep -q '^src/rooms/'; then
+            node scripts/validate-playground.mjs --base ${{ github.event.pull_request.base.sha }} --scope large
+          else
+            echo "no room changes"
+          fi
+      - name: Playground PRs may only touch the wall
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'playground')
+        run: |
+          bad=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...HEAD | grep -v '^src/rooms/' || true)
+          if [ -n "$bad" ]; then echo "playground PR touches protected paths:"; echo "$bad"; exit 1; fi

@@ -1,0 +1,4 @@
+# Everything needs a maintainer review, except the wall itself.
+# A line with a path and no owner clears ownership for that path (GitHub semantics).
+*                     @gavinpola
+/src/rooms/

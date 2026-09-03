@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+.vercel
+.convex
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+.ab-out
+.tanstack

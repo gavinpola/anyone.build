@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@gatekeeper/*": [
+        "packages/gatekeeper/src/*"
+      ]
+    },
+    "types": [
+      "vite/client"
+    ],
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "src",
+    "vite.config.ts",
+    "scripts",
+    "sandbox",
+    "packages/gatekeeper/src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "convex"
+  ]
+}

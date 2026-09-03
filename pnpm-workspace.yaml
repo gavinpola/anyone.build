@@ -1,0 +1,10 @@
+packages:
+  - "packages/*"
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@4.0.73'
+  - ai@7.0.91
+  - framer-motion@13.2.0
+  - motion-dom@13.2.0
+  - motion@13.2.0
