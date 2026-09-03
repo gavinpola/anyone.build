@@ -1,5 +1,14 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-03T08:40:58.191Z",
-  "blocks": []
+  "generatedAt": "2026-09-03T09:03:35.756Z",
+  "blocks": [
+    {
+      "id": "hello-wall",
+      "title": "Hello",
+      "description": "A short hello line at the head of the wall for whoever shows up.",
+      "size": "full",
+      "order": 0,
+      "path": "src/rooms/main/blocks/hello-wall.tsx"
+    }
+  ]
 }

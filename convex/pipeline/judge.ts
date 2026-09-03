@@ -79,7 +79,8 @@ export const run = internalAction({
     let first;
     let judgeCents = 0;
     try {
-      const j = await judge(cfg, input);
+      // One retry: cheap models occasionally return JSON the schema can't parse.
+      const j = await judge(cfg, input).catch(() => judge(cfg, input));
       first = j.verdict;
       judgeCents += costCents(j.usage, priceFor(cfg.judgeModel));
     } catch (e) {
