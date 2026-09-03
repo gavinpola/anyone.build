@@ -1,11 +1,12 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { JudgeVerdict, RedTeamVerdict, DiffReview } from "./schemas";
+import { JudgeVerdict, RedTeamVerdict, DiffReview, SecurityReview } from "./schemas";
 import { judgeSystemPrompt, judgeUserPrompt, type JudgeInput } from "./prompts/judge";
 import { redTeamSystemPrompt, redTeamUserPrompt } from "./prompts/redteam";
 import { reviewSystemPrompt, reviewUserPrompt } from "./prompts/review";
 import { triageSystemPrompt, triageUserPrompt } from "./prompts/triage";
+import { securitySystemPrompt, securityUserPrompt } from "./prompts/security";
 
 export type ModelConfig = {
   apiKey: string;
@@ -14,6 +15,8 @@ export type ModelConfig = {
   judgeModel: string;
   redTeamModel: string;
   reviewModel: string;
+  /** the security pass; falls back to the review model */
+  securityModel?: string;
   addendum?: string;
 };
 
@@ -136,4 +139,25 @@ export async function triageNote(
     prompt: triageUserPrompt(input),
   });
   return { triage: r.object, usage: usageOf(r, cfg.model) };
+}
+
+/** The security pass on a diff: a second model, a narrower question, and a deterministic block rule. */
+export async function securityReview(
+  cfg: ModelConfig,
+  input: { prompt: string; plan: string[]; diff: string; fullFiles: Record<string, string> },
+): Promise<{ review: SecurityReview; usage: Usage }> {
+  const model = cfg.securityModel || cfg.reviewModel;
+  const r = await generateObject({
+    model: provider(cfg)(model),
+    schema: SecurityReview,
+    maxOutputTokens: 900,
+    system: securitySystemPrompt(),
+    prompt: securityUserPrompt(input),
+  });
+  return { review: r.object, usage: usageOf(r, model) };
+}
+
+/** Medium or high risk never ships, whatever the model's block flag says. */
+export function securityBlocks(review: SecurityReview): boolean {
+  return review.block || review.risk === "medium" || review.risk === "high";
 }

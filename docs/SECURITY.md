@@ -19,6 +19,10 @@ Every layer below is deterministic and public. Knowing about it doesn't help you
 7. **Branch rules.** `main` requires a PR and green CI; the bot can't bypass; force-push is off; secret scanning and push protection are on.
 8. **Runtime.** CSP, per-block error boundaries, a smoke test on every preview, one-click revert, and strikes that drop trust.
 
+## The security pass
+
+Every diff that survives the validator and the diff review gets a second model, asked only one question: how could this hurt a visitor, the site, or its operators? The prompt is `packages/gatekeeper/src/prompts/security.ts`; the answer is a risk level, concrete findings, and a block flag. Medium or high risk never ships regardless of the flag (`securityBlocks`), the finding text lands in the failed request's record, and the risk level is printed in every pull request body. It runs on a different, cheap model than the reviewer so one model's blind spot isn't the whole story.
+
 ## Known trade-offs
 
 - The judge prompt is public. We think three checks plus deterministic walls beat obscurity, and we'd rather people improve the prompt than guess at it. A short private addendum can be appended at runtime.

@@ -49,6 +49,14 @@ export const DiffReview = z.object({
 });
 export type DiffReview = z.infer<typeof DiffReview>;
 
+export const SecurityReview = z.object({
+  risk: z.enum(["none", "low", "medium", "high"]),
+  findings: z.array(z.string().max(240)).max(6).describe("Concrete: file + what the code does"),
+  block: z.boolean().describe("True if this must not ship as-is"),
+  summary: z.string().max(160),
+});
+export type SecurityReview = z.infer<typeof SecurityReview>;
+
 export const RunResult = z.object({
   ok: z.boolean(),
   summary: z.string().max(200),
