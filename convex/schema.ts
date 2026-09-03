@@ -4,6 +4,7 @@ import { v } from "convex/values";
 export const requestStatus = v.union(
   v.literal("judging"),
   v.literal("needs_human"),
+  v.literal("proposed"), // safe + for-everyone but too big to auto-ship: up for a vote on the leaderboard
   v.literal("rejected"),
   v.literal("queued"),
   v.literal("building"),
@@ -134,6 +135,8 @@ export default defineSchema({
     budgetDay: v.optional(v.string()), // the ET day the reservation was booked on
     settled: v.optional(v.boolean()), // budget settled exactly once
     plusOnes: v.number(),
+    proposalVotes: v.optional(v.number()), // tally while status is "proposed"
+    promotedFrom: v.optional(v.id("requests")), // set on the queued clone when a proposal wins
     pinnedUntil: v.optional(v.number()),
     workflowId: v.optional(v.string()),
     createdAt: v.number(),
@@ -143,7 +146,17 @@ export default defineSchema({
     .index("by_status", ["status", "createdAt"])
     .index("by_user", ["userId", "createdAt"])
     .index("by_guest", ["guestId", "createdAt"])
-    .index("by_room", ["roomId", "createdAt"]),
+    .index("by_room", ["roomId", "createdAt"])
+    .index("by_status_votes", ["status", "proposalVotes"]),
+
+  // One vote per signed-in person on a proposal (a "proposed" request). Guests can't vote.
+  proposalVotes: defineTable({
+    requestId: v.id("requests"),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_request_user", ["requestId", "userId"])
+    .index("by_user", ["userId"]),
 
   changes: defineTable({
     requestId: v.id("requests"),

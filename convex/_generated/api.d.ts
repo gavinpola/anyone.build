@@ -34,6 +34,7 @@ import type * as pipeline_judge from "../pipeline/judge.js";
 import type * as pipeline_source from "../pipeline/source.js";
 import type * as pipeline_state from "../pipeline/state.js";
 import type * as presence from "../presence.js";
+import type * as proposals from "../proposals.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as requests from "../requests.js";
 import type * as rooms_main_poll from "../rooms/main/poll.js";
@@ -81,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "pipeline/source": typeof pipeline_source;
   "pipeline/state": typeof pipeline_state;
   presence: typeof presence;
+  proposals: typeof proposals;
   rateLimits: typeof rateLimits;
   requests: typeof requests;
   "rooms/main/poll": typeof rooms_main_poll;

@@ -1,0 +1,59 @@
+import { useMutation, useQuery } from "convex/react";
+import { ArrowBigUp } from "lucide-react";
+import { api } from "../../../convex/_generated/api";
+import { hasConvex } from "@/core/lib/providers";
+import { timeAgo } from "@/core/lib/useNow";
+import { useViewer } from "@/core/auth/useViewer";
+import { cn } from "@/core/lib/cn";
+
+/** "Up for a vote": safe-but-big asks the crowd decides on. The top one is built each night. */
+export function ProposalsSection() {
+  const rows = useQuery(api.proposals.list, hasConvex ? { limit: 40 } : "skip");
+  const vote = useMutation(api.proposals.vote);
+  const viewer = useViewer();
+  if (!hasConvex || (rows && rows.length === 0)) return null;
+  return (
+    <section>
+      <div className="flex items-baseline justify-between">
+        <h2 className="font-display text-2xl">Up for a vote</h2>
+        <span className="placard">top one ships tonight</span>
+      </div>
+      <p className="mt-1 text-[13px] text-ink-2">
+        Bigger asks don't get turned away — they go here. Sign in to vote; the most-wanted one is built each night, safely.
+      </p>
+      <div className="frame mt-3 overflow-hidden">
+        {rows ? (
+          <ul>
+            {rows.map((p, i) => (
+              <li key={p.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
+                <button
+                  type="button"
+                  onClick={() => (viewer.signedIn ? void vote({ requestId: p.id }).catch(() => {}) : viewer.signIn())}
+                  className={cn(
+                    "flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-md border text-[12px] tabular-nums transition",
+                    p.myVote ? "border-accent bg-accent-soft text-accent" : "border-line bg-card text-ink-2 hover:border-line-2",
+                  )}
+                  aria-pressed={p.myVote}
+                  title={viewer.signedIn ? "Vote" : "Sign in to vote"}
+                >
+                  <ArrowBigUp size={16} />
+                  {p.votes}
+                </button>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px]">{p.prompt}</span>
+                  <span className="placard flex items-center gap-2">
+                    {i === 0 && p.votes > 0 ? <span className="text-accent">leading</span> : null}
+                    <span>{p.scope}</span>
+                    <span>· {timeAgo(p.createdAt)}</span>
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="p-5 text-[14px] text-muted">Loading…</p>
+        )}
+      </div>
+    </section>
+  );
+}

@@ -347,6 +347,13 @@ export const setVerdict = internalMutation({
     if (a.judgeCents && a.judgeCents > 0) await ctx.runMutation(internal.budget.settle, { day: siteDay(), reservedCents: 0, spentCents: a.judgeCents });
     const verdict = { approved: a.approved, category: a.category, hint: a.hint, scope: a.scope, confidence: a.confidence, plan: a.plan, redTeamed: a.redTeamed, model: a.model, touchesBackend: a.touchesBackend };
     if (!a.approved) {
+      // Safe and for-everyone, but bigger than this signed-in requester can auto-ship? It's not a no —
+      // it goes up for a vote. Guests can't propose (voting needs an account), so they still get the no.
+      const propose = a.category === "too_big" && !!r.userId;
+      if (propose) {
+        await ctx.db.patch(a.id, { status: "proposed", verdict, proposalVotes: 0, updatedAt: Date.now() });
+        return { ok: true, queued: false, proposed: true };
+      }
       await ctx.db.patch(a.id, { status: a.needsHuman ? "needs_human" : "rejected", verdict, updatedAt: Date.now() });
       return { ok: true, queued: false };
     }

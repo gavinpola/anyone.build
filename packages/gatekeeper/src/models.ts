@@ -113,11 +113,12 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     out.verdict = "approve";
     if (/too big|can't|cannot|unsure|maintainer|not sure/i.test(out.public_hint)) out.public_hint = "On it. This is a big one, so give it a minute.";
   }
-  // Otherwise "unsure" is not a queue anyone reads: it's a no with advice. (When the proposals board
-  // ships, an in-scope-but-unsure ask becomes a proposal instead of a reject here.)
+  // An unsure hedge that still produced a concrete plan is a big/ambiguous ask, not noise: mark it
+  // too_big so it routes to the proposals board (up for a vote), not a dead reject. Only a hedge with
+  // no plan is a genuine "nothing to build" → unclear.
   if (out.verdict === "needs_human") {
     out.verdict = "reject";
-    out.category = out.category ?? "unclear";
+    out.category = out.plan.length >= 2 ? "too_big" : "unclear";
   }
   if (out.touches_backend && out.verdict === "approve") {
     if (trust < 1) {

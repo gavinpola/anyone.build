@@ -187,6 +187,11 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
                 <p className="text-[14px] font-medium text-ok">It's live.</p>
                 <p className="mt-0.5 text-[13px] text-ink-2">Your change is on the wall for everyone. Watch the feed for the diff.</p>
               </div>
+            ) : request?.status === "proposed" ? (
+              <div className="w-full rounded-md bg-accent-soft p-3">
+                <p className="text-[14px] font-medium text-accent">Up for a vote.</p>
+                <p className="mt-0.5 text-[13px] text-ink-2">This one's big, so the wall put it up for a vote on the leaderboard. The most-wanted one is built each night.</p>
+              </div>
             ) : request?.status === "needs_human" ? (
               <div className="w-full rounded-md bg-warn-soft p-3">
                 <p className="text-[14px] font-medium text-warn">Not this time.</p>

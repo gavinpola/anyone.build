@@ -1,6 +1,7 @@
 export type RequestStatus =
   | "judging"
   | "needs_human"
+  | "proposed"
   | "rejected"
   | "queued"
   | "building"
