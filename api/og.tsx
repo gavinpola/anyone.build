@@ -12,7 +12,9 @@ export const config = { runtime: "nodejs" };
 
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "https://hushed-ladybug-141.convex.cloud";
 
-export default async function handler(req: Request): Promise<Response> {
+// A named GET export is the Web-signature form on the Node runtime (a default export would get Node's
+// request object, whose url is a bare path).
+export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const kind = url.searchParams.get("kind") === "p" ? "p" : "c";
   const id = (url.searchParams.get("id") ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 64);
