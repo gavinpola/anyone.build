@@ -41,6 +41,7 @@ import type * as proposals from "../proposals.js";
 import type * as rateLimits from "../rateLimits.js";
 import type * as requests from "../requests.js";
 import type * as rooms_main_poll from "../rooms/main/poll.js";
+import type * as share from "../share.js";
 import type * as sites from "../sites.js";
 import type * as sitesTriage from "../sitesTriage.js";
 import type * as stats from "../stats.js";
@@ -92,6 +93,7 @@ declare const fullApi: ApiFromModules<{
   rateLimits: typeof rateLimits;
   requests: typeof requests;
   "rooms/main/poll": typeof rooms_main_poll;
+  share: typeof share;
   sites: typeof sites;
   sitesTriage: typeof sitesTriage;
   stats: typeof stats;

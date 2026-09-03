@@ -18,6 +18,8 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SitesRouteImport } from './routes/sites'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as CIdRouteImport } from './routes/c.$id'
+import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as RRoomSlugRouteImport } from './routes/r.$room.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +67,16 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CIdRoute = CIdRouteImport.update({
+  id: '/c/$id',
+  path: '/c/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PIdRoute = PIdRouteImport.update({
+  id: '/p/$id',
+  path: '/p/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RRoomSlugRoute = RRoomSlugRouteImport.update({
   id: '/r/$room/$slug',
   path: '/r/$room/$slug',
@@ -81,6 +93,8 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/c/$id': typeof CIdRoute
+  '/p/$id': typeof PIdRoute
   '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +107,8 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/c/$id': typeof CIdRoute
+  '/p/$id': typeof PIdRoute
   '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRoutesById {
@@ -106,6 +122,8 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/c/$id': typeof CIdRoute
+  '/p/$id': typeof PIdRoute
   '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +138,8 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/c/$id'
+    | '/p/$id'
     | '/r/$room/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +152,8 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/c/$id'
+    | '/p/$id'
     | '/r/$room/$slug'
   id:
     | '__root__'
@@ -144,6 +166,8 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/c/$id'
+    | '/p/$id'
     | '/r/$room/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +181,8 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   SitesRoute: typeof SitesRoute
   TermsRoute: typeof TermsRoute
+  CIdRoute: typeof CIdRoute
+  PIdRoute: typeof PIdRoute
   RRoomSlugRoute: typeof RRoomSlugRoute
 }
 
@@ -225,6 +251,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/c/$id': {
+      id: '/c/$id'
+      path: '/c/$id'
+      fullPath: '/c/$id'
+      preLoaderRoute: typeof CIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$id': {
+      id: '/p/$id'
+      path: '/p/$id'
+      fullPath: '/p/$id'
+      preLoaderRoute: typeof PIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$room/$slug': {
       id: '/r/$room/$slug'
       path: '/r/$room/$slug'
@@ -245,6 +285,8 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   SitesRoute: SitesRoute,
   TermsRoute: TermsRoute,
+  CIdRoute: CIdRoute,
+  PIdRoute: PIdRoute,
   RRoomSlugRoute: RRoomSlugRoute,
 }
 export const routeTree = rootRouteImport

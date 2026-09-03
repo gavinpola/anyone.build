@@ -9,6 +9,14 @@
       "destination": "https://hushed-ladybug-141.convex.site/ask/:path*"
     },
     {
+      "source": "/c/:id",
+      "destination": "/api/share?kind=c&id=:id"
+    },
+    {
+      "source": "/p/:id",
+      "destination": "/api/share?kind=p&id=:id"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

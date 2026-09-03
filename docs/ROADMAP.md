@@ -60,6 +60,13 @@ Gavin's machine: Apple M4, 16 GB, Ollama installed but no models pulled. The pip
 
 - [ ] Wire a dev profile: `MODEL_BASE_URL=http://localhost:11434/v1` + local model names so `pnpm dev` uses Ollama when it's running, falling back to cloud otherwise. Pull `qwen2.5-coder:7b` (coder) and `qwen2.5:3b` (judge/triage).
 
+## Sharing (shipped 2026-09-03, phase 1)
+
+- [x] **Share links that unfurl.** `/c/<request id>` (a change) and `/p/<request id>` (a proposal) are real routes: the wall or the vote board, scrolled to the thing, ringed, with a bar saying who asked for what. A Vercel edge function (`api/share.ts`) serves the app's own HTML with per-change preview tags, and `api/og.tsx` renders the preview image (the ask in big type, who asked, the site) so a link looks right in iMessage / Slack / X. Share buttons at the three moments that matter: the composer's "It's live" and "Up for a vote" panels, the feed card, the ledger rows, and the vote-board rows. Native share sheet on phones, copy-the-link elsewhere. Only public things are shareable (rejected/failed asks stay private).
+- [ ] **Phase 2: bring a friend.** Every share link carries `?via=<handle>`; a newcomer's first *live* change within 7 days credits "brought by" on the leaderboard (a tile: builders you've brought). Counts only landed changes, so it can't be gamed by signing up alts. Needs a `users.broughtBy` field, the claim flow to carry it, and a small leaderboard tile.
+- [ ] **Phase 2: a builder page to share.** `/u/<handle>`: their changes, their blocks, a share button. The leaderboard's profile query already exists.
+- [ ] **Later:** dynamic preview images that render the actual block (screenshot on merge via the preview deploy); "share the wall as it is right now" snapshots.
+
 ## Polish & smaller things
 
 - [ ] Header live counters — done this tick (number-forward). Watch for more "feels weak" spots (the patron slot pill next).

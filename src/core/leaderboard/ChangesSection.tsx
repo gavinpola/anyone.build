@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
+import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { ArrowBigUp, GitPullRequest } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
@@ -42,6 +43,7 @@ export function ChangesSection() {
                     <span className="text-ok">+{c.linesAdded}</span> <span className="text-bad">−{c.linesRemoved}</span>
                   </span>
                 </span>
+                  <ShareButton compact url={shareUrl("c", c.requestId)} title={c.summary || "A change on the wall"} text="Made on anyone.build, the website anyone can change" />
                 {c.prUrl && c.prUrl.startsWith("https://") ? (
                   <a href={c.prUrl} target="_blank" rel="noopener noreferrer" className="placard inline-flex items-center gap-1 hover:text-accent">
                     <GitPullRequest size={12} /> PR

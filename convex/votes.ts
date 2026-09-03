@@ -48,6 +48,7 @@ export const recentChanges = query({
       }
       out.push({
         id: c._id,
+        requestId: c.requestId,
         summary: c.summary,
         by: { handle: u?.handle ?? "a guest", avatarUrl: u?.avatarUrl ?? null },
         mine: viewer ? c.userId === viewer._id : false,

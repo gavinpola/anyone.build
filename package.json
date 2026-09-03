@@ -34,6 +34,7 @@
     "@octokit/rest": "^22.0.1",
     "@openrouter/ai-sdk-provider": "^3.0.0",
     "@tanstack/react-router": "^1.170.32",
+    "@vercel/og": "^1.0.2",
     "@vercel/sandbox": "^3.2.1",
     "ai": "^7.0.91",
     "better-auth": "~1.6.11",

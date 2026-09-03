@@ -198,3 +198,11 @@ body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--a
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* A shared link lands here: ring the thing for a moment. */
+.share-ring {
+  outline: 2px solid var(--color-accent, #ffd84d);
+  outline-offset: 6px;
+  border-radius: 12px;
+  transition: outline-color 1.2s ease;
+}

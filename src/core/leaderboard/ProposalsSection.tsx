@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
+import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { ArrowBigUp } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
@@ -25,7 +26,7 @@ export function ProposalsSection() {
         {rows ? (
           <ul>
             {rows.map((p, i) => (
-              <li key={p.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
+              <li key={p.id} data-proposal={p.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
                 <button
                   type="button"
                   onClick={() => (viewer.signedIn ? void vote({ requestId: p.id }).catch(() => {}) : viewer.signIn())}
@@ -47,6 +48,7 @@ export function ProposalsSection() {
                     <span>· {timeAgo(p.createdAt)}</span>
                   </span>
                 </span>
+                <ShareButton compact url={shareUrl("p", p.id)} title={p.prompt} text="Vote for this on anyone.build" />
               </li>
             ))}
           </ul>
