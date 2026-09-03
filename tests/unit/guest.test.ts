@@ -24,7 +24,7 @@ describe("scopeGate", () => {
   it("new accounts are tiny-only; builders get a human for bigger asks", () => {
     expect(scopeGate(0, "small").allowed).toBe(true);
     expect(scopeGate(0, "medium").category).toBe("too_big");
-    expect(scopeGate(1, "medium").needsHuman).toBe(true);
+    expect(scopeGate(1, "medium")).toMatchObject({ allowed: false, needsHuman: false, category: "too_big" });
     expect(scopeGate(2, "medium").allowed).toBe(true);
     expect(scopeGate(3, "large").allowed).toBe(true);
   });

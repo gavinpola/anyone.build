@@ -104,7 +104,7 @@ function Flagged() {
   );
 }
 
-const EDITABLE: Array<{ key: string; label: string; kind: "number" | "text" }> = [
+const EDITABLE: Array<{ key: string; label: string; kind: "number" | "text" | "bool" }> = [
   { key: "dailyBudgetCents", label: "Daily AI budget (cents)", kind: "number" },
   { key: "maxConcurrentBuilds", label: "Concurrent builds", kind: "number" },
   { key: "minBidCents", label: "Minimum bid (cents)", kind: "number" },
@@ -115,6 +115,8 @@ const EDITABLE: Array<{ key: string; label: string; kind: "number" | "text" }> =
   { key: "reviewModel", label: "Review model", kind: "text" },
   { key: "coderModel", label: "Coder model", kind: "text" },
   { key: "maxTurns", label: "Max agent steps", kind: "number" },
+  { key: "guestsEnabled", label: "Guests can ask (no account)", kind: "bool" },
+  { key: "backendEnabled", label: "Room functions (agent-written backend)", kind: "bool" },
 ];
 
 function Config() {
@@ -132,15 +134,26 @@ function Config() {
             <label key={f.key} className="flex flex-col gap-1 text-[13px]">
               <span className="text-ink-2">{f.label}</span>
               <span className="flex gap-2">
-                <input
-                  value={val}
-                  onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
-                  className="h-9 flex-1 rounded-md border border-line bg-paper px-2 font-mono text-[13px]"
-                />
+                {f.kind === "bool" ? (
+                  <select
+                    value={val}
+                    onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
+                    className="h-9 flex-1 rounded-md border border-line bg-paper px-2 font-mono text-[13px]"
+                  >
+                    <option value="true">on</option>
+                    <option value="false">off</option>
+                  </select>
+                ) : (
+                  <input
+                    value={val}
+                    onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
+                    className="h-9 flex-1 rounded-md border border-line bg-paper px-2 font-mono text-[13px]"
+                  />
+                )}
                 <button
                   type="button"
                   disabled={val === cur}
-                  onClick={() => void set({ key: f.key, value: f.kind === "number" ? Number(val) : val }).then(() => setDraft((d) => ({ ...d, [f.key]: undefined as never })))}
+                  onClick={() => void set({ key: f.key, value: f.kind === "number" ? Number(val) : f.kind === "bool" ? val === "true" : val }).then(() => setDraft((d) => ({ ...d, [f.key]: undefined as never })))}
                   className="h-9 rounded-md border border-line px-3 disabled:opacity-40"
                 >
                   Save

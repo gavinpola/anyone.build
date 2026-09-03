@@ -4,7 +4,6 @@ import { RoomContext } from "@/kit/room-context";
 import { pagesFor } from "./pages";
 import { cn } from "@/core/lib/cn";
 import { BlockBoundary } from "@/core/lib/BlockBoundary";
-import { Placard } from "@/core/lib/Placard";
 import { room } from "@/rooms/main/room";
 
 // Every file in src/rooms/main/blocks is a block. Adding one never touches another file.
@@ -77,8 +76,7 @@ export function Room() {
                 <Component />
               </BlockBoundary>
             </div>
-            <Placard blockId={meta.id} title={meta.title} path={path} />
-          </section>
+            </section>
         ))}
 
         {/* The open wall: pointing here means "add a block". Always present; it's the whole wall when empty. */}

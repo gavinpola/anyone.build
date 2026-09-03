@@ -51,7 +51,9 @@ function Board({ period, metric, title }: { period: Period; metric: "changes" | 
                 <span className={cn("font-display num relative w-8 text-xl", i === 0 ? "text-accent" : "text-ink-2")}>{i + 1}</span>
                 <Avatar handle={r.handle} url={r.avatarUrl} size={24} />
                 <span className="relative min-w-0 flex-1 truncate text-[15px] font-medium">@{r.handle}</span>
-                <span className="placard relative hidden sm:inline">{r.standing} standing</span>
+                <span className="placard relative hidden sm:inline">
+                  {r.standing} {r.standing === 1 ? "change" : "changes"} standing
+                </span>
                 <span className="font-display num relative text-xl">{n(v)}</span>
               </li>
             );

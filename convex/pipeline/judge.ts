@@ -30,7 +30,7 @@ export const run = internalAction({
       const res = await ctx.runMutation(internal.requests.setVerdict, {
         id: requestId,
         approved: !bad && gate.allowed,
-        needsHuman: !bad && !gate.allowed && gate.needsHuman,
+        needsHuman: false,
         category: bad ?? (gate.allowed ? undefined : (gate.category ?? undefined)),
         hint: bad ? "That one doesn't fit the wall's rules." : gate.allowed ? "Looks good for everyone." : gate.hint,
         scope,
@@ -46,7 +46,7 @@ export const run = internalAction({
     if (!apiKey) {
       // No judge configured: fail closed, but tell the requester something useful.
       await ctx.runMutation(internal.requests.setVerdict, {
-        id: requestId, approved: false, needsHuman: true, hint: "The judge isn't set up yet; a maintainer will look.", scope: "tiny", confidence: 0, plan: [], redTeamed: false, model: "none", capCents: 0,
+        id: requestId, approved: false, needsHuman: false, category: "unclear", hint: "The judge isn't set up yet. Try again later.", scope: "tiny", confidence: 0, plan: [], redTeamed: false, model: "none", capCents: 0,
       });
       return;
     }
@@ -80,26 +80,29 @@ export const run = internalAction({
     let first;
     let judgeCents = 0;
     try {
-      // One retry: cheap models occasionally return JSON the schema can't parse.
-      const j = await judge(cfg, input).catch(() => judge(cfg, input));
+      // Cheap models occasionally return JSON the schema can't parse: retry once, then try the other vendor.
+      const j = await judge(cfg, input)
+        .catch(() => judge(cfg, input))
+        .catch(() => judge({ ...cfg, judgeModel: cfg.redTeamModel }, input));
       first = j.verdict;
       judgeCents += costCents(j.usage, priceFor(cfg.judgeModel));
     } catch (e) {
       await ctx.runMutation(internal.requests.setVerdict, {
-        id: requestId, approved: false, needsHuman: true, hint: "The judge stumbled; a maintainer will look.", scope: "tiny", confidence: 0, plan: [], redTeamed: false, model: cfg.judgeModel, capCents: 0,
+        id: requestId, approved: false, needsHuman: false, category: "unclear", hint: "The judge couldn't read that one. Try again in a minute, or say it more plainly.", scope: "tiny", confidence: 0, plan: [], redTeamed: false, model: cfg.judgeModel, capCents: 0,
       });
       console.error("judge failed", e);
       return;
     }
 
+    // Nobody reviews an "unsure" queue, so unsure is a no with advice on how to re-ask.
     let approved = first.verdict === "approve";
-    let needsHuman = first.verdict === "needs_human";
-    let category = first.category ?? undefined;
+    const needsHuman = false;
+    let category = first.category ?? (first.verdict === "needs_human" ? "unclear" : undefined);
     let hint = first.public_hint;
     if (approved && first.touches_backend && !config.backendEnabled) {
       approved = false;
-      needsHuman = true;
-      hint = "That needs a room function, which is opening soon; a maintainer will look.";
+      category = "too_big";
+      hint = "That needs a room function, which isn't open yet. Ask for the part that doesn't need one.";
     }
     let redTeamed = false;
     const order = ["tiny", "small", "medium", "large"];
@@ -112,15 +115,14 @@ export const run = internalAction({
         const rt = rtRes.verdict;
         if (rt.block) {
           approved = false;
-          needsHuman = rt.confidence < 0.6;
           category = rt.category ?? "unsafe_code";
           hint = rt.public_hint || hint;
         }
       } catch (e) {
         console.error("red team failed", e);
         approved = false;
-        needsHuman = true;
-        hint = "Needs a second look from a maintainer.";
+        category = "unclear";
+        hint = "Couldn't get a second opinion on that one. Try again in a minute.";
       }
     }
 

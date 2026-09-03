@@ -94,7 +94,7 @@ export function scopeGate(trust: number, scope: JudgeVerdict["scope"]): { allowe
   if (SCOPE_ORDER.indexOf(scope) <= SCOPE_ORDER.indexOf(max)) return { allowed: true, needsHuman: false, category: null, hint: "" };
   if (trust < 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "Guests can make small changes. Sign in with GitHub for bigger ones." };
   if (trust === 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "Start small; bigger changes unlock as your work stays up." };
-  return { allowed: false, needsHuman: true, category: null, hint: "That's a bigger change than we auto-ship; a maintainer will look." };
+  return { allowed: false, needsHuman: false, category: "too_big", hint: "That's bigger than we auto-ship. Split it into smaller asks." };
 }
 
 /** Deterministic guardrails on top of the model's answer. */
@@ -103,9 +103,14 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
   const trust = input.requester.trust;
   const gate = scopeGate(trust, out.scope);
   if (out.verdict === "approve" && !gate.allowed) {
-    out.verdict = gate.needsHuman ? "needs_human" : "reject";
+    out.verdict = "reject";
     out.category = gate.category;
     out.public_hint = gate.hint;
+  }
+  // Nobody reviews an "unsure" queue: unsure is a no, and the hint says how to re-ask.
+  if (out.verdict === "needs_human") {
+    out.verdict = "reject";
+    out.category = out.category ?? "unclear";
   }
   if (out.touches_backend && out.verdict === "approve") {
     if (trust < 1) {
@@ -117,8 +122,9 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
   if (out.verdict === "reject" && !out.category) out.category = "unclear";
   if (out.verdict !== "reject") out.category = null;
   if (out.verdict === "approve" && out.plan.length === 0) {
-    out.verdict = "needs_human";
-    out.public_hint = "Couldn't turn that into concrete steps; a maintainer will take a look.";
+    out.verdict = "reject";
+    out.category = "unclear";
+    out.public_hint = "Couldn't turn that into concrete steps. Say what should change, and where.";
   }
   // Never let a hint leak the machinery
   if (/constitution|system prompt|instruction|judge|gatekeeper/i.test(out.public_hint)) {

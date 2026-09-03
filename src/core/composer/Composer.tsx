@@ -189,7 +189,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
               </div>
             ) : request?.status === "needs_human" ? (
               <div className="w-full rounded-md bg-warn-soft p-3">
-                <p className="text-[14px] font-medium text-warn">A human will look.</p>
+                <p className="text-[14px] font-medium text-warn">Not this time.</p>
                 <p className="mt-0.5 text-[13px] text-ink-2">{request.verdict?.hint || "This one is bigger or blurrier than the machine ships on its own."}</p>
               </div>
             ) : request?.status === "failed" || request?.status === "cancelled" ? (

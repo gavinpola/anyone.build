@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { RoomContext } from "@/kit/room-context";
 import { BlockBoundary } from "@/core/lib/BlockBoundary";
-import { Placard } from "@/core/lib/Placard";
 import { FeedRail } from "@/core/feed/FeedRail";
 import { findPage } from "./pages";
 
@@ -40,7 +39,6 @@ export function PageView({ room, slug }: { room: string; slug: string }) {
               <Component />
             </BlockBoundary>
           </div>
-          <Placard blockId={blockId} title={meta.title} path={path} />
         </section>
         <FeedRail />
       </div>
