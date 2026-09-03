@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction, internalMutation } from "../_generated/server";
 import { getAllConfig } from "../config";
+import { fastEligible } from "./fastRules";
 
 /**
  * Executor entry. `EXECUTOR=sandbox` runs the real Vercel Sandbox pipeline (pipeline/build.ts);
@@ -66,8 +67,13 @@ export const start = internalAction({
     if (process.env.EXECUTOR === "sandbox") {
       let outcome: string | undefined;
       try {
-        await ctx.runAction(internal.pipeline.build.run, { requestId });
-        outcome = (await ctx.runQuery(internal.requests.getInternal, { id: requestId }))?.request.status;
+        // A tiny change to one existing file: one model call, no sandbox. Falls back to the sandbox when unusable.
+        const config = await ctx.runQuery(internal.config.all, {});
+        const fast = fastEligible(data.request, config);
+        let handled = false;
+        if (fast.ok) handled = (await ctx.runAction(internal.pipeline.fast.run, { requestId })).handled;
+        if (!handled) await ctx.runAction(internal.pipeline.build.run, { requestId });
+        outcome =(await ctx.runQuery(internal.requests.getInternal, { id: requestId }))?.request.status;
       } finally {
         // The block lock lives until the change is live or dead (state.markLiveBySha / state.fail / cancel release it).
         if (!outcome || !["preview", "merging"].includes(outcome)) await ctx.runMutation(internal.pipeline.executor.release, { requestId });

@@ -22,6 +22,7 @@ Vercel production deploy → the wall changes for everyone
 | submit | `convex/requests.ts` | auth, trust, rate limits, dedupe (+1), target path check |
 | judge | `convex/pipeline/judge.ts` | `packages/gatekeeper` judge → optional red team → verdict, scope, plan; budget reserved |
 | queue | `convex/pipeline/executor.ts` | one build per block, global concurrency cap |
+| fast path | `convex/pipeline/fast.ts` | tiny scope on one existing block/page file: one model call rewrites the file, a unified diff is generated in Convex, no sandbox; CI is the typecheck. Unusable reply → requeue → sandbox |
 | build | `convex/pipeline/build.ts` | Vercel Sandbox: install, run `sandbox/runner.mjs`, read the diff |
 | validate | `packages/gatekeeper/src/validate` | paths, sizes, forbidden code, secrets |
 | review | `reviewDiff` | does the diff do only what was approved? |

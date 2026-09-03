@@ -26,6 +26,9 @@ export const DEFAULTS = {
   reviewModel: "qwen/qwen3-coder-next",
   securityModel: "google/gemini-3.1-flash-lite",
   coderModel: "deepseek/deepseek-v4-flash-0731",
+  // Tiny asks on one existing file: one model call, no sandbox (pipeline/fast.ts); the sandbox is the fallback.
+  fastPathEnabled: true,
+  fastModel: "", // empty = coderModel
   maxTurns: 40,
   sandboxTimeoutMs: 12 * 60 * 1000,
 } as const;
@@ -63,6 +66,8 @@ export const publicConfig = query({
       patronTopUpPct: c.patronTopUpPct,
       judgeModel: c.judgeModel,
       coderModel: c.coderModel,
+      fastPathEnabled: c.fastPathEnabled,
+      fastModel: c.fastModel,
     };
   },
 });

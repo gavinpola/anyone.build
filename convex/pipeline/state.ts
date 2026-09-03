@@ -39,6 +39,16 @@ export const fail = internalMutation({
   },
 });
 
+/** Fast path → sandbox: put an in-flight request back in the queue, keeping what the attempt cost. */
+export const requeue = internalMutation({
+  args: { id: v.id("requests"), costCents: v.optional(v.number()) },
+  handler: async (ctx, { id, costCents }) => {
+    const r = await ctx.db.get(id);
+    if (!r || !["queued", "building", "validating", "reviewing"].includes(r.status)) return;
+    await ctx.db.patch(id, { status: "queued", stage: undefined, run: { ...(r.run ?? {}), costCents: costCents ?? r.run?.costCents }, updatedAt: Date.now() });
+  },
+});
+
 export const setPreview = internalMutation({
   args: { id: v.id("requests"), previewUrl: v.string() },
   handler: async (ctx, { id, previewUrl }) => {

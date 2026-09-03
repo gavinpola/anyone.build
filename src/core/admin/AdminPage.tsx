@@ -115,6 +115,8 @@ const EDITABLE: Array<{ key: string; label: string; kind: "number" | "text" | "b
   { key: "reviewModel", label: "Review model", kind: "text" },
   { key: "coderModel", label: "Coder model", kind: "text" },
   { key: "maxTurns", label: "Max agent steps", kind: "number" },
+  { key: "fastPathEnabled", label: "Fast path (tiny asks skip the sandbox)", kind: "bool" },
+  { key: "fastModel", label: "Fast path model (empty = coder model)", kind: "text" },
   { key: "guestsEnabled", label: "Guests can ask (no account)", kind: "bool" },
   { key: "backendEnabled", label: "Room functions (agent-written backend)", kind: "bool" },
 ];

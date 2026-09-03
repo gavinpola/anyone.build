@@ -30,6 +30,8 @@ import type * as patrons from "../patrons.js";
 import type * as payments from "../payments.js";
 import type * as pipeline_build from "../pipeline/build.js";
 import type * as pipeline_executor from "../pipeline/executor.js";
+import type * as pipeline_fast from "../pipeline/fast.js";
+import type * as pipeline_fastRules from "../pipeline/fastRules.js";
 import type * as pipeline_github from "../pipeline/github.js";
 import type * as pipeline_judge from "../pipeline/judge.js";
 import type * as pipeline_source from "../pipeline/source.js";
@@ -79,6 +81,8 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   "pipeline/build": typeof pipeline_build;
   "pipeline/executor": typeof pipeline_executor;
+  "pipeline/fast": typeof pipeline_fast;
+  "pipeline/fastRules": typeof pipeline_fastRules;
   "pipeline/github": typeof pipeline_github;
   "pipeline/judge": typeof pipeline_judge;
   "pipeline/source": typeof pipeline_source;

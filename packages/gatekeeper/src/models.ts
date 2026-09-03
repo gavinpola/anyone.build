@@ -1,5 +1,5 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 import { JudgeVerdict, RedTeamVerdict, DiffReview, SecurityReview } from "./schemas";
 import { judgeSystemPrompt, judgeUserPrompt, type JudgeInput } from "./prompts/judge";
@@ -235,6 +235,20 @@ export async function securityReview(
     prompt: securityUserPrompt(input),
   });
   return { review: { ...r.object, findings: clampList(r.object.findings, 6, 240), summary: clampStr(r.object.summary, 160) }, usage: usageOf(r, model) };
+}
+
+/** One plain-text completion: the fast path's whole-file rewrite. The caller parses and validates the reply. */
+export async function fastRewrite(cfg: Pick<ModelConfig, "apiKey" | "baseURL">, input: { model: string; system: string; prompt: string; maxOutputTokens?: number }): Promise<{ text: string; usage: Usage }> {
+  const or = provider(cfg);
+  const r = await generateText({
+    model: or.chat(input.model),
+    system: input.system,
+    prompt: input.prompt,
+    temperature: 0,
+    maxOutputTokens: input.maxOutputTokens ?? 8000, // a 400-line block is ~4k tokens
+    maxRetries: 2,
+  });
+  return { text: r.text, usage: usageOf(r, input.model) };
 }
 
 /**

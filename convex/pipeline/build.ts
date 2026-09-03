@@ -82,7 +82,7 @@ export const run = internalAction({
       networkPolicy: networkPolicy as never,
     });
 
-    let cost = 0;
+    let cost = request.run?.costCents ?? 0; // a fast-path attempt that fell back already spent a little
     try {
       if (snapshotId) {
         await sandbox.runCommand("git", ["fetch", "--depth", "50", "origin", baseSha]);
