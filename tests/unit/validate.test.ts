@@ -43,3 +43,16 @@ describe("validateDiff", () => {
     expect(validateDiff(mk("src/rooms/main/blocks/a.tsx", ['<a href="x">']), "small").problems.join()).toMatch(/forbidden/);
   });
 });
+
+describe("pages", () => {
+  it("allows new page files and maps them to page:<slug> ids", async () => {
+    const { isAllowedNewFile, blockIdFromPath, isAllowedPath } = await import("../../packages/gatekeeper/src/validate/paths.js");
+    expect(isAllowedNewFile("src/rooms/main/pages/guestbook.tsx")).toBe(true);
+    expect(isAllowedNewFile("src/rooms/main/pages/Nope.tsx")).toBe(false);
+    expect(isAllowedNewFile("src/rooms/main/pages/deep/x.tsx")).toBe(false);
+    expect(isAllowedPath("src/rooms/main/pages/guestbook.tsx")).toBe(true);
+    expect(blockIdFromPath("src/rooms/main/pages/guestbook.tsx")).toBe("page:guestbook");
+    expect(blockIdFromPath("src/rooms/main/blocks/hello.tsx")).toBe("hello");
+    expect(blockIdFromPath("src/rooms/main/room.ts")).toBeNull();
+  });
+});

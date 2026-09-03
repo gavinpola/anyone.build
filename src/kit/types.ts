@@ -16,3 +16,18 @@ export type BlockModule = {
   default: React.ComponentType;
   block: BlockMeta;
 };
+
+/** Metadata every page exports as `page`. Pages are routes: /r/<room>/<slug>. */
+export type PageMeta = {
+  /** URL slug, kebab-case, unique within the room. Never change it once live. */
+  slug: string;
+  /** Shown in the room's Pages strip and on the placard. */
+  title: string;
+  /** One line, shown to the judge and in the manifest. */
+  description: string;
+};
+
+export type PageModule = {
+  default: React.ComponentType;
+  page: PageMeta;
+};

@@ -29,7 +29,7 @@ function walk(node: unknown, visit: (n: Node) => void) {
 
 export function stampSource(opts: { root: string; include?: RegExp }): Plugin {
   // src/rooms is the real surface; docs/examples/blocks only ever mounts in dev (VITE_E2E_BLOCKS).
-  const include = opts.include ?? /[\\/](src[\\/]rooms|docs[\\/]examples[\\/]blocks)[\\/].*\.tsx$/;
+  const include = opts.include ?? /[\\/](src[\\/]rooms|docs[\\/]examples[\\/](blocks|pages))[\\/].*\.tsx$/;
   return {
     name: "anyone:stamp-source",
     enforce: "pre",

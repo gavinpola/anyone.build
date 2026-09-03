@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-03T09:03:35.756Z",
+  "generatedAt": "2026-09-03T11:25:28.305Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -9,6 +9,15 @@
       "size": "full",
       "order": 0,
       "path": "src/rooms/main/blocks/hello-wall.tsx"
+    },
+    {
+      "id": "welcome-message",
+      "title": "Welcome",
+      "description": "A small line inviting everyone to add something to the wall.",
+      "size": "full",
+      "order": 1,
+      "path": "src/rooms/main/blocks/welcome-message.tsx"
     }
-  ]
+  ],
+  "pages": []
 }

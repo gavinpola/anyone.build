@@ -18,6 +18,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SitesRouteImport } from './routes/sites'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as RRoomSlugRouteImport } from './routes/r.$room.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RRoomSlugRoute = RRoomSlugRouteImport.update({
+  id: '/r/$room/$slug',
+  path: '/r/$room/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/r/$room/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/r/$room/$slug'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/r/$room/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   SitesRoute: typeof SitesRoute
   TermsRoute: typeof TermsRoute
+  RRoomSlugRoute: typeof RRoomSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/r/$room/$slug': {
+      id: '/r/$room/$slug'
+      path: '/r/$room/$slug'
+      fullPath: '/r/$room/$slug'
+      preLoaderRoute: typeof RRoomSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   SitesRoute: SitesRoute,
   TermsRoute: TermsRoute,
+  RRoomSlugRoute: RRoomSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
