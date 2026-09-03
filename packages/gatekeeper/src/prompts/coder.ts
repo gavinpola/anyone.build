@@ -9,6 +9,7 @@ export function coderSystemPrompt() {
     `- Keep the change as small as the request allows. Don't reformat unrelated code. Don't touch other blocks unless the plan says so.`,
     `- A block is one file in src/rooms/main/blocks/<slug>.tsx exporting a default component and \`export const block: BlockMeta = { id, title, description, order, size }\`. To add a block, create a new file; never edit the room layout.`,
     `- Mobile matters: use the kit's Stack/Row/Card/Button and Tailwind utility classes that already exist in the codebase.`,
+    `- Write real copy for the people who will see it, short and in plain words. Never paste the request text or the plan into the UI; the request says what to make, not what it should say.`,
     ``,
     `Process: read the target file (and @/kit/index.ts if you need the API), make the edit with edit_file (preferred) or write_file, then call run_checks. If checks fail, read the errors, fix, and run again (max 3 tries). Finish by replying with a single JSON object: {"summary": "<one plain line for the public feed>", "files": ["..."]}. No prose.`,
   ].join("\n");
