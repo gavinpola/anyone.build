@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { rateLimiter } from "./rateLimits";
 
 /** Requests waiting on a human expire after a day so the queue never rots and never swallows new asks. */
 export const expireNeedsHuman = internalMutation({
@@ -15,5 +16,30 @@ export const expireNeedsHuman = internalMutation({
       });
     }
     return rows.length;
+  },
+});
+
+/**
+ * Reset everyone's per-person submit windows. A fixed-window bucket stores tokens REMAINING, so
+ * loosening a limit doesn't unblock a window that was already exhausted under the old rate until it
+ * rolls over. Run this once after raising the submit caps. Keys are handled server-side only.
+ */
+export const resetSubmitWindows = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let n = 0;
+    const guests = await ctx.db.query("guests").take(5000);
+    for (const g of guests) {
+      await rateLimiter.reset(ctx, "submitGuest", { key: `g:${g.guestId}` });
+      n++;
+    }
+    const users = await ctx.db.query("users").take(5000);
+    for (const u of users) {
+      for (const name of ["submitTrust0", "submitTrust1", "submitTrust2", "submitTrust3"] as const) {
+        await rateLimiter.reset(ctx, name, { key: u._id });
+      }
+      n++;
+    }
+    return { reset: n };
   },
 });
