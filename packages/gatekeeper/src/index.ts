@@ -12,7 +12,7 @@ export { SCOPE_CAP_CENTS, costCents, priceFor, PRICES } from "./budget";
 
 export { triageNote, NoteTriage } from "./models";
 export { triageSystemPrompt, triageUserPrompt } from "./prompts/triage";
-export { securityReview, securityBlocks, resourceOnly, fastRewrite } from "./models";
+export { securityReview, securityBlocks, resourceOnly, fastRewrite, reviewBlocks, reviewNote } from "./models";
 export { fastSystemPrompt, fastUserPrompt, extractRewrite } from "./prompts/fast";
 export { unifiedDiff } from "./patch";
 export { SecurityReview } from "./schemas";

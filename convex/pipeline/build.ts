@@ -3,7 +3,7 @@ import { Sandbox } from "@vercel/sandbox";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
-import { coderSystemPrompt, coderUserPrompt, reviewDiff, securityReview, securityBlocks, resourceOnly, validateDiff, costCents, priceFor, type ModelConfig } from "../../packages/gatekeeper/src/index";
+import { coderSystemPrompt, coderUserPrompt, reviewDiff, reviewBlocks, reviewNote, securityReview, securityBlocks, resourceOnly, validateDiff, costCents, priceFor, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { octokit, headSha, commitFiles, openPullRequest } from "./github";
 
 type RunnerResult = { ok: boolean; summary: string; files: string[]; steps: number; inputTokens: number; outputTokens: number; checks: Record<string, boolean>; error?: string };
@@ -104,7 +104,7 @@ export const run = internalAction({
       const line = stdout.split("\n").reverse().find((l) => l.startsWith("AB_RESULT "));
       const result: RunnerResult | null = line ? (JSON.parse(line.slice("AB_RESULT ".length)) as RunnerResult) : null;
       const price = priceFor(coderModel);
-      cost = result ? costCents({ inputTokens: result.inputTokens, outputTokens: result.outputTokens }, price) : 0;
+      cost += result ? costCents({ inputTokens: result.inputTokens, outputTokens: result.outputTokens }, price) : 0;
       if (!result || !result.ok) {
         // Keep only the runner's own log lines in the stored error; the model SDK's stderr is noise.
         const runnerLog = (await runner.stderr()).split("\n").filter((l) => l.startsWith("[runner")).join("\n").slice(-1500);
@@ -145,10 +145,12 @@ export const run = internalAction({
       };
       const { review, usage } = await reviewDiff(cfg, { prompt: request.prompt, plan: verdict.plan, diff });
       cost += costCents(usage, priceFor(cfg.reviewModel));
-      if (!review.approve || !review.matches_request || review.safety_concerns.length) {
-        await fail("unsafe_code", "The reviewer wasn't comfortable with that diff.", [...review.safety_concerns, ...review.hidden_behavior].join("; ") || "review rejected", cost);
+      if (reviewBlocks(review)) {
+        await fail("unsafe_code", "The reviewer wasn't comfortable with that diff.", [...review.safety_concerns, ...review.hidden_behavior].join("; ") + (review.summary ? ` (${review.summary})` : ""), cost);
         return;
       }
+      const reviewDoubts = reviewNote(review);
+      if (reviewDoubts) console.warn("diff review doubts (shipping anyway):", reviewDoubts, review.summary);
 
       // The security pass: a different model asked only "how could this hurt someone?"
       await set("reviewing", "security review");
@@ -169,7 +171,7 @@ export const run = internalAction({
       const pr = await openPullRequest(kit, {
         branch,
         title: review.summary || result.summary,
-        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`, ``, `Opened automatically by anyone.build.`].join("\n"),
+        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)}${reviewDoubts ? " · " + reviewDoubts : ""} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`, ``, `Opened automatically by anyone.build.`].join("\n"),
         labels: ["playground"],
       });
       await set("preview", undefined, {

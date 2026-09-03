@@ -57,7 +57,15 @@ export const run = internalAction({
       judgeModel: process.env.JUDGE_MODEL || config.judgeModel,
       redTeamModel: process.env.REDTEAM_MODEL || config.redTeamModel,
       reviewModel: process.env.REVIEW_MODEL || config.reviewModel,
-      addendum: process.env.JUDGE_ADDENDUM || undefined,
+      addendum:
+        [
+          process.env.JUDGE_ADDENDUM,
+          !config.backendEnabled
+            ? "Room functions (backend) are switched off right now: plan shared state with the kit store (useStore/useCounter) whenever the ask can be met that way, and set touches_backend=true only if it truly can't."
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n") || undefined,
     };
 
     const [manifest, snippet, recentChanges] = await Promise.all([
@@ -102,14 +110,33 @@ export const run = internalAction({
 
     // "Unclear" on an ask that has a target and some words is usually the model being lazy, not the
     // ask being empty. One generous second look (a cheap call) before we bounce anyone.
-    if (first.verdict === "reject" && first.category === "unclear" && request.prompt.trim().split(/\s+/).length >= 4) {
+    const singleBlock = Boolean(request.target.blockId) && request.target.blockId !== "__new__" && !first.touches_other_blocks;
+    const enoughWords = request.prompt.trim().split(/\s+/).length >= 4;
+    const lazyUnclear = first.verdict === "reject" && first.category === "unclear" && enoughWords;
+    // A change to ONE block is at most medium, and medium ships for everyone: "too big" there is the model hedging.
+    const bigOneBlock = first.verdict === "reject" && first.category === "too_big" && singleBlock && !first.touches_backend;
+    if (lazyUnclear || bigOneBlock) {
       try {
-        const nudge = "SECOND LOOK: this ask has a target and a direction. Do not ask for more detail. Pick the most reasonable concrete interpretation, write it as a 2-5 step plan, size it honestly, and approve unless it breaks a rule.";
+        const nudge = bigOneBlock
+          ? `SECOND LOOK: this ask targets ONE existing block (${request.target.blockId}). Changing one block is at most a medium change, and medium ships for everyone here, so size is never a reason to hedge. Pick the most reasonable concrete interpretation (for "split into two halves", a two-column layout inside the block), write a 2-5 step plan, scope it tiny/small/medium honestly, and approve unless it breaks a rule.`
+          : "SECOND LOOK: this ask has a target and a direction. Do not ask for more detail. Pick the most reasonable concrete interpretation, write it as a 2-5 step plan, size it honestly, and approve unless it breaks a rule.";
         const again = await judge({ ...cfg, addendum: [cfg.addendum, nudge].filter(Boolean).join("\n") }, input);
         judgeCents += costCents(again.usage, priceFor(cfg.judgeModel));
-        if (again.verdict.verdict !== "reject" || again.verdict.category !== "unclear") first = again.verdict;
+        if (again.verdict.verdict === "approve" || (again.verdict.verdict === "reject" && again.verdict.category !== "unclear" && again.verdict.category !== "too_big")) first = again.verdict;
       } catch (e) {
         console.error("generous retry failed", e instanceof Error ? e.message.slice(0, 200) : String(e));
+      }
+    }
+    // Room functions unavailable (tier off, or a requester who can't use them yet): most shared state fits the
+    // kit store, so give the judge one chance to re-plan without a backend before this goes to a vote.
+    if (first.touches_backend && (!config.backendEnabled || requester.trust < 1) && (first.verdict === "approve" || first.category === "too_big")) {
+      try {
+        const nudge = "SECOND LOOK: room functions are NOT available for this request. Re-plan it using only the kit store (useStore for a shared list of small documents, useCounter for a shared tally; both live for everyone) and set touches_backend=false, unless the ask truly needs server-side rules (strict one-per-person, hidden state, atomic turn-taking). Approve the kit-store version.";
+        const again = await judge({ ...cfg, addendum: [cfg.addendum, nudge].filter(Boolean).join("\n") }, input);
+        judgeCents += costCents(again.usage, priceFor(cfg.judgeModel));
+        if (again.verdict.verdict === "approve" && !again.verdict.touches_backend) first = again.verdict;
+      } catch (e) {
+        console.error("backend re-plan failed", e instanceof Error ? e.message.slice(0, 200) : String(e));
       }
     }
     // Nobody reviews an "unsure" queue, so unsure is a no with advice on how to re-ask.

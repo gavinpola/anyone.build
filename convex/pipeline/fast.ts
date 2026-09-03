@@ -9,6 +9,8 @@ import {
   fastRewrite,
   unifiedDiff,
   reviewDiff,
+  reviewBlocks,
+  reviewNote,
   securityReview,
   securityBlocks,
   resourceOnly,
@@ -90,10 +92,12 @@ export const run = internalAction({
       const { review, usage } = await reviewDiff(cfg, { prompt: request.prompt, plan: verdict.plan, diff });
       cost += costCents(usage, priceFor(cfg.reviewModel));
       if (review.safety_concerns.length) {
-        await fail("unsafe_code", "The reviewer wasn't comfortable with that diff.", [...review.safety_concerns, ...review.hidden_behavior].join("; "), cost);
+        await fail("unsafe_code", "The reviewer wasn't comfortable with that diff.", [...review.safety_concerns, ...review.hidden_behavior].join("; ") + (review.summary ? ` (${review.summary})` : ""), cost);
         return { handled: true, reason: "review: safety" };
       }
-      if (!review.approve || !review.matches_request) return back("review: " + (review.hidden_behavior.join("; ") || "didn't match the request"), cost);
+      // Hidden behavior in a one-shot rewrite: let the sandbox agent (which iterates) have a go.
+      if (reviewBlocks(review)) return back("review: " + review.hidden_behavior.join("; "), cost);
+      const reviewDoubts = reviewNote(review);
 
       await set("reviewing", "security review");
       const sec = await securityReview(cfg, { prompt: request.prompt, plan: verdict.plan, diff, fullFiles });
@@ -118,7 +122,7 @@ export const run = internalAction({
           `**Plan**`,
           ...verdict.plan.map((p) => `- ${p}`),
           ``,
-          `Scope: tiny · fast path (one model call, no sandbox; CI is the typecheck) · cost: $${(cost / 100).toFixed(2)} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`,
+          `Scope: tiny · fast path (one model call, no sandbox; CI is the typecheck) · cost: $${(cost / 100).toFixed(2)}${reviewDoubts ? " · " + reviewDoubts : ""} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`,
           ``,
           `Opened automatically by anyone.build.`,
         ].join("\n"),

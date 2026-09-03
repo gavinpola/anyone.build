@@ -400,6 +400,17 @@ export const recentChanges = internalQuery({
   },
 });
 
+/** Judge a stuck proposal again (after a judge fix), same requester, same ask. Internal (CLI) only. Votes already cast stay on record. */
+export const rejudge = internalMutation({
+  args: { id: v.id("requests") },
+  handler: async (ctx, { id }) => {
+    const r = await ctx.db.get(id);
+    if (!r || !["proposed", "rejected"].includes(r.status)) throw new Error("Not a proposed or rejected request");
+    await ctx.db.patch(id, { status: "judging", verdict: undefined, stage: undefined, proposalVotes: 0, updatedAt: Date.now() });
+    await ctx.scheduler.runAfter(0, internal.pipeline.judge.run, { requestId: id });
+  },
+});
+
 /** Re-run a failed build under the same request: same requester, same verdict, a fresh budget reservation. Internal (CLI) only. */
 export const rebuildFailed = internalMutation({
   args: { id: v.id("requests") },

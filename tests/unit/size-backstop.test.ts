@@ -34,3 +34,47 @@ describe("size is never a reason to reject", () => {
     expect(n.category).toBe("unsafe_code");
   });
 });
+
+// Production regressions (2026-09-03, Gavin's own asks): a one-block ask never becomes a LARGE proposal,
+// and "more specific" is a clarity hedge, not size talk.
+import { describe as describe2, expect as expect2, it as it2 } from "vitest";
+import { normalizeJudge as normalize2, reviewBlocks, reviewNote } from "../../packages/gatekeeper/src/models";
+import { JudgeVerdict as JV2, DiffReview as DR2 } from "../../packages/gatekeeper/src/schemas";
+
+const electric = { path: "src/rooms/main/blocks/electric-message.tsx", line: 14, blockId: "electric-message", blockTitle: "Electric", tag: "div" };
+const base2 = { prompt: "turn this into a countdown at midnight et - split the block into 2 halves", target: electric, snippet: "", manifest: [], recentChanges: [], requester: { handle: "gavin-mill", trust: 1, liveChanges: 3 } } as never;
+
+describe2("single-block asks and the size backstop", () => {
+  it2("a size-flavoured hedge on ONE block floors at medium (a proposal at most, never large)", () => {
+    const v = JV2.parse({ verdict: "needs_human", category: null, public_hint: "This is too ambitious for one change.", scope: "small", confidence: 0.4, plan: [], touches_other_blocks: false, touches_backend: false, rationale: "Too big." });
+    const n = normalize2(v, base2);
+    expect2(n.scope).toBe("medium");
+    expect2(n.category).toBe("too_big");
+    expect2(n.plan[0]).toMatch(/inside this block/);
+  });
+  it2("'be more specific' is unclear, not too_big, so the generous second look gets to run", () => {
+    const v = JV2.parse({ verdict: "reject", category: "unclear", public_hint: "Please be more specific about the two halves.", scope: "small", confidence: 0.4, plan: [], touches_other_blocks: false, touches_backend: false, rationale: "Ambiguous split." });
+    const n = normalize2(v, base2);
+    expect2(n.category).toBe("unclear");
+    expect2(n.scope).not.toBe("large");
+  });
+  it2("a new-block hedge that talks size still becomes a large proposal", () => {
+    const v = JV2.parse({ verdict: "reject", category: "unclear", public_hint: "That's a big project.", scope: "small", confidence: 0.4, plan: [], touches_other_blocks: false, touches_backend: false, rationale: "" });
+    const n = normalize2(v, { ...base2, target: { path: "src/rooms/main/blocks/", line: 0, blockId: "__new__", blockTitle: "New block", tag: "wall" } });
+    expect2(n.category).toBe("too_big");
+    expect2(n.scope).toBe("large");
+  });
+});
+
+describe2("the diff reviewer blocks only on findings", () => {
+  const ok = { matches_request: true, hidden_behavior: [], safety_concerns: [], quality_ok: true, approve: true, summary: "Added a pulsing shape." };
+  it2("approve=false or matches_request=false with no finding ships, with a note", () => {
+    expect2(reviewBlocks(DR2.parse({ ...ok, approve: false, matches_request: false }))).toBe(false);
+    expect2(reviewNote(DR2.parse({ ...ok, approve: false, matches_request: false }))).toMatch(/may not fully match/);
+    expect2(reviewNote(DR2.parse(ok))).toBe("");
+  });
+  it2("a hidden-behavior or safety finding blocks", () => {
+    expect2(reviewBlocks(DR2.parse({ ...ok, hidden_behavior: ["Adds a link to another site."] }))).toBe(true);
+    expect2(reviewBlocks(DR2.parse({ ...ok, safety_concerns: ["Encodes visitor input into class names."] }))).toBe(true);
+  });
+});

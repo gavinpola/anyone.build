@@ -154,13 +154,16 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
   // Size is scope, never a verdict. If the model rejected or hedged *because the ask is big*
   // ("a big project; ask for something smaller"), it ignored the ambition rule: route it to the vote
   // board as a large, honestly-scoped proposal instead of a dead reject.
-  const sizeTalk = /\b(big project|too big|too large|large project|too complex|too ambitious|ambitious|smaller|scope (it )?down|more specific|whole app|entire (app|game|site)|full (app|game))\b/i;
+  const sizeTalk = /\b(big project|too big|too large|large project|too complex|too ambitious|ambitious|smaller|scope (it )?down|whole app|entire (app|game|site)|full (app|game))\b/i;
+  // A change aimed at ONE existing block is at most medium (see the cap above), whatever the model says about size.
+  const singleBlock = Boolean(input.target.blockId) && input.target.blockId !== "__new__" && !out.touches_other_blocks && !buildsPage;
   const hedged = (out.verdict === "reject" && (out.category === "unclear" || !out.category)) || out.verdict === "needs_human";
   if (hedged && (sizeTalk.test(out.public_hint) || sizeTalk.test(out.rationale))) {
     out.verdict = "reject";
     out.category = "too_big";
-    if (SCOPE_ORDER.indexOf(out.scope) < SCOPE_ORDER.indexOf("large")) out.scope = "large";
-    if (out.plan.length === 0) out.plan = ["Build the smallest honest version of what was asked, as its own page, with the kit's useTick loop and a canvas if it's a game."];
+    const floor: JudgeVerdict["scope"] = singleBlock ? "medium" : "large";
+    if (SCOPE_ORDER.indexOf(out.scope) < SCOPE_ORDER.indexOf(floor)) out.scope = floor;
+    if (out.plan.length === 0) out.plan = [singleBlock ? "Make the change inside this block, keeping it to the block itself." : "Build the smallest honest version of what was asked, as its own page, with the kit's useTick loop and a canvas if it's a game."];
     out.public_hint = "This one's big — it's up for a vote.";
   }
   // An unsure hedge that still produced a concrete plan is a big/ambiguous ask, not noise: mark it
@@ -235,6 +238,25 @@ export async function securityReview(
     prompt: securityUserPrompt(input),
   });
   return { review: { ...r.object, findings: clampList(r.object.findings, 6, 240), summary: clampStr(r.object.summary, 160) }, usage: usageOf(r, model) };
+}
+
+/**
+ * The diff reviewer fails a build only with a concrete finding: something the request didn't ask for, or a
+ * way to harm someone. "approve: false" or "matches_request: false" with no finding is taste, and an
+ * open-ended ask ("do the coolest thing you can") has no single right answer. Production regression: a
+ * cool-animation block was built, then died on "review rejected" with no reason.
+ */
+export function reviewBlocks(review: DiffReview): boolean {
+  return review.safety_concerns.length > 0 || review.hidden_behavior.length > 0;
+}
+
+/** What to put in the PR body / error when the reviewer had doubts. */
+export function reviewNote(review: DiffReview): string {
+  const bits: string[] = [];
+  if (!review.matches_request) bits.push("reviewer: may not fully match the request");
+  if (!review.quality_ok) bits.push("reviewer: quality doubts");
+  if (!review.approve && bits.length === 0) bits.push("reviewer: not approved, no finding");
+  return bits.join("; ");
 }
 
 /** One plain-text completion: the fast path's whole-file rewrite. The caller parses and validates the reply. */
