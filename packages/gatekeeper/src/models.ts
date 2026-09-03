@@ -107,7 +107,14 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     out.category = gate.category;
     out.public_hint = gate.hint;
   }
-  // Nobody reviews an "unsure" queue: unsure is a no, and the hint says how to re-ask.
+  // A concrete, in-scope plan from a trusted-enough requester shouldn't die on the model's hedge:
+  // promote it to approve (the red team, security pass, and validator still gate the actual build).
+  if (out.verdict === "needs_human" && out.plan.length >= 2 && scopeGate(trust, out.scope).allowed) {
+    out.verdict = "approve";
+    if (/too big|can't|cannot|unsure|maintainer|not sure/i.test(out.public_hint)) out.public_hint = "On it. This is a big one, so give it a minute.";
+  }
+  // Otherwise "unsure" is not a queue anyone reads: it's a no with advice. (When the proposals board
+  // ships, an in-scope-but-unsure ask becomes a proposal instead of a reject here.)
   if (out.verdict === "needs_human") {
     out.verdict = "reject";
     out.category = out.category ?? "unclear";
@@ -119,7 +126,8 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
       out.public_hint = trust < 0 ? "That needs a room function; sign in with GitHub and ask again." : "Room functions unlock once your first changes stay up.";
     } else if (out.scope === "tiny") out.scope = "small";
   }
-  if (out.verdict === "reject" && !out.category) out.category = "unclear";
+  const VALID = new Set(["not_for_everyone","destroys_others_work","unsafe_code","out_of_bounds","unclear","too_big","collided","budget_spent","slow_down","build_failed"]);
+  if (out.verdict === "reject" && (!out.category || !VALID.has(out.category))) out.category = "unclear";
   if (out.verdict !== "reject") out.category = null;
   if (out.verdict === "approve" && out.plan.length === 0) {
     out.verdict = "reject";

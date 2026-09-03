@@ -97,7 +97,9 @@ export const run = internalAction({
     // Nobody reviews an "unsure" queue, so unsure is a no with advice on how to re-ask.
     let approved = first.verdict === "approve";
     const needsHuman = false;
-    let category = first.category ?? (first.verdict === "needs_human" ? "unclear" : undefined);
+    // normalizeJudge guarantees category is null or a valid RejectionCategory; narrow for setVerdict.
+    let category = (first.category ?? (first.verdict === "needs_human" ? "unclear" : undefined)) as
+      | "not_for_everyone" | "destroys_others_work" | "unsafe_code" | "out_of_bounds" | "unclear" | "too_big" | "collided" | "budget_spent" | "slow_down" | "build_failed" | undefined;
     let hint = first.public_hint;
     if (approved && first.touches_backend && !config.backendEnabled) {
       approved = false;
