@@ -6,7 +6,9 @@ import { ImageResponse } from "@vercel/og";
 import { createElement as h } from "react";
 import { byLine, fetchShare, tidy } from "./_share";
 
-export const config = { runtime: "edge" };
+// Node runtime on purpose: the edge bundler picks this library's Node build (it imports a Node builtin)
+// and refuses it; the Node build ships its own font and WASM and needs nothing else.
+export const config = { runtime: "nodejs" };
 
 const CONVEX_URL = process.env.VITE_CONVEX_URL || "https://hushed-ladybug-141.convex.cloud";
 
