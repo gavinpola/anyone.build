@@ -87,6 +87,24 @@ test.describe("the picker", () => {
       const p = page.locator('[data-ab-block="welcome"] p').first();
       await p.hover({ position: { x: 2, y: 2 } });
       await expect(page.locator(".picker-placard")).toContainText(/<p>|“/);
+      // punctuation is its own target: hover the first period in the paragraph
+      const dot = await p.evaluate((el) => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          const i = (n.textContent ?? "").indexOf(".");
+          if (i < 0) continue;
+          const r = document.createRange();
+          r.setStart(n, i);
+          r.setEnd(n, i + 1);
+          const b = r.getBoundingClientRect();
+          return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+        }
+        return null;
+      });
+      if (dot) {
+        await page.mouse.move(dot.x, dot.y);
+        await expect(page.locator(".picker-placard")).toContainText("“.”");
+      }
     }
     await page.keyboard.press("Escape");
     await expect(page.locator(".picker-outline")).toHaveCount(0);

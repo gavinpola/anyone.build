@@ -9,7 +9,7 @@ function targetAt(x: number, y: number): PickerTarget | null {
   const t = resolveTarget(el);
   if (!t || t.granularity === "block") return t;
   const w = wordAtPoint(t.element, x, y);
-  if (w && w.word.length >= 2 && (t.element.textContent ?? "").trim().length > w.word.length) {
+  if (w && (w.punct || w.word.length >= 2) && (t.element.textContent ?? "").trim().length > w.word.length) {
     return { ...t, rect: w.rect, text: w.word, granularity: "word" };
   }
   return t;

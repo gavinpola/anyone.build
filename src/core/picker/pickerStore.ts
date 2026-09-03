@@ -93,7 +93,7 @@ export function resolveTarget(el: Element | null): PickerTarget | null {
  * If the pointer sits on a word inside `el`, return that word and its box.
  * Uses caret hit-testing (Chrome/Firefox: caretPositionFromPoint; Safari: caretRangeFromPoint).
  */
-export function wordAtPoint(el: HTMLElement, x: number, y: number): { word: string; rect: DOMRect } | null {
+export function wordAtPoint(el: HTMLElement, x: number, y: number): { word: string; rect: DOMRect; punct?: boolean } | null {
   type CaretPos = { offsetNode: Node; offset: number };
   const d = document as Document & { caretPositionFromPoint?: (x: number, y: number) => CaretPos | null; caretRangeFromPoint?: (x: number, y: number) => Range | null };
   let node: Node | null = null;
@@ -115,6 +115,29 @@ export function wordAtPoint(el: HTMLElement, x: number, y: number): { word: stri
   const text = node.textContent ?? "";
   if (!text.trim()) return null;
   const isWord = (c: string) => /[\p{L}\p{N}'’-]/u.test(c);
+  const isPunct = (c: string) => c !== "" && !/\s/u.test(c) && !isWord(c);
+  const rectOf = (from: number, to: number) => {
+    const range = document.createRange();
+    range.setStart(node!, from);
+    range.setEnd(node!, to);
+    const r = range.getBoundingClientRect();
+    return r.width === 0 || x < r.left - 2 || x > r.right + 2 || y < r.top - 2 || y > r.bottom + 2 ? null : r;
+  };
+
+  // Punctuation is its own target: a period, a comma, an "!", or a run of the same mark ("…", "!!").
+  // The caret lands on either side of a mark, so try the char at the offset and the one before it.
+  for (const c of [Math.min(offset, text.length - 1), offset - 1]) {
+    if (c < 0 || c >= text.length) continue;
+    const ch = text[c] ?? "";
+    if (!isPunct(ch)) continue;
+    let pa = c;
+    let pb = c + 1;
+    while (pa > 0 && text[pa - 1] === ch) pa--;
+    while (pb < text.length && text[pb] === ch) pb++;
+    const r = rectOf(pa, pb);
+    if (r) return { word: text.slice(pa, pb), rect: r, punct: true };
+  }
+
   let a = Math.min(offset, text.length);
   let b = a;
   if (a > 0 && !isWord(text[a] ?? "") && isWord(text[a - 1] ?? "")) a--;
@@ -122,10 +145,7 @@ export function wordAtPoint(el: HTMLElement, x: number, y: number): { word: stri
   b = a;
   while (b < text.length && isWord(text[b] ?? "")) b++;
   if (b <= a) return null;
-  const range = document.createRange();
-  range.setStart(node, a);
-  range.setEnd(node, b);
-  const rect = range.getBoundingClientRect();
-  if (rect.width === 0 || x < rect.left - 2 || x > rect.right + 2 || y < rect.top - 2 || y > rect.bottom + 2) return null;
+  const rect = rectOf(a, b);
+  if (!rect) return null;
   return { word: text.slice(a, b), rect };
 }
