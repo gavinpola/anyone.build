@@ -80,10 +80,16 @@ export const run = internalAction({
     let first;
     let judgeCents = 0;
     try {
-      // Cheap models occasionally return JSON the schema can't parse: retry once, then try the other vendor.
-      const j = await judge(cfg, input)
-        .catch(() => judge(cfg, input))
-        .catch(() => judge({ ...cfg, judgeModel: cfg.redTeamModel }, input));
+      // Retry once, then try the other vendor. Log every attempt's error: a swallowed retry chain hid
+      // a schema bug for a day (a 201-char plan step threw away a good approve).
+      const attempt = (label: string, c: typeof cfg) =>
+        judge(c, input).catch((e: unknown) => {
+          console.error(`judge attempt failed [${label} ${c.judgeModel}]:`, e instanceof Error ? e.message.slice(0, 400) : String(e));
+          throw e;
+        });
+      const j = await attempt("1", cfg)
+        .catch(() => attempt("2", cfg))
+        .catch(() => attempt("3/fallback", { ...cfg, judgeModel: cfg.redTeamModel }));
       first = j.verdict;
       judgeCents += costCents(j.usage, priceFor(cfg.judgeModel));
     } catch (e) {

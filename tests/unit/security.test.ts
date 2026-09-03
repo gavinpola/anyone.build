@@ -18,6 +18,7 @@ describe("security review decision", () => {
   });
   it("rejects malformed reviews", () => {
     expect(SecurityReview.safeParse({ ...base, risk: "critical" }).success).toBe(false);
-    expect(SecurityReview.safeParse({ ...base, risk: "none", findings: new Array(9).fill("x") }).success).toBe(false);
+    // Over-count findings now PARSE (lenient shape) and are clamped to 6 in securityReview(); length is never a reason to throw away a review.
+    expect(SecurityReview.safeParse({ ...base, risk: "none", findings: new Array(9).fill("x") }).success).toBe(true);
   });
 });

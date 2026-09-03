@@ -13,7 +13,8 @@ export function ClaimPrompt() {
   const [done, setDone] = useState<{ requests: number; changes: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (!viewer.signedIn || !claimable || claimable.claimedByOther) return null;
-  const n = claimable.requests + claimable.changes;
+  // Only credit what actually landed: rejected or in-flight asks aren't "things you made".
+  const n = claimable.changes;
   if (!done && n === 0) return null;
   return (
     <div className="border-b border-line bg-accent-soft/50">
@@ -25,7 +26,7 @@ export function ClaimPrompt() {
         ) : (
           <>
             <span>
-              You made <span className="font-semibold">{n}</span> {n === 1 ? "thing" : "things"} on this wall before signing in.
+              You made <span className="font-semibold">{n}</span> {n === 1 ? "change" : "changes"} to this wall before signing in.
             </span>
             <button
               type="button"

@@ -30,6 +30,18 @@ function provider(cfg: Pick<ModelConfig, "apiKey" | "baseURL">) {
   });
 }
 
+/** Display-limit clamps. Model output is parsed leniently and clamped here, never rejected for length. */
+function clampStr(v: unknown, max: number): string {
+  return String(v ?? "").slice(0, max);
+}
+function clampList(v: unknown, max: number, each: number): string[] {
+  return (Array.isArray(v) ? v : []).map((x) => clampStr(x, each)).filter((x) => x.trim().length > 0).slice(0, max);
+}
+function clamp01(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
+}
+
 function usageOf(r: { usage?: { inputTokens?: number; outputTokens?: number } }, model: string): Usage {
   return { inputTokens: r.usage?.inputTokens ?? 0, outputTokens: r.usage?.outputTokens ?? 0, model };
 }
@@ -61,7 +73,11 @@ export async function redTeam(cfg: ModelConfig, input: JudgeInput, first: JudgeV
     maxOutputTokens: 1200,
     maxRetries: 2,
   });
-  return { verdict: r.object, usage: usageOf(r, cfg.redTeamModel) };
+  const rt = r.object;
+  return {
+    verdict: { ...rt, harms: clampList(rt.harms, 6, 200), most_likely_intent: clampStr(rt.most_likely_intent, 200), public_hint: clampStr(rt.public_hint, 160), confidence: clamp01(rt.confidence) },
+    usage: usageOf(r, cfg.redTeamModel),
+  };
 }
 
 export async function reviewDiff(cfg: ModelConfig, input: { prompt: string; plan: string[]; diff: string }): Promise<{ review: DiffReview; usage: Usage }> {
@@ -76,7 +92,11 @@ export async function reviewDiff(cfg: ModelConfig, input: { prompt: string; plan
     maxOutputTokens: 1200,
     maxRetries: 2,
   });
-  return { review: r.object, usage: usageOf(r, cfg.reviewModel) };
+  const rv = r.object;
+  return {
+    review: { ...rv, hidden_behavior: clampList(rv.hidden_behavior, 6, 200), safety_concerns: clampList(rv.safety_concerns, 6, 200), summary: clampStr(rv.summary, 140) },
+    usage: usageOf(r, cfg.reviewModel),
+  };
 }
 
 const SCOPE_ORDER = ["tiny", "small", "medium", "large"] as const;
@@ -99,7 +119,16 @@ export function scopeGate(trust: number, scope: JudgeVerdict["scope"]): { allowe
 
 /** Deterministic guardrails on top of the model's answer. */
 export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict {
-  const out = { ...v };
+  // Clamp to display limits first: length is never a reason to throw away a verdict.
+  const out: JudgeVerdict = {
+    ...v,
+    public_hint: clampStr(v.public_hint, 160),
+    plan: clampList(v.plan, 5, 200),
+    rationale: clampStr(v.rationale, 600),
+    confidence: clamp01(v.confidence),
+    touches_backend: Boolean(v.touches_backend),
+    touches_other_blocks: Boolean(v.touches_other_blocks),
+  };
   const trust = input.requester.trust;
   const gate = scopeGate(trust, out.scope);
   if (out.verdict === "approve" && !gate.allowed) {
@@ -152,7 +181,7 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
 
 export const NoteTriage = z.object({
   kind: z.enum(["bug", "copy", "design", "feature", "question", "spam"]),
-  summary: z.string().max(160),
+  summary: z.string(),
 });
 export type NoteTriage = z.infer<typeof NoteTriage>;
 
@@ -168,7 +197,7 @@ export async function triageNote(
     system: triageSystemPrompt,
     prompt: triageUserPrompt(input),
   });
-  return { triage: r.object, usage: usageOf(r, cfg.model) };
+  return { triage: { ...r.object, summary: clampStr(r.object.summary, 160) }, usage: usageOf(r, cfg.model) };
 }
 
 /** The security pass on a diff: a second model, a narrower question, and a deterministic block rule. */
@@ -184,7 +213,7 @@ export async function securityReview(
     system: securitySystemPrompt(),
     prompt: securityUserPrompt(input),
   });
-  return { review: r.object, usage: usageOf(r, model) };
+  return { review: { ...r.object, findings: clampList(r.object.findings, 6, 240), summary: clampStr(r.object.summary, 160) }, usage: usageOf(r, model) };
 }
 
 /** Medium or high risk never ships, whatever the model's block flag says. */
