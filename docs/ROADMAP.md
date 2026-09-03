@@ -78,6 +78,8 @@ Gavin's machine: Apple M4, 16 GB, Ollama installed but no models pulled. The pip
 
 ## Owned by Gavin (I can't do these)
 
+- DONE 2026-09-03: `CONVEX_DEPLOY_KEY` is set on Vercel, so Convex production deploys on every push to main. Remaining flip: `backendEnabled` on /admin (agent-written room functions).
+
 Free disk space · turn off Vercel preview auth · sign in on prod once + a Stripe test bid · create the Convex production deploy key and add `CONVEX_DEPLOY_KEY` to Vercel, then flip `backendEnabled` on `/admin` · buy the domain.
 
 ## How the loop uses this
