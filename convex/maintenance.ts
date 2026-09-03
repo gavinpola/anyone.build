@@ -2,6 +2,22 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { rateLimiter } from "./rateLimits";
 
+/** Proposals nobody voted for in a week come off the board. */
+export const expireStaleProposals = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    const rows = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "proposed").lt("createdAt", cutoff)).take(200);
+    let n = 0;
+    for (const r of rows) {
+      if ((r.proposalVotes ?? 0) > 0) continue;
+      await ctx.db.patch(r._id, { status: "rejected", verdict: r.verdict ? { ...r.verdict, hint: "Nobody voted for this one in a week. Ask again if you still want it." } : undefined, updatedAt: Date.now() });
+      n++;
+    }
+    return n;
+  },
+});
+
 /** Requests waiting on a human expire after a day so the queue never rots and never swallows new asks. */
 export const expireNeedsHuman = internalMutation({
   args: { olderThanMs: v.optional(v.number()) },

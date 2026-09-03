@@ -112,9 +112,10 @@ export function scopeGate(trust: number, scope: JudgeVerdict["scope"]): { allowe
   const t = String(Math.min(3, Math.max(-1, trust)));
   const max = MAX_SCOPE[t] ?? "tiny";
   if (SCOPE_ORDER.indexOf(scope) <= SCOPE_ORDER.indexOf(max)) return { allowed: true, needsHuman: false, category: null, hint: "" };
-  if (trust < 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "Guests can make small changes. Sign in with GitHub for bigger ones." };
-  if (trust === 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "Start small; bigger changes unlock as your work stays up." };
-  return { allowed: false, needsHuman: false, category: "too_big", hint: "That's bigger than we auto-ship. Split it into smaller asks." };
+  // Too big to auto-ship for this trust level → it goes up for a vote (setVerdict routes too_big to the board).
+  if (trust < 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's bigger than a guest can ship alone — it's up for a vote. Sign in to vote for it." };
+  if (trust === 0) return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's big — it's up for a vote. Bigger auto-ships unlock as your work stays up." };
+  return { allowed: false, needsHuman: false, category: "too_big", hint: "This one's bigger than we auto-ship — it's up for a vote." };
 }
 
 /** Deterministic guardrails on top of the model's answer. */
@@ -142,6 +143,18 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     out.verdict = "approve";
     if (/too big|can't|cannot|unsure|maintainer|not sure/i.test(out.public_hint)) out.public_hint = "On it. This is a big one, so give it a minute.";
   }
+  // Size is scope, never a verdict. If the model rejected or hedged *because the ask is big*
+  // ("a big project; ask for something smaller"), it ignored the ambition rule: route it to the vote
+  // board as a large, honestly-scoped proposal instead of a dead reject.
+  const sizeTalk = /\b(big project|too big|too large|large project|too complex|too ambitious|ambitious|smaller|scope (it )?down|more specific|whole app|entire (app|game|site)|full (app|game))\b/i;
+  const hedged = (out.verdict === "reject" && (out.category === "unclear" || !out.category)) || out.verdict === "needs_human";
+  if (hedged && (sizeTalk.test(out.public_hint) || sizeTalk.test(out.rationale))) {
+    out.verdict = "reject";
+    out.category = "too_big";
+    if (SCOPE_ORDER.indexOf(out.scope) < SCOPE_ORDER.indexOf("large")) out.scope = "large";
+    if (out.plan.length === 0) out.plan = ["Build the smallest honest version of what was asked, as its own page, with the kit's useTick loop and a canvas if it's a game."];
+    out.public_hint = "This one's big — it's up for a vote.";
+  }
   // An unsure hedge that still produced a concrete plan is a big/ambiguous ask, not noise: mark it
   // too_big so it routes to the proposals board (up for a vote), not a dead reject. Only a hedge with
   // no plan is a genuine "nothing to build" → unclear.
@@ -153,7 +166,7 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     if (trust < 1) {
       out.verdict = "reject";
       out.category = "too_big";
-      out.public_hint = trust < 0 ? "That needs a room function; sign in with GitHub and ask again." : "Room functions unlock once your first changes stay up.";
+      out.public_hint = "That needs a room function — it'll go up for a vote.";
     } else if (out.scope === "tiny") out.scope = "small";
   }
   const VALID = new Set(["not_for_everyone","destroys_others_work","unsafe_code","out_of_bounds","unclear","too_big","collided","budget_spent","slow_down","build_failed"]);

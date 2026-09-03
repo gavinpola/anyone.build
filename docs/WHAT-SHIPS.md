@@ -86,10 +86,10 @@ Who's asking sets the auto-ship ceiling, not what's allowed to be proposed.
 
 | Trust | Who | Auto-ships up to | Can propose |
 | --- | --- | --- | --- |
-| −1 | guest (no account) | small | no (voting and proposals need an account) |
+| −1 | guest (no account) | small | yes — anyone can propose; only signed-in people vote, and nothing builds without votes |
 | 0 | new account | small | yes |
 | 1 | builder (a change stayed up) | medium | yes |
 | 2 | trusted | large | yes |
 | 3 | maintainer | anything | yes |
 
-Anyone signed in can propose and vote. Guests can still change the wall (small, safe), they just can't steer the crowd.
+Anyone can propose, guest or not: a proposal is just a row on the board. Voting needs an account, and a proposal only builds if it wins the vote, so a flood of junk proposals can never build itself; unvoted ones fall off the board after a week.
