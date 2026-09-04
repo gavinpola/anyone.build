@@ -8,6 +8,7 @@ export function Minimap({
   zoom,
   viewport,
   onGo,
+  onGoBlock,
   highlight,
 }: {
   world: World;
@@ -16,6 +17,7 @@ export function Minimap({
   zoom: number;
   viewport: { w: number; h: number };
   onGo: (worldPoint: { x: number; y: number }) => void;
+  onGoBlock?: (id: string) => void;
   highlight?: string | null;
 }) {
   const W = 168;
@@ -40,7 +42,21 @@ export function Minimap({
       >
         <rect x={0} y={0} width={world.w} height={world.h} className="minimap-ground" />
         {placed.map((p) => (
-          <rect key={p.id} x={p.x} y={p.y} width={p.w} height={p.h} rx={16} className={"minimap-block" + (highlight === p.id ? " is-hot" : "")} />
+          <rect
+            key={p.id}
+            data-map-block={p.id}
+            x={p.x}
+            y={p.y}
+            width={p.w}
+            height={p.h}
+            rx={0}
+            className={"minimap-block" + (highlight === p.id ? " is-hot" : "")}
+            onPointerDown={(e) => {
+              if (!onGoBlock) return;
+              e.stopPropagation();
+              onGoBlock(p.id);
+            }}
+          />
         ))}
         <rect x={vx} y={vy} width={vw} height={vh} className="minimap-view" />
       </svg>

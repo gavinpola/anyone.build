@@ -3,10 +3,10 @@ import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { ArrowBigUp, GitPullRequest } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
-import { Avatar } from "@/core/feed/RequestCard";
 import { timeAgo } from "@/core/lib/useNow";
 import { useViewer } from "@/core/auth/useViewer";
 import { cn } from "@/core/lib/cn";
+import { LEDGER_ROWS, ScrollHint, WhoAsked } from "./Ledger";
 
 export function ChangesSection() {
   const rows = useQuery(api.votes.recentChanges, hasConvex ? { limit: 50 } : "skip");
@@ -17,7 +17,7 @@ export function ChangesSection() {
       <h2 className="font-display text-2xl">Changes</h2>
       <div className="frame mt-3 overflow-hidden">
         {rows && rows.length ? (
-          <ul>
+          <ul className="ledger-scroll" data-ledger="changes">
             {rows.map((c) => (
               <li key={c.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
                 <button
@@ -38,8 +38,7 @@ export function ChangesSection() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px]">{c.summary || "A change on the wall."}</span>
                   <span className="placard flex items-center gap-2">
-                    <Avatar handle={c.by.handle} url={c.by.avatarUrl} size={16} />
-                    @{c.by.handle} · {timeAgo(c.mergedAt)} · {c.blockIds.join(", ") || "wall"} ·{" "}
+                    <WhoAsked by={c.by} /> · {timeAgo(c.mergedAt)} · {c.blockIds.join(", ") || "wall"} ·{" "}
                     <span className="text-ok">+{c.linesAdded}</span> <span className="text-bad">−{c.linesRemoved}</span>
                   </span>
                 </span>
@@ -55,6 +54,7 @@ export function ChangesSection() {
         ) : (
           <p className="p-5 text-[14px] text-muted">Nothing yet.</p>
         )}
+        {rows && rows.length > LEDGER_ROWS ? <ScrollHint more={rows.length - LEDGER_ROWS} /> : null}
       </div>
     </section>
   );

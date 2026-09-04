@@ -22,12 +22,12 @@ export function CanvasBar({ zoom, fit, onZoom, onFit, onWall, onNote, toast, com
       <button type="button" className={btn} onClick={onFit} aria-label="Fit the whole wall" title="Fit">
         <Maximize2 size={13} />
       </button>
-      <span className="canvas-bar-sep" />
-      <button type="button" className={btn + " gap-1.5 font-mono uppercase tracking-[0.08em]"} onClick={(e) => onNote((e.currentTarget as HTMLElement).getBoundingClientRect())} title="A quick note">
+      <span className="canvas-bar-sep bar-optional" />
+      <button type="button" className={btn + " bar-optional gap-1.5 font-mono uppercase tracking-[0.08em]"} onClick={(e) => onNote((e.currentTarget as HTMLElement).getBoundingClientRect())} title="A quick note">
         <StickyNote size={13} />
         <span className="bar-text">note</span>
       </button>
-      <button type="button" className={btn + " gap-1.5 font-mono uppercase tracking-[0.08em]"} onClick={(e) => onWall((e.currentTarget as HTMLElement).getBoundingClientRect())} title="Change the wall itself: its ground, spacing, skin, decay">
+      <button type="button" className={btn + " bar-optional gap-1.5 font-mono uppercase tracking-[0.08em]"} onClick={(e) => onWall((e.currentTarget as HTMLElement).getBoundingClientRect())} title="Change the wall itself: its ground, spacing, skin, decay">
         <Brush size={13} />
         <span className="bar-text">the wall</span>
       </button>

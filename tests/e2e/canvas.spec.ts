@@ -34,7 +34,6 @@ test("a fixed world, fitted on load; the bar zooms in and out and fits again", a
   expect(z2).toBeLessThan(z1);
   expect(Math.abs(z2 - z0)).toBeLessThan(0.05); // heights settle a little between fits
   await expect(page.locator("[data-minimap]")).toBeVisible();
-  await expect(page.locator("[data-directory]")).toBeVisible();
 });
 
 test("drag out a space and the composer opens for that space; click a point and it opens for that point", async ({ page }) => {
@@ -68,18 +67,19 @@ test("drag out a space and the composer opens for that space; click a point and 
   await page.keyboard.press("Escape");
 });
 
-test("drag a block by its label and the ask to move it is written for you", async ({ page }) => {
+test("in pick mode, drag an object and the ask to move it is written for you", async ({ page }) => {
   await page.goto(url);
   await ready(page);
   const first = page.locator("[data-world] [data-ab-block]:not([data-ab-block='__new__'])").first();
-  // zoom to it first, as a person would (labels hide at the far overview)
-  await page.locator("[data-directory-item]").first().click();
+  const id = (await first.getAttribute("data-ab-block"))!;
+  // zoom to it first, as a person would (the map jumps to an object)
+  await page.locator(`[data-map-block="${id}"]`).dispatchEvent("pointerdown");
   await page.waitForTimeout(450);
-  const chrome = first.locator(".object-label");
-  const box = (await chrome.boundingBox())!;
-  await page.mouse.move(box.x + 30, box.y + box.height / 2);
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  const box = (await first.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 40);
   await page.mouse.down();
-  await page.mouse.move(box.x + 180, box.y + 120, { steps: 10 });
+  await page.mouse.move(box.x + 220, box.y + 160, { steps: 10 });
   await page.mouse.up();
   const dialog = page.getByRole("dialog", { name: /ask for a change/i });
   await expect(dialog).toBeVisible();
@@ -87,14 +87,14 @@ test("drag a block by its label and the ask to move it is written for you", asyn
   await page.keyboard.press("Escape");
 });
 
-test("the directory lists what's on the canvas and jumps to a block", async ({ page }) => {
+test("the map shows every object and jumps to one", async ({ page }) => {
   await page.goto(url);
   await ready(page);
-  const rows = page.locator("[data-directory-item]");
-  expect(await rows.count()).toBeGreaterThan(0);
+  const rects = page.locator("[data-map-block]");
+  expect(await rects.count()).toBeGreaterThan(0);
   const world = page.locator("[data-world]");
   const before = await world.getAttribute("style");
-  await rows.last().click();
+  await rects.last().dispatchEvent("pointerdown");
   await page.waitForTimeout(300);
   expect(await world.getAttribute("style")).not.toBe(before);
 });
@@ -103,9 +103,9 @@ test("a signed-out visitor's stroke on the open canvas survives a reload", async
   test.setTimeout(90_000);
   await page.goto(url);
   await ready(page);
-  const chip = page.locator('[data-directory-item="collaborative-art"]');
+  const chip = page.locator('[data-map-block="collaborative-art"]');
   test.skip((await chip.count()) === 0, "no open canvas on this wall");
-  await chip.click();
+  await chip.dispatchEvent("pointerdown");
   await page.waitForTimeout(500);
   const art = page.locator('[data-ab-block="collaborative-art"] canvas');
   await expect(art).toBeVisible();

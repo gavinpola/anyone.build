@@ -9,7 +9,7 @@ export function PickButton({ className, label = "Change something" }: { classNam
   const { arming, sticky } = usePicker();
   const on = arming && sticky;
   return (
-    <button
+    <button aria-label={on ? "Click anything" : "Change something"}
       type="button"
       onClick={() => (on ? pickerStore.disarm() : pickerStore.arm(true))}
       className={cn(

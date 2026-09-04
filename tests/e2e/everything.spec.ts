@@ -84,8 +84,8 @@ test.describe("the picker", () => {
     if (await h1.count()) {
       // zoom in on the block the way a person would (the directory jumps to it): picking a word at the
       // overview zoom is imprecise by nature
-      const row = page.locator('[data-directory-item="welcome"]');
-      if (await row.count()) await row.click();
+      const row = page.locator('[data-map-block="welcome"]');
+      if (await row.count()) await row.dispatchEvent("pointerdown");
       await page.waitForTimeout(450);
       await h1.hover({ position: { x: 14, y: 14 } }); // the first word; the centre lands on the one-word <em>, which is targeted as an element by design
       await expect(page.locator(".picker-placard")).toContainText(/“\w+”/);
@@ -253,7 +253,8 @@ test.describe("mobile", () => {
     await page.locator('[data-ab-block="__new__"]').tap();
     await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeVisible();
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: /^live/i }).click({ force: true });
+    await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeHidden();
+    await page.getByRole("button", { name: /^live/i }).tap();
     await expect(page.getByRole("dialog", { name: /live feed/i })).toBeVisible();
   });
 });

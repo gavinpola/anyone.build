@@ -20,8 +20,6 @@ import { CanvasBar } from "./CanvasBar";
 import { Pins } from "./Pins";
 import { Minimap } from "./Minimap";
 import { Heat } from "./Heat";
-import { Directory, type DirectoryItem } from "./Directory";
-import { CardChrome } from "./CardChrome";
 import { useTouch } from "./useTouch";
 import { clampPan, clampZoom, fitZoom, lifeLeft, packBlocks, parsePoint, parseRegion, pointText, regionText, toWorld, widthFor, worldSize, zoomAround, type Pan, type Rect } from "./canvas";
 import { pickerStore, resolveTarget } from "@/core/picker/pickerStore";
@@ -52,7 +50,9 @@ export const blocks = Object.entries({ ...examples, ...modules })
 const NEW_BLOCK_PATH = `src/rooms/${room.id}/blocks/`;
 /** The wall itself: its file. Reached from the canvas bar. */
 export const CANVAS_PATH = `src/rooms/${room.id}/canvas.ts`;
-const ADD_ZONE = 420; // px of always-empty canvas at the bottom: "point here to add something" (tall enough to point at when fitted)
+const ADD_ZONE = 420;
+/** Height the floating bar takes at the bottom of the viewport; the world fits above it. */
+const BAR_INSET = 72; // px of always-empty canvas at the bottom: "point here to add something" (tall enough to point at when fitted)
 const GAP = () => Math.max(0, Math.min(80, canvas.gap ?? 24));
 const PAD = () => Math.max(0, Math.min(80, canvas.padding ?? 6)) + 80; // room for the constant-size labels above the first row (22px / zoom ≥ 0.3)
 const IN_FLIGHT = new Set(["queued", "building", "validating", "reviewing", "preview", "merging"]);
@@ -160,7 +160,8 @@ function CanvasRoom({ compact }: { compact: boolean }) {
   useLayoutEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
-    const measure = () => setVp({ w: el.clientWidth, h: el.clientHeight });
+    // the bar floats over the bottom of the viewport; fit the world into the space above it
+    const measure = () => setVp({ w: el.clientWidth, h: Math.max(0, el.clientHeight - BAR_INSET) });
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -235,12 +236,11 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     }
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
-    if (target.closest("[data-canvas-bar], [data-minimap], [data-directory]")) return;
+    if (target.closest("[data-canvas-bar], [data-minimap], [data-canvas-ui]")) return;
     const section = target.closest<HTMLElement>("[data-ab-block]");
     const inBlock = section && section.dataset.abBlock !== "__new__" && wallRef.current?.contains(section);
     const picking = pickerStore.get().arming;
-    const onChrome = Boolean(target.closest(".object-label"));
-    if (picking || onChrome) {
+    if (picking) {
       if (inBlock) {
         const p = at.get(section.dataset.abBlock!);
         if (!p) return;
@@ -355,10 +355,6 @@ function CanvasRoom({ compact }: { compact: boolean }) {
   const shipped = requests.filter((r) => r.status === "live" && now - r.createdAt < 3 * 60_000).sort((a, b) => b.createdAt - a.createdAt)[0];
   const dyingToday = [...facts.values()].filter((f) => f.left != null && f.left > 0 && f.left < DAY).length;
 
-  const directory: DirectoryItem[] = visible.map((b) => {
-    const f = facts.get(b.meta.id)!;
-    return { id: b.meta.id, title: b.meta.title, by: f.by, lastAt: f.lastAt, changes: f.changes, left: f.left, window: f.window, editing: f.editing, faded: f.faded, isNew: f.isNew };
-  });
   const focus = (id: string) => {
     const p = at.get(id);
     if (p) goTo({ x: p.x + p.w / 2, y: p.y + Math.min(p.h / 2, 260) }, Math.max(zoom, 0.85));
@@ -383,7 +379,6 @@ function CanvasRoom({ compact }: { compact: boolean }) {
   return (
     <RoomContext.Provider value={room.id}>
       <div className={cn("canvas-shell", compact && "is-compact")} data-skin={skin}>
-        <Directory items={directory} decayOn={decayOn} onGo={focus} className="canvas-directory" pages={pages.map((p) => ({ slug: p.meta.slug, title: p.meta.title }))} compact={compact} />
         <div className="canvas-column">
         <div
           ref={viewportRef}
@@ -429,8 +424,8 @@ function CanvasRoom({ compact }: { compact: boolean }) {
                   data-life={f.left == null ? "pinned" : f.faded ? "faded" : f.left < DAY ? "dying" : "alive"}
                   style={style}
                   className={cn("hung flex flex-col", skin === "instrument" ? (explicitShape ? cn("object", shape.className) : "object") : shape.className, skin === "paper" && h.body.merge && "liquid-body", drag && "dragging", f.faded && "faded", f.editing && "editing")}
+                  title={`${meta.title}${f.by ? ` · @${f.by}` : ""}${f.left == null ? " · pinned" : f.faded ? " · faded, touch to revive" : ""}`}
                 >
-                  {skin === "instrument" ? <CardChrome by={f.by} title={meta.title} left={f.left} pinned={meta.pinned} isNew={f.isNew} editing={f.editing} faded={f.faded} /> : null}
                   <div className="frame-body flex-1">
                     <BlockBoundary title={meta.title}>
                       <Component />
@@ -448,7 +443,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             >
               <div className="frame-body flex flex-1 flex-col items-center justify-center p-6 text-center">
                 <p className="text-[15px] text-ink-2">Nothing lives here yet.</p>
-                <p className="mt-1 text-[13px] text-muted">Point here to add something. Hold ⇧⌘ and drag out a space to work on it. Drag an object by its label to move it.</p>
+                <p className="mt-1 text-[13px] text-muted">Point here to add something. Hold ⇧⌘ and drag out a space to work on it, or drag an object to move it.</p>
               </div>
             </section>
             {gesture?.kind === "marquee" && gesture.rect ? <div className="marquee" style={{ left: gesture.rect.x, top: gesture.rect.y, width: gesture.rect.w, height: gesture.rect.h }} /> : null}
@@ -456,9 +451,8 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             <Cursors roomId={room.id} boxRef={wallRef} scale={1 / zoom} />
           </div>
 
-          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} /> : null}
-        </div>
-        <CanvasBar
+          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} /> : null}
+          <CanvasBar
             zoom={zoom}
             fit={fit}
             onZoom={(z) => applyZoom(z)}
@@ -468,6 +462,17 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             onWall={(rect) => pickerStore.select({ path: CANVAS_PATH, line: 1, blockId: "__canvas__", blockTitle: "The wall itself", tag: "canvas", text: undefined, rect, element: viewportRef.current!, granularity: "block" })}
             toast={shipped ? `${shipped.user.guest ? "a guest" : "@" + shipped.user.handle} shipped: ${shipped.run?.summary ?? shipped.prompt}` : dyingToday ? `${dyingToday} ${dyingToday === 1 ? "thing fades" : "things fade"} today unless touched` : null}
           />
+          {pages.length ? (
+            <nav aria-label="Pages" className="canvas-pages" data-canvas-ui>
+              <span className="placard smallcaps">pages</span>
+              {pages.map((p) => (
+                <PageLink key={p.meta.slug} to={p.meta.slug} className="directory-chip">
+                  {p.meta.title}
+                </PageLink>
+              ))}
+            </nav>
+          ) : null}
+        </div>
         </div>
       </div>
     </RoomContext.Provider>
@@ -505,7 +510,6 @@ function StackedRoom() {
           if (l?.fadedAt || (left != null && left <= 0)) return null;
           return (
             <section key={meta.id} data-ab-block={meta.id} data-ab-path={path} data-shape={typeof h.shape === "string" ? h.shape : "custom"} style={skin === "instrument" && meta.shape == null ? undefined : shape.style} className={cn("hung wall-full flex flex-col", skin === "instrument" ? (meta.shape != null ? cn("object", shape.className) : "object") : shape.className, skin === "paper" && h.body.merge && "liquid-body")}>
-              {skin === "instrument" ? <CardChrome by={p?.lastBy ?? p?.guestTag ?? null} title={meta.title} left={left} pinned={meta.pinned} isNew={(p?.lastAt ?? 0) > now - DAY} /> : null}
               <div className="frame-body flex-1">
                 <BlockBoundary title={meta.title}>
                   <Component />

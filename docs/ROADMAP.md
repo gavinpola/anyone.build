@@ -108,3 +108,10 @@ Free disk space · turn off Vercel preview auth · sign in on prod once + a Stri
 ## How the loop uses this
 
 Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from Security hardening, then Stability, then the SaaS offering; (3) if everything concrete is blocked, stress-test what exists and log what broke as a new item; (4) always leave this file with an honest "Now" and check off what shipped. Never end a tick without updating this file and the plan's Morning section.
+
+## The room is the canvas (2026-09-04)
+- [x] No labels over objects and no directory: the canvas fills the Room page edge to edge under the header; the bar floats at the bottom centre, the map above the Live pill, pages as a strip top-left. Hovering an object shows its title and who touched it last (native tooltip). Moving an object: pick mode, then drag it.
+- [x] The map jumps to an object (each block is a clickable rect, `data-map-block`).
+- [x] Phones: the bar is zoom + Change beside the Live pill; the map is off (it covered the add zone).
+- [x] The vote board: five rows, scroll for the rest; every hour the top proposal is built and leaves the board (`crons.hourly promoteTop`); who asked, linked to their GitHub when they signed in with it. Same five-row ledger on Changes.
+- [ ] NEXT: an object's facts (who, when, days left) belong in the pick placard and the composer header, not a native tooltip; a "faded" object needs a visible way to revive from the map.

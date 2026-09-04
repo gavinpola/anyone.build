@@ -206,7 +206,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
             ) : request?.status === "proposed" ? (
               <div className="w-full rounded-md bg-accent-soft p-3">
                 <p className="text-[14px] font-medium text-accent">Up for a vote.</p>
-                <p className="mt-0.5 text-[13px] text-ink-2">This one's big, so the wall put it up for a vote on the leaderboard. The most-wanted one is built each night. Send friends the link to get votes.</p>
+                <p className="mt-0.5 text-[13px] text-ink-2">This one's big, so the wall put it up for a vote on the leaderboard. Every hour the most-wanted one is built. Send friends the link to get votes.</p>
                 <div className="mt-2">
                   <ShareButton label="Share to get votes" url={shareUrl("p", request.id)} title={request.prompt} text="Vote for this on anyone.build" />
                 </div>

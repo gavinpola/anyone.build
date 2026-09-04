@@ -10,6 +10,13 @@ import { siteDay } from "./lib/days";
 const MIN_VOTES_TO_BUILD = 1;
 
 /** The board: safe-but-big asks people can vote on. Newest-and-most-wanted first. */
+/** Who asked, as the board shows it: a handle that links to GitHub for people who signed in there; guests stay guests. */
+export function whoAsked(u: { handle: string; avatarUrl?: string | null } | null): { handle: string; github: string | null; avatarUrl: string | null; guest: boolean } {
+  if (!u) return { handle: "a guest", github: null, avatarUrl: null, guest: true };
+  const fromGithub = /^[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$/i.test(u.handle) && !u.handle.startsWith("anon-");
+  return { handle: u.handle, github: fromGithub ? `https://github.com/${u.handle}` : null, avatarUrl: u.avatarUrl ?? null, guest: false };
+}
+
 export const list = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit }) => {
@@ -22,8 +29,10 @@ export const list = query({
     const out = [];
     for (const r of rows) {
       const mine = viewer ? await ctx.db.query("proposalVotes").withIndex("by_request_user", (q) => q.eq("requestId", r._id).eq("userId", viewer._id)).unique() : null;
+      const u = r.userId ? await ctx.db.get(r.userId) : null;
       out.push({
         id: r._id,
+        by: whoAsked(u),
         prompt: r.prompt,
         scope: r.verdict?.scope ?? "large",
         hint: r.verdict?.hint ?? "",

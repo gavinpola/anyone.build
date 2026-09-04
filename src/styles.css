@@ -456,3 +456,26 @@ body:has([data-canvas]) [data-global-pick] { display: none; }
 .canvas-shell.is-compact .canvas-bar .canvas-bar-cta { margin-left: auto; }
 .canvas-shell.is-compact .canvas-bar .canvas-bar-cta .placard { display: none; }
 
+/* ===== The room is the canvas: full bleed under the header, the bar and the map float over it ===== */
+.room-page { width: 100%; }
+.canvas-shell { display: block; }
+.canvas-shell.is-compact { display: block; }
+.canvas-column { display: block; }
+.canvas-viewport { height: calc(100dvh - 57px); min-height: 480px; border: 0; border-radius: 0; }
+.canvas-shell.is-compact .canvas-viewport { height: calc(100dvh - 57px); margin: 0; width: 100%; }
+.canvas-bar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: auto; max-width: calc(100% - 28px); z-index: 50; }
+.canvas-shell.is-compact .canvas-bar { position: absolute; left: 8px; right: 112px; bottom: 12px; transform: none; width: auto; max-width: none; justify-content: space-between; }
+.canvas-shell.is-compact .bar-optional { display: none; }
+.minimap { bottom: 64px; }
+.canvas-shell.is-compact .minimap { display: none; }
+.canvas-pages { position: absolute; left: 14px; top: 12px; z-index: 50; display: flex; align-items: center; gap: 6px; }
+.canvas-directory, .directory-strip { display: none; }
+.object-label { display: none; }
+body:has([data-canvas]) footer { display: none; }
+body:has([data-canvas]) { padding-bottom: 0; }
+body:has([data-canvas]) .flex.min-h-dvh { padding-bottom: 0; }
+
+/* ===== Ledgers on the leaderboard: five rows, then scroll ===== */
+.ledger-scroll { max-height: calc(5 * 66px); overflow-y: auto; overscroll-behavior: contain; }
+.ledger-hint { color: var(--muted); text-align: center; }
+

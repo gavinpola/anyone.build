@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { whoAsked } from "./proposals";
 import { mutation, query } from "./_generated/server";
 import { getViewerUser, requireUser } from "./users";
 import { rateLimiter } from "./rateLimits";
@@ -50,7 +51,7 @@ export const recentChanges = query({
         id: c._id,
         requestId: c.requestId,
         summary: c.summary,
-        by: { handle: u?.handle ?? "a guest", avatarUrl: u?.avatarUrl ?? null },
+        by: whoAsked(u),
         mine: viewer ? c.userId === viewer._id : false,
         blockIds: c.blockIds,
         linesAdded: c.linesAdded,
