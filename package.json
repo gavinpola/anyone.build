@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "validate:playground": "node scripts/validate-playground.mjs",
-    "eval:judge": "node scripts/eval-judge.mjs",
+    "eval:judge": "vitest run --config vitest.eval.config.ts",
     "refresh-snapshot": "node scripts/refresh-snapshot.mjs",
     "smoke": "playwright test",
     "sync:manifest": "node scripts/gen-manifest.mjs",

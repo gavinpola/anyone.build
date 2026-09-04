@@ -166,6 +166,16 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     if (out.plan.length === 0) out.plan = [singleBlock ? "Make the change inside this block, keeping it to the block itself." : "Build the smallest honest version of what was asked, as its own page, with the kit's useTick loop and a canvas if it's a game."];
     out.public_hint = "This one's big — it's up for a vote.";
   }
+  // A whole-wall ask ("translate the whole wall", "every block") that came back "unclear" is the model dodging
+  // a big job: it has a target (the wall) and a direction. Route it to the vote board as a large change.
+  const wholeWall = /\b(whole|entire|every|all( of)?|each) (the )?(wall|blocks?|site|page|thing|text)\b/i.test(input.prompt);
+  if (out.verdict === "reject" && out.category === "unclear" && wholeWall) {
+    out.category = "too_big";
+    out.scope = "large";
+    out.touches_other_blocks = true;
+    if (out.plan.length === 0) out.plan = ["Apply the change block by block across the wall, keeping each block's own look."];
+    out.public_hint = "This one touches the whole wall — it's up for a vote.";
+  }
   // An unsure hedge that still produced a concrete plan is a big/ambiguous ask, not noise: mark it
   // too_big so it routes to the proposals board (up for a vote), not a dead reject. Only a hedge with
   // no plan is a genuine "nothing to build" → unclear.

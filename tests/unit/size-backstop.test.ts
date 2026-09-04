@@ -78,3 +78,19 @@ describe2("the diff reviewer blocks only on findings", () => {
     expect2(reviewBlocks(DR2.parse({ ...ok, safety_concerns: ["Encodes visitor input into class names."] }))).toBe(true);
   });
 });
+
+describe2("whole-wall asks", () => {
+  it2("an 'unclear' on a whole-wall ask becomes a large proposal, never a dead reject", () => {
+    const v = JV2.parse({ verdict: "reject", category: "unclear", public_hint: "Please point to specific text.", scope: "medium", confidence: 0.5, plan: [], touches_other_blocks: false, touches_backend: false, rationale: "" });
+    const n = normalize2(v, { ...base2, prompt: "translate the whole wall to Spanish", target: { path: "src/rooms/main/blocks/", line: 0, blockId: "__new__", blockTitle: "New block", tag: "wall" } });
+    expect2(n.category).toBe("too_big");
+    expect2(n.scope).toBe("large");
+    expect2(n.touches_other_blocks).toBe(true);
+    expect2(n.plan.length).toBeGreaterThan(0);
+  });
+  it2("an ordinary 'unclear' is untouched", () => {
+    const v = JV2.parse({ verdict: "reject", category: "unclear", public_hint: "Say what should change.", scope: "tiny", confidence: 0.5, plan: [], touches_other_blocks: false, touches_backend: false, rationale: "" });
+    const n = normalize2(v, { ...base2, prompt: "asdfghjkl" });
+    expect2(n.category).toBe("unclear");
+  });
+});

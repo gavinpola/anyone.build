@@ -15,6 +15,7 @@ export { triageSystemPrompt, triageUserPrompt } from "./prompts/triage";
 export { securityReview, securityBlocks, resourceOnly, fastRewrite, reviewBlocks, reviewNote } from "./models";
 export { fastSystemPrompt, fastUserPrompt, extractRewrite } from "./prompts/fast";
 export { unifiedDiff } from "./patch";
+export { judgeWithSecondLooks, BACKEND_OFF_ADDENDUM, type JudgeRunOptions, type JudgeRunResult } from "./judge-run";
 export { SecurityReview } from "./schemas";
 export { securitySystemPrompt, securityUserPrompt } from "./prompts/security";
 export { validateBackendFile, BACKEND_FILE_RE } from "./validate/backend.js";

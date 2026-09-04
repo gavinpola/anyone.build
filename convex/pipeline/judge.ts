@@ -2,7 +2,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
-import { judge, redTeam, costCents, priceFor, scopeGate, type JudgeInput, type ModelConfig } from "../../packages/gatekeeper/src/index";
+import { judgeWithSecondLooks, BACKEND_OFF_ADDENDUM, redTeam, costCents, priceFor, scopeGate, type JudgeInput, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { fetchManifest, fetchSnippet } from "./source";
 
 export const run = internalAction({
@@ -60,9 +60,7 @@ export const run = internalAction({
       addendum:
         [
           process.env.JUDGE_ADDENDUM,
-          !config.backendEnabled
-            ? "Room functions (backend) are switched off right now: plan shared state with the kit store (useStore/useCounter) whenever the ask can be met that way, and set touches_backend=true only if it truly can't."
-            : "",
+          !config.backendEnabled ? BACKEND_OFF_ADDENDUM : "",
         ]
           .filter(Boolean)
           .join("\n") || undefined,
@@ -88,56 +86,18 @@ export const run = internalAction({
     let first;
     let judgeCents = 0;
     try {
-      // Retry once, then try the other vendor. Log every attempt's error: a swallowed retry chain hid
-      // a schema bug for a day (a 201-char plan step threw away a good approve).
-      const attempt = (label: string, c: typeof cfg) =>
-        judge(c, input).catch((e: unknown) => {
-          console.error(`judge attempt failed [${label} ${c.judgeModel}]:`, e instanceof Error ? e.message.slice(0, 400) : String(e));
-          throw e;
-        });
-      const j = await attempt("1", cfg)
-        .catch(() => attempt("2", cfg))
-        .catch(() => attempt("3/fallback", { ...cfg, judgeModel: cfg.redTeamModel }));
-      first = j.verdict;
-      judgeCents += costCents(j.usage, priceFor(cfg.judgeModel));
+      // The judge as the methodology says to run it: retries across vendors, then the second looks
+      // (packages/gatekeeper/src/judge-run.ts; the eval measures the same code).
+      const r = await judgeWithSecondLooks(cfg, input, { backendAvailable: Boolean(config.backendEnabled) && requester.trust >= 1, log: (m) => console.error(m) });
+      first = r.verdict;
+      judgeCents += r.cents;
+      if (r.secondLooks.length) console.log("judge second looks:", r.secondLooks.join(", "), "→", first.verdict, first.category ?? "");
     } catch (e) {
       await ctx.runMutation(internal.requests.setVerdict, {
         id: requestId, approved: false, needsHuman: false, category: "unclear", hint: "The judge couldn't read that one. Try again in a minute, or say it more plainly.", scope: "tiny", confidence: 0, plan: [], redTeamed: false, model: cfg.judgeModel, capCents: 0,
       });
       console.error("judge failed", e);
       return;
-    }
-
-    // "Unclear" on an ask that has a target and some words is usually the model being lazy, not the
-    // ask being empty. One generous second look (a cheap call) before we bounce anyone.
-    const singleBlock = Boolean(request.target.blockId) && request.target.blockId !== "__new__" && !first.touches_other_blocks;
-    const enoughWords = request.prompt.trim().split(/\s+/).length >= 4;
-    const lazyUnclear = first.verdict === "reject" && first.category === "unclear" && enoughWords;
-    // A change to ONE block is at most medium, and medium ships for everyone: "too big" there is the model hedging.
-    const bigOneBlock = first.verdict === "reject" && first.category === "too_big" && singleBlock && !first.touches_backend;
-    if (lazyUnclear || bigOneBlock) {
-      try {
-        const nudge = bigOneBlock
-          ? `SECOND LOOK: this ask targets ONE existing block (${request.target.blockId}). Changing one block is at most a medium change, and medium ships for everyone here, so size is never a reason to hedge. Pick the most reasonable concrete interpretation (for "split into two halves", a two-column layout inside the block), write a 2-5 step plan, scope it tiny/small/medium honestly, and approve unless it breaks a rule.`
-          : "SECOND LOOK: this ask has a target and a direction. Do not ask for more detail. Pick the most reasonable concrete interpretation, write it as a 2-5 step plan, size it honestly, and approve unless it breaks a rule.";
-        const again = await judge({ ...cfg, addendum: [cfg.addendum, nudge].filter(Boolean).join("\n") }, input);
-        judgeCents += costCents(again.usage, priceFor(cfg.judgeModel));
-        if (again.verdict.verdict === "approve" || (again.verdict.verdict === "reject" && again.verdict.category !== "unclear" && again.verdict.category !== "too_big")) first = again.verdict;
-      } catch (e) {
-        console.error("generous retry failed", e instanceof Error ? e.message.slice(0, 200) : String(e));
-      }
-    }
-    // Room functions unavailable (tier off, or a requester who can't use them yet): most shared state fits the
-    // kit store, so give the judge one chance to re-plan without a backend before this goes to a vote.
-    if (first.touches_backend && (!config.backendEnabled || requester.trust < 1) && (first.verdict === "approve" || first.category === "too_big")) {
-      try {
-        const nudge = "SECOND LOOK: room functions are NOT available for this request. Re-plan it using only the kit store (useStore for a shared list of small documents, useCounter for a shared tally; both live for everyone) and set touches_backend=false, unless the ask truly needs server-side rules (strict one-per-person, hidden state, atomic turn-taking). Approve the kit-store version.";
-        const again = await judge({ ...cfg, addendum: [cfg.addendum, nudge].filter(Boolean).join("\n") }, input);
-        judgeCents += costCents(again.usage, priceFor(cfg.judgeModel));
-        if (again.verdict.verdict === "approve" && !again.verdict.touches_backend) first = again.verdict;
-      } catch (e) {
-        console.error("backend re-plan failed", e instanceof Error ? e.message.slice(0, 200) : String(e));
-      }
     }
     // Nobody reviews an "unsure" queue, so unsure is a no with advice on how to re-ask.
     let approved = first.verdict === "approve";
