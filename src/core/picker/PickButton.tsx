@@ -20,7 +20,7 @@ export function PickButton({ className, label = "Change something" }: { classNam
       aria-pressed={on}
     >
       {on ? <X size={14} /> : <Crosshair size={14} />}
-      {on ? "Click anything" : label}
+      <span className="pick-label">{on ? "Click anything" : label}</span>
       {!on ? (
         <span className="placard hidden items-center gap-0.5 sm:inline-flex">
           <kbd className="rounded border border-line bg-paper-2 px-1">⇧</kbd>

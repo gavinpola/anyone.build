@@ -61,7 +61,7 @@ function useStoreConvex<T>(namespace: string) {
   const putM = useMutation(api.store.put);
   const removeM = useMutation(api.store.remove);
   const put = useCallback((key: string, value: T) => void putM({ namespace, key, value, anonId: tabSessionId() }).catch(() => {}), [putM, namespace]);
-  const remove = useCallback((key: string) => void removeM({ namespace, key }).catch(() => {}), [removeM, namespace]);
+  const remove = useCallback((key: string) => void removeM({ namespace, key, anonId: tabSessionId() }).catch(() => {}), [removeM, namespace]);
   return { docs: (rows ?? []) as StoreDoc<T>[], put, remove, ready: rows !== undefined };
 }
 

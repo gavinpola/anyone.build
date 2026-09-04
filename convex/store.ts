@@ -32,19 +32,20 @@ export const list = query({
   },
 });
 
-/** Upsert one doc. Signed-in only. (anonId is still accepted for call compatibility but unused now.) */
+/** Upsert one doc. Anyone may write (the wall is anyone's): signed-in people own docs by account, signed-out people by tab id, both rate-limited. */
 export const put = mutation({
   args: { namespace: v.string(), key: v.string(), value: v.any(), anonId: v.optional(v.string()) },
-  handler: async (ctx, { namespace, key, value }) => {
+  handler: async (ctx, { namespace, key, value, anonId }) => {
     assertPublicNamespace(namespace); // counters go through bump(); room:* is the kit's alone
     if (key.length > 128) throw new Error("Key too long");
     const bytes = JSON.stringify(value ?? null).length;
     if (bytes > MAX_DOC_BYTES) throw new Error("Value too large (4 KB max)");
 
     const viewer = await getViewerUser(ctx);
-    if (!viewer) throw new Error("Sign in to write"); // counters (the old anon path) go through bump()
-    const limitKey = `u:${viewer._id}`;
-    await rateLimiter.limit(ctx, "storeWrite", { key: limitKey, throws: true });
+    const anon = viewer ? undefined : (anonId ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 40) || undefined;
+    if (!viewer && !anon) throw new Error("Couldn't identify this browser. Reload and try again.");
+    const limitKey = viewer ? `u:${viewer._id}` : `a:${anon}`;
+    await rateLimiter.limit(ctx, viewer ? "storeWrite" : "storeWriteAnon", { key: limitKey, throws: true });
 
     const ns = await ctx.db
       .query("storeNamespaces")
@@ -56,7 +57,8 @@ export const put = mutation({
       .unique();
 
     // Only the author (or a maintainer) may overwrite an existing doc; shared counters have no author.
-    if (existing?.byUserId && existing.byUserId !== viewer?._id && (viewer?.trust ?? 0) < 3) throw new Error("Not yours");
+    const mine = !existing || (viewer ? existing.byUserId === viewer._id : !existing.byUserId && existing.byAnonId === anon) || (viewer?.trust ?? 0) >= 3;
+    if (!mine) throw new Error("Not yours");
     const countDelta = existing ? 0 : 1;
     const bytesDelta = bytes - (existing?.bytes ?? 0);
     const nextCount = (ns?.count ?? 0) + countDelta;
@@ -69,8 +71,9 @@ export const put = mutation({
       namespace,
       key,
       value,
-      by: viewer?.handle,
+      by: viewer?.handle ?? "guest",
       byUserId: viewer?._id,
+      byAnonId: anon,
       at: Date.now(),
       bytes,
     };
@@ -108,17 +111,19 @@ export const bump = mutation({
 });
 
 export const remove = mutation({
-  args: { namespace: v.string(), key: v.string() },
-  handler: async (ctx, { namespace, key }) => {
+  args: { namespace: v.string(), key: v.string(), anonId: v.optional(v.string()) },
+  handler: async (ctx, { namespace, key, anonId }) => {
     assertPublicNamespace(namespace); // was unchecked: room:*/counter:* were removable through here
     const viewer = await getViewerUser(ctx);
-    if (!viewer) throw new Error("Sign in first");
+    const anon = viewer ? undefined : (anonId ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 40) || undefined;
+    if (!viewer && !anon) throw new Error("Couldn't identify this browser. Reload and try again.");
     const existing = await ctx.db
       .query("storeDocs")
       .withIndex("by_namespace_key", (q) => q.eq("namespace", namespace).eq("key", key))
       .unique();
     if (!existing) return;
-    if (existing.byUserId !== viewer._id && viewer.trust < 3) throw new Error("Not yours");
+    const mine = (viewer ? existing.byUserId === viewer._id : !existing.byUserId && existing.byAnonId === anon) || (viewer?.trust ?? 0) >= 3;
+    if (!mine) throw new Error("Not yours");
     await ctx.db.delete(existing._id);
     const ns = await ctx.db
       .query("storeNamespaces")

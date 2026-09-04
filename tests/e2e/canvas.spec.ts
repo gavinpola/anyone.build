@@ -72,6 +72,9 @@ test("drag a block by its label and the ask to move it is written for you", asyn
   await page.goto(url);
   await ready(page);
   const first = page.locator("[data-world] [data-ab-block]:not([data-ab-block='__new__'])").first();
+  // zoom to it first, as a person would (labels hide at the far overview)
+  await page.locator("[data-directory-item]").first().click();
+  await page.waitForTimeout(450);
   const chrome = first.locator(".object-label");
   const box = (await chrome.boundingBox())!;
   await page.mouse.move(box.x + 30, box.y + box.height / 2);
@@ -94,4 +97,26 @@ test("the directory lists what's on the canvas and jumps to a block", async ({ p
   await rows.last().click();
   await page.waitForTimeout(300);
   expect(await world.getAttribute("style")).not.toBe(before);
+});
+
+test("a signed-out visitor's stroke on the open canvas survives a reload", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto(url);
+  await ready(page);
+  const chip = page.locator('[data-directory-item="collaborative-art"]');
+  test.skip((await chip.count()) === 0, "no open canvas on this wall");
+  await chip.click();
+  await page.waitForTimeout(500);
+  const art = page.locator('[data-ab-block="collaborative-art"] canvas');
+  await expect(art).toBeVisible();
+  const box = (await art.boundingBox())!;
+  const before = (await page.locator('[data-ab-block="collaborative-art"]').innerText()).match(/(\d+) strokes?/)?.[1] ?? "0";
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.locator('[data-ab-block="collaborative-art"]')).toContainText(new RegExp(`${Number(before) + 1} strokes?`), { timeout: 15_000 });
+  await page.reload();
+  await ready(page);
+  await expect(page.locator('[data-ab-block="collaborative-art"]')).toContainText(new RegExp(`${Number(before) + 1} strokes?`), { timeout: 20_000 });
 });

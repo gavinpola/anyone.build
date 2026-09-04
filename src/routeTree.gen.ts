@@ -18,6 +18,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SitesRouteImport } from './routes/sites'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TimelapseRouteImport } from './routes/timelapse'
 import { Route as CIdRouteImport } from './routes/c.$id'
 import { Route as LabIdRouteImport } from './routes/lab.$id'
 import { Route as PIdRouteImport } from './routes/p.$id'
@@ -68,6 +69,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimelapseRoute = TimelapseRouteImport.update({
+  id: '/timelapse',
+  path: '/timelapse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CIdRoute = CIdRouteImport.update({
   id: '/c/$id',
   path: '/c/$id',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/timelapse': typeof TimelapseRoute
   '/c/$id': typeof CIdRoute
   '/lab/$id': typeof LabIdRoute
   '/p/$id': typeof PIdRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/timelapse': typeof TimelapseRoute
   '/c/$id': typeof CIdRoute
   '/lab/$id': typeof LabIdRoute
   '/p/$id': typeof PIdRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/sites': typeof SitesRoute
   '/terms': typeof TermsRoute
+  '/timelapse': typeof TimelapseRoute
   '/c/$id': typeof CIdRoute
   '/lab/$id': typeof LabIdRoute
   '/p/$id': typeof PIdRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/timelapse'
     | '/c/$id'
     | '/lab/$id'
     | '/p/$id'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/timelapse'
     | '/c/$id'
     | '/lab/$id'
     | '/p/$id'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/sites'
     | '/terms'
+    | '/timelapse'
     | '/c/$id'
     | '/lab/$id'
     | '/p/$id'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   SitesRoute: typeof SitesRoute
   TermsRoute: typeof TermsRoute
+  TimelapseRoute: typeof TimelapseRoute
   CIdRoute: typeof CIdRoute
   LabIdRoute: typeof LabIdRoute
   PIdRoute: typeof PIdRoute
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/timelapse': {
+      id: '/timelapse'
+      path: '/timelapse'
+      fullPath: '/timelapse'
+      preLoaderRoute: typeof TimelapseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/c/$id': {
       id: '/c/$id'
       path: '/c/$id'
@@ -305,6 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   SitesRoute: SitesRoute,
   TermsRoute: TermsRoute,
+  TimelapseRoute: TimelapseRoute,
   CIdRoute: CIdRoute,
   LabIdRoute: LabIdRoute,
   PIdRoute: PIdRoute,

@@ -90,6 +90,8 @@ export type CanvasMeta = {
   heat?: boolean;
   /** a map of the world in the corner */
   minimap?: boolean;
+  /** phones: the same canvas with pinch and pan (default), or a plain stack */
+  mobile?: "canvas" | "stack";
   /** the fixed size of the canvas in px at zoom 1 (people zoom and pan inside it); default 2400 × 1600 */
   size?: { w: number; h: number };
   /** minimum height of the wall when blocks are placed freely, px (legacy; `size` wins) */

@@ -3,7 +3,7 @@ import { BuildersSection } from "./BuildersSection";
 import { ChangesSection } from "./ChangesSection";
 import { ProposalsSection } from "./ProposalsSection";
 import { FocusBar } from "@/core/share/FocusBar";
-import { TimelapseSection } from "./TimelapseSection";
+import { TimelapseLink } from "./TimelapseLink";
 
 export function LeaderboardPage({ focus }: { focus?: string } = {}) {
   return (
@@ -11,12 +11,15 @@ export function LeaderboardPage({ focus }: { focus?: string } = {}) {
       {focus ? <FocusBar id={focus} kind="p" /> : null}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <div className="flex min-w-0 flex-col gap-10">
-          <TimelapseSection />
           <BuildersSection />
           <ProposalsSection />
           <ChangesSection />
+          <TimelapseLink />
         </div>
-        <PatronColumn />
+        {/* phones: the patron leads; desktop: the right column */}
+        <div className="order-first lg:order-none">
+          <PatronColumn />
+        </div>
       </div>
     </div>
   );

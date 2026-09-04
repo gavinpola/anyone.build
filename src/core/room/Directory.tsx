@@ -21,9 +21,29 @@ const initials = (s: string | null) => (s ? s.replace(/^guest[- ·]*/i, "g").sli
 const leftText = (ms: number | null) => (ms == null ? "∞" : ms <= 0 ? "gone" : ms < 3_600_000 ? `${Math.max(1, Math.round(ms / 60_000))}m` : ms < 86_400_000 ? `${Math.round(ms / 3_600_000)}h` : `${Math.round(ms / 86_400_000)}d`);
 
 /** What's on the canvas: a directory, not a layers panel. Click to go there. */
-export function Directory({ items, decayOn, onGo, className, pages = [] }: { items: DirectoryItem[]; decayOn: boolean; onGo: (id: string) => void; className?: string; pages?: Array<{ slug: string; title: string }> }) {
+export function Directory({ items, decayOn, onGo, className, pages = [], compact = false }: { items: DirectoryItem[]; decayOn: boolean; onGo: (id: string) => void; className?: string; pages?: Array<{ slug: string; title: string }>; compact?: boolean }) {
   const [tab, setTab] = useState<"hot" | "new" | "dying">("hot");
   const now = useNow(30_000);
+  if (compact) {
+    // phones: a strip of chips above the canvas; tap to go there
+    const list = [...items].sort((a, b) => b.changes - a.changes || (b.lastAt ?? 0) - (a.lastAt ?? 0));
+    return (
+      <div className={cn("directory-strip", className)} aria-label="On the canvas" data-directory={items.length}>
+        <span className="placard smallcaps shrink-0">on the canvas</span>
+        {pages.map((p) => (
+          <PageLink key={p.slug} to={p.slug} className="directory-chip">
+            {p.title}
+          </PageLink>
+        ))}
+        {list.map((it) => (
+          <button key={it.id} type="button" onClick={() => onGo(it.id)} className={cn("directory-chip", it.editing && "is-editing", it.faded && "is-faded")} data-directory-item={it.id}>
+            <span className={cn("directory-chip-dot", it.isNew ? "bg-ok" : it.left != null && it.left < 86_400_000 ? "bg-warn" : "bg-line-2")} />
+            {it.title}
+          </button>
+        ))}
+      </div>
+    );
+  }
   const sorted = [...items].sort((a, b) =>
     tab === "hot" ? b.changes - a.changes || (b.lastAt ?? 0) - (a.lastAt ?? 0) : tab === "new" ? (b.lastAt ?? 0) - (a.lastAt ?? 0) : (a.left ?? Infinity) - (b.left ?? Infinity),
   );

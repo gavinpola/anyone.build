@@ -38,3 +38,11 @@ test("an unknown page says so and links back", async ({ page }) => {
   await page.getByRole("link", { name: /the wall/i }).click();
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("the timelapse has its own page, linked from the leaderboard", async ({ page }) => {
+  await page.goto(`${url}/leaderboard`);
+  await expect(page.locator("[data-timelapse-link]")).toBeVisible({ timeout: 20_000 });
+  await page.locator("[data-timelapse-link]").click();
+  await expect(page).toHaveURL(/\/timelapse$/);
+  await expect(page.locator("[data-timelapse]")).toBeVisible({ timeout: 20_000 });
+});

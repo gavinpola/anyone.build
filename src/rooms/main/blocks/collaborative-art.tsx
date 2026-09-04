@@ -34,9 +34,6 @@ export default function CollaborativeArt() {
   const drawingRef = useRef(false);
   const lastRef = useRef<Pt | null>(null);
   const localRef = useRef<Stroke | null>(null);
-  // strokes by a signed-out visitor: drawn for them, kept only in this tab
-  const guestRef = useRef<Stroke[]>([]);
-  const [guestCount, setGuestCount] = useState(0);
   const docsRef = useRef(docs);
   useEffect(() => {
     docsRef.current = docs;
@@ -86,7 +83,6 @@ export default function CollaborativeArt() {
     }
     ctx.stroke();
     for (const d of docs) drawStroke(ctx, d.value);
-    for (const s of guestRef.current) drawStroke(ctx, s);
     if (localRef.current) drawStroke(ctx, localRef.current);
   }, [docs, drawStroke]);
 
@@ -105,12 +101,6 @@ export default function CollaborativeArt() {
   };
 
   const commit = (s: Stroke) => {
-    if (!signedIn) {
-      guestRef.current = [...guestRef.current.slice(-49), s];
-      setGuestCount(guestRef.current.length);
-      redraw();
-      return;
-    }
     put(makeKey(), s);
     const all = docsRef.current;
     const excess = all.length - (MAX_STROKES - 1);
@@ -179,13 +169,7 @@ export default function CollaborativeArt() {
   };
 
   const clear = () => {
-    if (!signedIn) {
-      guestRef.current = [];
-      setGuestCount(0);
-      redraw();
-      return;
-    }
-    for (const d of docsRef.current) remove(d.key);
+    for (const d of docsRef.current) remove(d.key); // only your own strokes go; the store keeps everyone else's
   };
 
   return (
@@ -212,7 +196,7 @@ export default function CollaborativeArt() {
         {!signedIn && (
           <div className="pointer-events-none absolute inset-x-0 flex justify-center pt-3">
             <span className="rounded-full border border-line bg-[#0d0b09]/80 px-3 py-1 text-[12px] text-[#f4efe3]/80">
-              drawing just for you — sign in to add your strokes for everyone
+              drawing as a guest — sign in to put your name on your strokes
             </span>
           </div>
         )}
@@ -234,7 +218,7 @@ export default function CollaborativeArt() {
             />
           ))}
         </Row>
-        <Button variant="secondary" size="sm" onClick={clear} disabled={signedIn ? docs.length === 0 : guestCount === 0}>
+        <Button variant="secondary" size="sm" onClick={clear} disabled={docs.length === 0}>
           <Eraser size={14} />
           Clear
         </Button>

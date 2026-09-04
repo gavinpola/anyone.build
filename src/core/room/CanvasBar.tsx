@@ -5,7 +5,7 @@ import { PickButton } from "@/core/picker/PickButton";
  * The bottom bar: zoom, fit, a quick note, "describe a thing" (pick mode), the door to the wall's own
  * file, and a one-line toast for what just shipped or what fades today.
  */
-export function CanvasBar({ zoom, fit, onZoom, onFit, onWall, onNote, toast }: { zoom: number; fit: number; onZoom: (z: number) => void; onFit: () => void; onWall: (rect: DOMRect) => void; onNote: (rect: DOMRect) => void; toast: string | null }) {
+export function CanvasBar({ zoom, fit, onZoom, onFit, onWall, onNote, toast, compact = false }: { zoom: number; fit: number; onZoom: (z: number) => void; onFit: () => void; onWall: (rect: DOMRect) => void; onNote: (rect: DOMRect) => void; toast: string | null; compact?: boolean }) {
   const pct = Math.round(zoom * 100);
   const btn = "inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[12px] font-medium text-ink-2 hover:bg-paper-2 hover:text-ink disabled:opacity-40";
   return (
@@ -25,14 +25,14 @@ export function CanvasBar({ zoom, fit, onZoom, onFit, onWall, onNote, toast }: {
       <span className="canvas-bar-sep" />
       <button type="button" className={btn + " gap-1.5 font-mono uppercase tracking-[0.08em]"} onClick={(e) => onNote((e.currentTarget as HTMLElement).getBoundingClientRect())} title="A quick note">
         <StickyNote size={13} />
-        note
+        <span className="bar-text">note</span>
       </button>
       <button type="button" className={btn + " gap-1.5 font-mono uppercase tracking-[0.08em]"} onClick={(e) => onWall((e.currentTarget as HTMLElement).getBoundingClientRect())} title="Change the wall itself: its ground, spacing, skin, decay">
         <Brush size={13} />
-        the wall
+        <span className="bar-text">the wall</span>
       </button>
       <span className="canvas-bar-sep" />
-      <PickButton className="canvas-bar-cta" label="Change something" />
+      <PickButton className="canvas-bar-cta whitespace-nowrap" label={compact ? "Change" : "Change something"} />
       {toast ? (
         <span className="canvas-toast" data-toast>
           <span className="live-dot" aria-hidden />

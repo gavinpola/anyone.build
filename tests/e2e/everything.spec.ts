@@ -250,7 +250,7 @@ test.describe("mobile", () => {
     await signIn(page);
     await expect(page.locator("[data-room]")).toBeVisible();
     await page.getByRole("button", { name: /change something/i }).click({ force: true });
-    await page.locator('[data-ab-block="__new__"]').tap({ position: { x: 100, y: 60 } });
+    await page.locator('[data-ab-block="__new__"]').tap();
     await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeVisible();
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: /^live/i }).click({ force: true });

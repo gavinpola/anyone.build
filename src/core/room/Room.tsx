@@ -52,9 +52,9 @@ export const blocks = Object.entries({ ...examples, ...modules })
 const NEW_BLOCK_PATH = `src/rooms/${room.id}/blocks/`;
 /** The wall itself: its file. Reached from the canvas bar. */
 export const CANVAS_PATH = `src/rooms/${room.id}/canvas.ts`;
-const ADD_ZONE = 300; // px of always-empty canvas at the bottom: "point here to add something" (tall enough to point at when fitted)
+const ADD_ZONE = 420; // px of always-empty canvas at the bottom: "point here to add something" (tall enough to point at when fitted)
 const GAP = () => Math.max(0, Math.min(80, canvas.gap ?? 24));
-const PAD = () => Math.max(0, Math.min(80, canvas.padding ?? 6)) + 30; // room for the labels above the first row
+const PAD = () => Math.max(0, Math.min(80, canvas.padding ?? 6)) + 80; // room for the constant-size labels above the first row (22px / zoom ≥ 0.3)
 const IN_FLIGHT = new Set(["queued", "building", "validating", "reviewing", "preview", "merging"]);
 const DAY = 86_400_000;
 
@@ -67,7 +67,7 @@ export function Room() {
     mq.addEventListener("change", f);
     return () => mq.removeEventListener("change", f);
   }, []);
-  return stacked ? <StackedRoom /> : <CanvasRoom />;
+  return stacked && canvas.mobile === "stack" ? <StackedRoom /> : <CanvasRoom compact={stacked} />;
 }
 
 function useHeights(wallRef: React.RefObject<HTMLDivElement | null>, ids: string) {
@@ -110,7 +110,7 @@ type Gesture =
   | { kind: "marquee"; start: { x: number; y: number }; rect: Rect | null }
   | { kind: "block"; id: string; start: { x: number; y: number }; from: { x: number; y: number }; delta: { x: number; y: number }; moved: boolean };
 
-function CanvasRoom() {
+function CanvasRoom({ compact }: { compact: boolean }) {
   const pages = pagesFor(room.id);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const wallRef = useRef<HTMLDivElement | null>(null);
@@ -208,7 +208,10 @@ function CanvasRoom() {
   }, [applyZoom, zoom, vp, world.w, worldH]);
   useTouch(wallRef, decayOn);
 
-  // gestures: pan on empty space; in pick mode, drag over a space (marquee) or drag a block (a move proposal)
+  // gestures: pan on empty space; in pick mode, drag over a space (marquee) or drag a block (a move proposal);
+  // two fingers pinch to zoom (and pan with the midpoint)
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ dist: number; zoom: number; mid: { x: number; y: number }; pan: Pan } | null>(null);
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const gestureRef = useRef<Gesture | null>(null);
   const setG = (g: Gesture | null) => {
@@ -220,6 +223,16 @@ function CanvasRoom() {
     return toWorld({ x: e.clientX, y: e.clientY }, r, pan, zoom);
   };
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === "touch") {
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.current.size === 2) {
+        const [a, b] = Array.from(pointers.current.values());
+        const r = viewportRef.current!.getBoundingClientRect();
+        pinch.current = { dist: Math.hypot(a!.x - b!.x, a!.y - b!.y), zoom, mid: { x: (a!.x + b!.x) / 2 - r.left, y: (a!.y + b!.y) / 2 - r.top }, pan };
+        setG(null);
+        return;
+      }
+    }
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
     if (target.closest("[data-canvas-bar], [data-minimap], [data-directory]")) return;
@@ -245,6 +258,21 @@ function CanvasRoom() {
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType === "touch" && pointers.current.has(e.pointerId)) {
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const pz = pinch.current;
+      if (pz && pointers.current.size >= 2) {
+        const [a, b] = Array.from(pointers.current.values());
+        const r = viewportRef.current!.getBoundingClientRect();
+        const dist = Math.hypot(a!.x - b!.x, a!.y - b!.y);
+        const mid = { x: (a!.x + b!.x) / 2 - r.left, y: (a!.y + b!.y) / 2 - r.top };
+        const z = clampZoom((pz.zoom * dist) / Math.max(1, pz.dist), fit);
+        const p = zoomAround(pz.mid, { pan: pz.pan, zoom: pz.zoom }, z);
+        setZoom(z);
+        setPan(clampPan({ x: p.x + (mid.x - pz.mid.x), y: p.y + (mid.y - pz.mid.y) }, z, vp, { w: world.w, h: worldH }));
+        return;
+      }
+    }
     const g = gestureRef.current;
     if (!g) return;
     if (g.kind === "pan") {
@@ -264,6 +292,14 @@ function CanvasRoom() {
     }
   };
   const onPointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType === "touch") {
+      pointers.current.delete(e.pointerId);
+      if (pinch.current) {
+        if (pointers.current.size < 2) pinch.current = null;
+        pickerStore.suppressClick();
+        return;
+      }
+    }
     const g = gestureRef.current;
     if (!g) return;
     setG(null);
@@ -328,13 +364,14 @@ function CanvasRoom() {
     if (p) goTo({ x: p.x + p.w / 2, y: p.y + Math.min(p.h / 2, 260) }, Math.max(zoom, 0.85));
   };
 
-  const worldStyle: CSSProperties = {
+  const worldStyle = {
     ...wallStyle(canvas, false),
     width: world.w,
     height: worldH,
     padding: 0,
     transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-  };
+    "--zoom": String(zoom),
+  } as CSSProperties;
   const liquid = skin === "paper" ? hung.filter((b) => b.h.body.merge).map((b) => ({ id: b.meta.id, body: b.h.body, tilt: b.h.tilt })) : [];
   const [noteAsk, setNoteAsk] = useState(0);
   const askNote = (rect: DOMRect) => {
@@ -345,8 +382,8 @@ function CanvasRoom() {
 
   return (
     <RoomContext.Provider value={room.id}>
-      <div className="canvas-shell" data-skin={skin}>
-        <Directory items={directory} decayOn={decayOn} onGo={focus} className="canvas-directory" pages={pages.map((p) => ({ slug: p.meta.slug, title: p.meta.title }))} />
+      <div className={cn("canvas-shell", compact && "is-compact")} data-skin={skin}>
+        <Directory items={directory} decayOn={decayOn} onGo={focus} className="canvas-directory" pages={pages.map((p) => ({ slug: p.meta.slug, title: p.meta.title }))} compact={compact} />
         <div className="canvas-column">
         <div
           ref={viewportRef}
@@ -358,9 +395,13 @@ function CanvasRoom() {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={() => setG(null)}
+          onPointerCancel={(e) => {
+            pointers.current.delete(e.pointerId);
+            if (pointers.current.size < 2) pinch.current = null;
+            setG(null);
+          }}
         >
-          <div ref={wallRef} className="wall canvas-world" style={worldStyle} data-world={`${world.w}x${worldH}`} data-content-bottom={Math.round(layout.bottom)} data-zoom={zoom.toFixed(3)}>
+          <div ref={wallRef} className="wall canvas-world" style={worldStyle} data-world={`${world.w}x${worldH}`} data-content-bottom={Math.round(layout.bottom)} data-zoom={zoom.toFixed(3)} data-zoomband={zoom < 0.22 ? "far" : zoom < 0.7 ? "mid" : "near"}>
             <Heat spots={heat} world={{ w: world.w, h: worldH }} />
             {liquid.length ? <LiquidLayer wallRef={wallRef} bodies={liquid} goo={canvas.goo ?? true} morph={canvas.morph ?? true} /> : null}
             {hung.map(({ meta, Component, path, h }) => {
@@ -423,6 +464,7 @@ function CanvasRoom() {
             onZoom={(z) => applyZoom(z)}
             onFit={() => applyZoom(fit)}
             onNote={askNote}
+            compact={compact}
             onWall={(rect) => pickerStore.select({ path: CANVAS_PATH, line: 1, blockId: "__canvas__", blockTitle: "The wall itself", tag: "canvas", text: undefined, rect, element: viewportRef.current!, granularity: "block" })}
             toast={shipped ? `${shipped.user.guest ? "a guest" : "@" + shipped.user.handle} shipped: ${shipped.run?.summary ?? shipped.prompt}` : dyingToday ? `${dyingToday} ${dyingToday === 1 ? "thing fades" : "things fade"} today unless touched` : null}
           />
