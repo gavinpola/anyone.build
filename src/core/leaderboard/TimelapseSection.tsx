@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { Pause, Play } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
+import { timeAgo, useNow } from "@/core/lib/useNow";
 
 /** The wall, every hour: a scrubbable timelapse of what the screen looked like. This page can't be changed by the wall. */
 export function TimelapseSection() {
@@ -17,18 +18,20 @@ export function TimelapseSection() {
     return () => clearInterval(t);
   }, [playing, n]);
   const f = frames?.[idx];
+  const latest = frames?.[n - 1];
+  const now = useNow(60_000);
   const when = (at: number) => new Date(at).toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric" });
   return (
     <section data-timelapse={n}>
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-2xl">The wall, every hour</h2>
-        <span className="placard">{n ? `${n} ${n === 1 ? "frame" : "frames"} · last 30 days` : ""}</span>
+        <span className="placard" data-timelapse-latest={latest?.at ?? ""}>{n && latest ? `${n} ${n === 1 ? "frame" : "frames"} · latest ${timeAgo(latest.at, now)}` : ""}</span>
       </div>
       <div className="frame mt-3 overflow-hidden">
         {!frames ? (
           <p className="p-5 text-[14px] text-muted">Loading…</p>
         ) : n === 0 ? (
-          <p className="p-5 text-[14px] text-muted">The first frame lands at the top of the next hour.</p>
+          <p className="p-5 text-[14px] text-muted">The first frame lands within the hour.</p>
         ) : (
           <div>
             <div className="relative bg-paper-2">

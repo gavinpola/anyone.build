@@ -1,8 +1,10 @@
 name: timelapse
 # The wall, every hour: one screenshot of the live site, stored for 30 days and shown on the leaderboard.
+# GitHub's scheduler skips and delays runs on quiet repos, so this asks three times an hour and the
+# script only posts when the last frame is older than 50 minutes. workflow_dispatch always posts.
 on:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "11,31,51 * * * *"
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,5 +28,7 @@ jobs:
         env:
           SITE_URL: https://anyone-build.vercel.app
           CONVEX_SITE_URL: https://hushed-ladybug-141.convex.site
+          CONVEX_URL: https://hushed-ladybug-141.convex.cloud
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
           TIMELAPSE_TOKEN: ${{ secrets.TIMELAPSE_TOKEN }}
         run: node scripts/timelapse.mjs

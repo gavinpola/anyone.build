@@ -9,6 +9,27 @@ if (!convexSite || !token) {
   console.error("CONVEX_SITE_URL and TIMELAPSE_TOKEN are required");
   process.exit(1);
 }
+// One frame an hour: skip when the latest frame is fresh (the schedule fires more often than that on
+// purpose, because GitHub drops scheduled runs). FORCE=1 (a manual run) always posts.
+const convexUrl = process.env.CONVEX_URL;
+const FRESH_MS = 50 * 60 * 1000;
+if (!process.env.FORCE && convexUrl) {
+  try {
+    const q = await fetch(`${convexUrl.replace(/\/$/, "")}/api/query`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ path: "timelapse:list", args: { limit: 1 }, format: "json" }),
+    });
+    const j = await q.json();
+    const latest = j?.value?.[j.value.length - 1];
+    if (latest && Date.now() - latest.at < FRESH_MS) {
+      console.log(`latest frame is ${Math.round((Date.now() - latest.at) / 60000)} min old; nothing to do`);
+      process.exit(0);
+    }
+  } catch (e) {
+    console.log("could not read the latest frame; posting anyway:", String(e).slice(0, 120));
+  }
+}
 const width = 1280;
 const height = 1600;
 const browser = await chromium.launch();

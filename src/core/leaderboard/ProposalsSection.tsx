@@ -7,21 +7,24 @@ import { timeAgo } from "@/core/lib/useNow";
 import { useViewer } from "@/core/auth/useViewer";
 import { cn } from "@/core/lib/cn";
 import { LEDGER_ROWS, ScrollHint, WhoAsked } from "./Ledger";
+import { useNow } from "@/core/lib/useNow";
+import { untilRoundEnd } from "../../../convex/lib/rounds";
 
-/** "Up for a vote": safe-but-big asks the crowd decides on. Every hour the top one is built and leaves the board. */
+/** "Up for a vote": safe-but-big asks the crowd decides on, in three-hour rounds: the top one is built, the rest start over. */
 export function ProposalsSection() {
   const rows = useQuery(api.proposals.list, hasConvex ? { limit: 100 } : "skip");
   const vote = useMutation(api.proposals.vote);
   const viewer = useViewer();
+  const now = useNow(30_000);
   if (!hasConvex || (rows && rows.length === 0)) return null;
   return (
     <section>
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-2xl">Up for a vote</h2>
-        <span className="placard">top one ships every hour</span>
+        <span className="placard" data-round-ends>round ends in {untilRoundEnd(now)}</span>
       </div>
       <p className="mt-1 text-[13px] text-ink-2">
-        Bigger asks don't get turned away — they go here. Sign in to vote; every hour the most-wanted one is built, safely, and leaves the board.
+        Bigger asks don't get turned away — they go here. Sign in to vote. Every three hours the most-wanted one is built, safely, and the rest start over.
       </p>
       <div className="frame mt-3 overflow-hidden">
         {rows ? (

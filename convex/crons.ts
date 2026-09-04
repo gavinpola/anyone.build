@@ -7,14 +7,16 @@ const crons = cronJobs();
 crons.hourly("auction tick (ET midnight)", { minuteUTC: 1 }, internal.payments.tickAuction, {});
 crons.hourly("sweep turnstile tickets", { minuteUTC: 17 }, internal.turnstile.sweep, {});
 crons.hourly("expire stale needs_human", { minuteUTC: 23 }, internal.maintenance.expireNeedsHuman, {});
-// The top-voted proposal gets built once a day, just after the ET midnight roll-over. One per day
-// keeps big community builds affordable; the winner still passes the full safety pipeline. 05:07 UTC
-// is ~1am ET (DST) / midnight ET (standard) — right after the auction close.
-crons.hourly("promote top proposal", { minuteUTC: 37 }, internal.proposals.promoteTop, {});
-crons.daily("expire unvoted proposals", { hourUTC: 5, minuteUTC: 12 }, internal.maintenance.expireStaleProposals, {});
+// Proposal rounds: every three hours (UTC hours divisible by 3, at :37, the same boundaries as
+// convex/lib/rounds.ts) the most-wanted proposal is built through the full safety pipeline and every
+// other proposal expires, so the board starts over. One build per round keeps big builds affordable.
+crons.cron("proposal round: build the top one, the rest start over", "37 */3 * * *", internal.proposals.promoteTop, {});
 // Keep the presence tables tiny.
 crons.interval("sweep presence", { minutes: 10 }, internal.presence.sweep, {});
 crons.daily("prune timelapse frames older than 30 days", { hourUTC: 5, minuteUTC: 20 }, internal.timelapse.prune, {});
+// GitHub drops scheduled runs on quiet repos: once an hour, if the latest frame is stale, ask it to run
+// the timelapse workflow (works once the GitHub App has the Actions permission; harmless until then).
+crons.hourly("kick the timelapse", { minuteUTC: 3 }, internal.timelapseKick.kick, {});
 
 crons.daily("decay: fade what ran out", { hourUTC: 5, minuteUTC: 33 }, internal.life.sweep, {});
 // One-off, kept until the legacy namespace is empty: the open canvas moved to a whiteboard namespace

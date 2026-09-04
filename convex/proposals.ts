@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query, type MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getViewerUser, requireUser } from "./users";
 import { rateLimiter } from "./rateLimits";
@@ -75,7 +75,9 @@ export const vote = mutation({
 /**
  * Promote the top-voted proposal into the normal pipeline, once per run. The build is gated exactly
  * like any other change (validator, diff review, security pass), so a winning-but-unsafe idea still
- * fails at build. Rationing to one per run keeps big builds affordable no matter how many are proposed.
+ * fails at build. Rationing to one per round keeps big builds affordable no matter how many are proposed.
+ * A round is three hours (convex/lib/rounds.ts); at its end the winner is built and every other proposal
+ * expires, so each round starts from a clean board.
  */
 export const promoteTop = internalMutation({
   args: {},
@@ -86,7 +88,10 @@ export const promoteTop = internalMutation({
       .order("desc")
       .take(1);
     const top = proposed[0];
-    if (!top || (top.proposalVotes ?? 0) < MIN_VOTES_TO_BUILD || !top.verdict) return { promoted: false };
+    if (!top || (top.proposalVotes ?? 0) < MIN_VOTES_TO_BUILD || !top.verdict) {
+      const expired = await expireRound(ctx, "The round ended without votes, so the board started over. Ask again if you still want it.");
+      return { promoted: false, expired };
+    }
 
     const config = await getAllConfig(ctx);
     const capCents = config.scopeCapsCents[top.verdict.scope];
@@ -115,9 +120,21 @@ export const promoteTop = internalMutation({
     // The proposal itself is retired from the board (its clone now carries the build).
     await ctx.db.patch(top._id, { status: "rejected", verdict: { ...top.verdict, hint: "This won the vote and is being built now." }, updatedAt: now });
     await ctx.runMutation(internal.pipeline.executor.enqueue, { requestId: cloneId });
-    return { promoted: true, requestId: cloneId, votes: top.proposalVotes ?? 0 };
+    // The round is over: everything else on the board expires, and the next round starts clean.
+    const expired = await expireRound(ctx, "The round ended: the most-wanted ask was built and the board started over. Ask again if you still want it.");
+    return { promoted: true, requestId: cloneId, votes: top.proposalVotes ?? 0, expired };
   },
 });
+
+/** Every other proposal leaves the board at the end of a round; re-asking is one click. */
+async function expireRound(ctx: MutationCtx, hint: string): Promise<number> {
+  const rows = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "proposed")).take(200);
+  const now = Date.now();
+  for (const r of rows) {
+    await ctx.db.patch(r._id, { status: "rejected", verdict: r.verdict ? { ...r.verdict, hint } : undefined, updatedAt: now });
+  }
+  return rows.length;
+}
 
 /** How many proposals are open, for the section header. */
 export const count = query({

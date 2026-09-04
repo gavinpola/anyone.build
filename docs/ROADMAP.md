@@ -113,7 +113,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] No labels over objects and no directory: the canvas fills the Room page edge to edge under the header; the bar floats at the bottom centre, the map above the Live pill, pages as a strip top-left. Hovering an object shows its title and who touched it last (native tooltip). Moving an object: pick mode, then drag it.
 - [x] The map jumps to an object (each block is a clickable rect, `data-map-block`).
 - [x] Phones: the bar is zoom + Change + Live across the bottom; the map is a chip that opens on request.
-- [x] The vote board: five rows, scroll for the rest; every hour the top proposal is built and leaves the board (`crons.hourly promoteTop`); who asked, linked to their GitHub when they signed in with it. Same five-row ledger on Changes.
+- [x] The vote board: five rows, scroll for the rest; proposals run in three-hour rounds: the top one is built and the rest expire (`crons.cron "37 */3 * * *" promoteTop`, `convex/lib/rounds.ts`); who asked, linked to their GitHub when they signed in with it. Same five-row ledger on Changes.
 - [ ] NEXT: an object's facts (who, when, days left) belong in the pick placard and the composer header, not a native tooltip; a "faded" object needs a visible way to revive from the map.
 
 ## Floating UI never blocks the canvas (Gavin, 2026-09-04: "I can't build stuff over the map / live")
@@ -124,4 +124,10 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] While pointing (chord or Change), the map, the pages strip and the "?" fade and let pointer events through; the bar keeps the cancel. e2e: a marquee started over the map reaches the canvas.
 - [x] The open canvas has an eraser instead of Clear: `open:` store namespaces are whiteboards (anyone erases anything), `store.removeMany` batches a drag's deletes under a `storeErase` bucket, the legacy strokes are adopted (never deleted) by an hourly one-off cron.
 - [ ] NEXT: undo the last erase (keep a short local tombstone list and re-put); delete the adopt cron once `collab-art` is empty; an object's facts (who, when, days left) in the pick placard instead of a tooltip.
+
+## Rounds and the hourly frame (Gavin, 2026-09-04: "maybe it's every 3 hours… and the wall every hour isn't working")
+- [x] Proposals run in three-hour rounds (UTC 00:37, 03:37, …): the most-wanted one is built, every other proposal expires and the board starts over. The board shows "round ends in 1h 12m" (`convex/lib/rounds.ts`, shared by the cron and the client; unit-tested).
+- [x] Timelapse: GitHub's scheduler fired the hourly job twice in ten hours. Now the workflow asks three times an hour and the script posts only when the latest frame is older than 50 minutes (manual runs always post); the cards say when the last frame landed.
+- [x] `timelapseKick` (Convex, hourly): if the latest frame is stale, ask GitHub to run the workflow. Needs the GitHub App's **Actions: read and write** permission (GitHub → Settings → Developer settings → GitHub Apps → anyone.build → Permissions), then accept the new permission on the installation; until then GitHub answers 403 and the kick is a no-op.
+- [ ] NEXT: if frames still miss hours after a day, move capture to a Vercel cron + headless Chromium function (Hobby allows daily crons only, so this needs Pro) or a screenshot API with a key.
 
