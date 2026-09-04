@@ -32,7 +32,7 @@ function NeedsHuman() {
   const decide = useMutation(api.requests.decide);
   return (
     <section>
-      <h2 className="font-display text-2xl">Needs a human</h2>
+      <h2 className="font-display text-2xl">Retired queue (needs_human; nothing new lands here)</h2>
       <div className="frame mt-3 overflow-hidden">
         {rows && rows.length ? (
           <ul>

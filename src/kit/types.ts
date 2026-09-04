@@ -22,6 +22,8 @@ export type BlockMeta = {
   span?: number;
   /** never fades (the wall header, the rules): decay skips it */
   pinned?: boolean;
+  /** Taken off the wall. The file stays as history and "bring it back" is one flip; the wall, the manifest, and the playtester skip it. */
+  removed?: boolean;
   /**
    * Where the block sits on the canvas, in world pixels (the canvas has a fixed size, see CanvasMeta.size):
    * x and y from the top-left, w the width. A placed block sits exactly there; blocks without a place are

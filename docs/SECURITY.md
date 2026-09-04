@@ -10,7 +10,7 @@ Email **security@anyone.build** or open a [private security advisory](https://gi
 
 Every layer below is deterministic and public. Knowing about it doesn't help you get around it.
 
-1. **Identity.** Changing anything needs a GitHub account. Account age and public repos set a trust level; new accounts get two tiny changes a day.
+1. **Identity.** Anyone can ask for a change, signed in or not; a guest is a browser id, and sign-in ties credit to a GitHub name (and is required only to vote and for the backend tier). Trust sets what builds right now, never whether an ask is welcome: up to medium ships on its own, larger goes up for a vote. One build per person at a time.
 2. **The editable surface is `src/rooms/**`, nothing else.** Enforced four times: inside the agent's tools, by the validator in the sandbox, by the validator in Convex before a commit, and by CI on the PR. `CODEOWNERS` requires a human review for everything outside the wall.
 3. **Forbidden code.** No network calls, storage, cookies, scripts, iframes, images or links from elsewhere, URL literals, dynamic import, eval, obfuscation, or invisible unicode in room files. ESLint bans plus a regex pass (`packages/gatekeeper/src/validate`). Links only through `SafeLink` with an allowlist.
 4. **No secret in the sandbox.** The agent runs in a Vercel Sandbox with deny-by-default egress. The model key is injected by the firewall at egress; the GitHub token never leaves Convex. The agent can't push: Convex commits the validated patch through the Git Data API.

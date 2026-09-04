@@ -170,6 +170,13 @@ test("anyone can erase anyone's stroke: a second visitor rubs out the first one'
   await expect.poll(() => count(a), { timeout: 15_000 }).toBeLessThan(start + 1);
 });
 
+test("a block marked removed is off the wall and off the map", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  await expect(page.locator('[data-ab-block="hello-note-6e0z"]')).toHaveCount(0);
+  await expect(page.locator('[data-map-block="hello-note-6e0z"]')).toHaveCount(0);
+});
+
 test("the map folds to a chip, remembers it, and opens again", async ({ page }) => {
   await page.goto(url);
   await ready(page);
@@ -275,3 +282,18 @@ test("while pointing, a marquee started over the map still reaches the canvas", 
   await expect(dialog.getByText("This space")).toBeVisible();
   await page.keyboard.press("Escape");
 });
+
+test("when a change lands after the tab loaded, the bar offers a reload", async ({ page }) => {
+  // the first answers (this tab's baseline; dev strict mode asks twice) are one build, then a newer one lands
+  let first = 0;
+  await page.route("**/version.json*", (route) => {
+    first ||= Date.now();
+    void route.fulfill({ json: { sha: Date.now() - first < 1500 ? "aaaaaaa" : "bbbbbbb", at: Date.now() } });
+  });
+  await page.goto(url);
+  await ready(page);
+  await expect(page.locator("[data-new-build]")).toHaveCount(0);
+  // the next poll (every few seconds under the e2e flag) answers with a different build: the pill appears in the bar
+  await expect(page.locator("[data-canvas-bar] [data-new-build]")).toBeVisible({ timeout: 15_000 });
+});
+

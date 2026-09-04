@@ -18,6 +18,7 @@ function blockIds(): string[] {
   if (env.length) return env;
   return readdirSync(ROOM_BLOCKS)
     .filter((f) => f.endsWith(".tsx"))
+    .filter((f) => !/removed\s*:\s*true/.test(readFileSync(new URL(f, ROOM_BLOCKS), "utf8"))) // off the wall: nothing to test
     .map((f) => f.replace(/\.tsx$/, ""));
 }
 
@@ -60,7 +61,7 @@ async function askVision(id: string, meta: { title: string; description: string 
       text: [
         `You are playtesting one block of a public website. The block is called "${meta.title}" and describes itself as: "${meta.description}".`,
         `The tester is a first-time visitor who is NOT signed in. What they did, in order: clicked the first visible button if there was one, tapped the middle of the block, pressed Space and ArrowUp, then dragged across the middle. Screenshots: (1) just after it rendered; (2) about half a second after those inputs; (3) about two seconds later.`,
-        `Anything that needs an account may refuse a signed-out visitor: that "works" as long as the block SAYS so plainly (a "sign in to …" prompt). Silently doing nothing does not work.`,
+        `Nothing on the wall needs an account: signed-out visitors can write, draw, vote in a block's own poll, and play. A block that tells a signed-out visitor to sign in before doing its main thing does NOT work. Silently doing nothing does not work either.`,
         `Decide whether the block plausibly works for a visitor who taps the right thing. The tester is a script: its taps land in the middle of the block and may miss the actual control, so a missed target is NOT a failure. Use what changed on screen as evidence (a game started, a timer ran, a prompt appeared, a score or counter moved, strokes appeared). Fail only for things that clearly cannot work: nothing visible; a crash or error text; the main action visibly doing nothing when it was aimed correctly (a jump that never happens after the game started); text cut off or overlapping; a layout that is obviously broken. Small aesthetic choices are fine. Static text "works" when it renders legibly.`,
         `Answer as JSON only: {"works": boolean, "confidence": 0..1, "problems": ["short, concrete"], "summary": "one line"}.`,
       ].join("\n"),

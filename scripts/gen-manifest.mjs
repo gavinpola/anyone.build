@@ -15,6 +15,7 @@ for (const room of readdirSync(roomsDir, { withFileTypes: true }).filter((d) => 
     const body = m?.[1] ?? "";
     const pick = (k) => body.match(new RegExp(`${k}\\s*:\\s*"([^"]*)"`))?.[1] ?? "";
     const order = Number(body.match(/order\s*:\s*(\d+)/)?.[1] ?? 0);
+    if (/removed\s*:\s*true/.test(body)) continue; // taken off the wall; the file is history, not an object
     blocks.push({ id: pick("id") || f.replace(/\.tsx$/, ""), title: pick("title"), description: pick("description"), size: pick("size"), order, path: `src/rooms/${room.name}/blocks/${f}` });
   }
   blocks.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));

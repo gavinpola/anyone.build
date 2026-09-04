@@ -31,7 +31,6 @@ export default function Poll() {
               key={o}
               variant={mine === o ? "primary" : "secondary"}
               className="relative justify-between overflow-hidden"
-              disabled={!viewer.signedIn}
               onClick={() => put(viewer.handle, o)}
             >
               <span
@@ -45,7 +44,6 @@ export default function Poll() {
           );
         })}
       </Stack>
-      {!viewer.signedIn ? <Text muted className="text-[12px]">Sign in to vote.</Text> : null}
     </Stack>
   );
 }

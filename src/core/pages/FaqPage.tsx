@@ -4,7 +4,7 @@ const faq: Array<[string, string]> = [
   ["What is this?", "A website anyone can change. Point at something, say what should change, and if it's good for everyone, an agent writes the code and it ships. The wall started empty."],
   ["How do I change something?", "Hold ⇧⌘ (⇧Ctrl on Windows) and click anything on the wall, or the empty wall itself. Say what should change."],
   ["Do I need an account?", "No. Sign in with GitHub if you want your changes counted under your name; you can claim earlier ones later."],
-  ["Who decides what ships?", "A gatekeeper model judges the request against the rules; a second model argues against it; a third reads the code it produced. Anything unclear goes to a human. All of it is open source."],
+  ["Who decides what ships?", "A gatekeeper model judges the request against the rules; a second model argues against it; a third reads the code it produced. Anything big goes up for a vote; anything loose is read generously; anything that isn't for everyone gets one honest line saying why. There is no human queue. All of it is open source."],
   ["Why was mine rejected?", "You'll see a short reason. The usual ones: it was promotion, it erased someone's work, it asked for something the wall can't safely run, or it wasn't clear what should change."],
   ["How long does it take?", "Judged in about a second. Built, checked, and live in a couple of minutes. You can watch it in Live."],
   ["Do I get credit?", "Every change is a real commit with your name on it, and it counts on the leaderboard."],

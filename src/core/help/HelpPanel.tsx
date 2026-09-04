@@ -8,7 +8,7 @@ import { useLiveStats } from "@/core/lib/useLiveStats";
 const steps = [
   ["Point", "Hold ⇧⌘ and click anything on the wall. On a phone, long-press."],
   ["Ask", "Say what should change. One thing at a time."],
-  ["Judged", "Good for everyone? It ships. Not? It doesn't, and it tells you why."],
+  ["Judged", "Good for everyone? It ships. Big? It goes up for a vote. Not? It tells you why."],
   ["Built", "An agent writes the code, checks it, and opens a pull request."],
   ["Live", "It merges and deploys. Sign in and your name is on the commit."],
 ];
@@ -19,6 +19,7 @@ const rules = [
   "No ads, promo, or links out. Patrons pay for that.",
   "Nothing hidden, nothing that tracks people.",
   "Works on a phone or it doesn't ship.",
+  "Big ideas go up for a vote; every round the most-wanted one is built.",
 ];
 
 export function HelpPanel({ open, onClose }: { open: boolean; onClose: () => void }) {

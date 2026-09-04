@@ -27,7 +27,8 @@ test("the product page reads and links", async ({ page }) => {
 });
 
 test("the footer and help panel point at it", async ({ page }) => {
-  await page.goto(url + "/");
+  // the room is the canvas (no footer there); the footer lives on every other page
+  await page.goto(url + "/leaderboard");
   await expect(page.getByRole("contentinfo").getByRole("link", { name: /for your site/i })).toBeVisible();
   await page.getByRole("button", { name: /how this works/i }).click();
   const help = page.getByRole("dialog", { name: /how this works/i });

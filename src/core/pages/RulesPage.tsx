@@ -1,16 +1,9 @@
 import { Prose } from "./Prose";
+import { CONSTITUTION_RULES, CONSTITUTION_VERSION } from "@/core/lib/constitution.gen";
 
-const wall = [
-  "Make it better for everyone. A change should be something a stranger is glad to find.",
-  "Build on, don't bulldoze. Removing someone's work needs a reason a fair person would accept.",
-  "No ads, promotion, or links out. Patrons pay for that. Links inside the wall go through the kit and an allowlist.",
-  "No personal data, tracking, or off-site calls. Nothing collects or sends anything about visitors.",
-  "Do what was asked and nothing hidden.",
-  "Works on a phone or it doesn't ship.",
-  "Nothing hateful, harassing, sexual, or illegal. No real people as targets.",
-  "The machinery (header, feed, judge, pipeline, patron board, accounts) is off limits. Asking to change it goes to a human.",
-  "One thing at a time. Small and clear beats big and vague.",
-];
+// The wall's rules are the constitution the judge enforces, verbatim (generated; see scripts/sync-constitution.mjs).
+const wall = CONSTITUTION_RULES;
+
 
 const patron = [
   "One slot a day. The highest bid at midnight Eastern Time gets the header for the next 24 hours: name, logo, link.",
@@ -26,7 +19,7 @@ const patron = [
 export function RulesPage() {
   return (
     <Prose title="Rules" intro="Two sets. One for the wall, one for the patron board. Both short on purpose.">
-      <h2>The wall</h2>
+      <h2>The wall <span className="placard ml-2 align-middle">constitution v{CONSTITUTION_VERSION}</span></h2>
       <ol className="flex flex-col gap-3">
         {wall.map((r, i) => (
           <li key={r} className="flex gap-3">

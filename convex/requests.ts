@@ -176,9 +176,10 @@ export const submit = mutation({
     const inflight = user
       ? await ctx.db.query("requests").withIndex("by_user", (q) => q.eq("userId", user._id)).order("desc").take(10)
       : await ctx.db.query("requests").withIndex("by_guest", (q) => q.eq("guestId", guest!.guestId)).order("desc").take(10);
-    // A few builds in flight per person (builds are the paid part); not a daily count.
-    if (inflight.filter((r) => ACTIVE.has(r.status)).length >= (user ? (user.trust >= 2 ? 5 : 3) : 2)) {
-      throw new Error("A couple of your changes are still building. Let one land first.");
+    // One build per person at a time (builds are the paid part, and one landing before the next keeps the
+    // wall legible); the moment it lands, fails, or goes to a vote, they can ask again. Not a daily count.
+    if (inflight.some((r) => ACTIVE.has(r.status))) {
+      throw new Error("Your change is still building. When it lands, ask for the next one.");
     }
 
     // Same ask, same block, already approved and in flight within the last 20 minutes → +1 instead
@@ -356,7 +357,7 @@ export const setVerdict = internalMutation({
         await ctx.db.patch(a.id, { status: "proposed", verdict, proposalVotes: 0, updatedAt: Date.now() });
         return { ok: true, queued: false, proposed: true };
       }
-      await ctx.db.patch(a.id, { status: a.needsHuman ? "needs_human" : "rejected", verdict, updatedAt: Date.now() });
+      await ctx.db.patch(a.id, { status: "rejected", verdict, updatedAt: Date.now() });
       return { ok: true, queued: false };
     }
     const hourly = await rateLimiter.limit(ctx, "approvalsGlobal", { key: "global" });

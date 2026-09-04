@@ -6,7 +6,7 @@ _The methodology the judge encodes. Public on purpose. This doubles as the eval 
 
 **Thinking big is free. Only the winner builds.**
 
-Anyone can ask for anything. Asking costs nothing. A small, clear, safe ask ships in under a minute for about a cent. A big or ambitious ask ("a game", "a chat", "GTA 6") is not rejected and is not built on the spot — it goes up for a vote, and only the single most-upvoted proposal gets built each day, under a hard credit cap. So ambition never balloons the bill: a thousand people asking for a thousand dream features cost nothing until the crowd picks one, and that one can only ever spend the large-scope cap.
+Anyone can ask for anything. Asking costs nothing. A small, clear, safe ask ships in under a minute for about a cent. A big or ambitious ask ("a game", "a chat", "GTA 6") is not rejected and is not built on the spot — it goes up for a vote, and every three-hour round only the single most-upvoted proposal gets built (the rest expire and the board starts over), so the biggest builds are rationed by what people actually want and stay affordable. There is no human queue: the judge decides, or the vote does. Ambition is read generously, not turned away. A big idea is not rejected for being big; it is reinterpreted into the largest honest version that fits and put on the board. Each round's build runs under a hard credit cap, so ambition never balloons the bill: a thousand people asking for a thousand dream features cost nothing until the crowd picks one, and that one can only ever spend the large-scope cap.
 
 ## The five gates (checked in order, fail fast)
 
@@ -98,4 +98,4 @@ Who's asking sets the auto-ship ceiling, not what's allowed to be proposed.
 | 2 | trusted | large | yes |
 | 3 | maintainer | anything | yes |
 
-Anyone can propose, guest or not: a proposal is just a row on the board. Voting needs an account, and a proposal only builds if it wins the vote, so a flood of junk proposals can never build itself; unvoted ones fall off the board after a week.
+Anyone can propose, guest or not: a proposal is just a row on the board. Voting needs an account, and a proposal only builds if it wins the vote, so a flood of junk proposals can never build itself; every three-hour round the top one is built and the rest expire, so the board starts over.

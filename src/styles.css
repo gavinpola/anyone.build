@@ -504,3 +504,9 @@ body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking
 .minimap-mark { fill: color-mix(in oklab, var(--accent) 22%, transparent); stroke: var(--accent); stroke-width: 12; }
 .minimap-dot { fill: var(--accent); }
 
+/* ===== "New on the wall": a change landed since this tab loaded ===== */
+.new-build { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.new-build:hover { background: var(--accent); color: var(--paper); }
+[data-feed-pills] .new-build { height: 36px; border-radius: 999px; }
+.canvas-bar:has(.new-build) .canvas-toast { display: none; }
+

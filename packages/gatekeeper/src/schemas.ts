@@ -21,7 +21,9 @@ export type Scope = z.infer<typeof Scope>;
 // threw away good verdicts in production, and strict providers (Azure) reject optional fields and
 // maxLength. All clamping/defaulting lives in models.ts normalize steps.
 export const JudgeVerdict = z.object({
-  verdict: z.enum(["approve", "reject", "needs_human"]),
+  // The model sees only approve | reject (there is no human queue). A stray legacy "needs_human" is read as a
+  // reject; normalizeJudge turns a planned hedge into a proposal (up for a vote) rather than a dead no.
+  verdict: z.preprocess((v) => (v === "needs_human" ? "reject" : v), z.enum(["approve", "reject"])),
   // Accept any string here so a model that echoes the scope into category doesn't fail schema
   // validation; normalizeJudge coerces it to a real RejectionCategory (or null on approve).
   category: z.string().nullable().describe("A RejectionCategory when verdict is reject; null otherwise"),

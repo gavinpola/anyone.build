@@ -43,7 +43,7 @@ export const blocks = Object.entries({ ...examples, ...modules })
     meta: mod.block,
     Component: mod.default,
   }))
-  .filter((b) => b.meta && b.Component)
+  .filter((b) => b.meta && b.Component && !b.meta.removed) // removed: true = taken off the wall, file kept as history
   .sort(
     (a, b) => a.meta.order - b.meta.order || a.meta.id.localeCompare(b.meta.id),
   );

@@ -6,6 +6,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const isProd = process.env.VERCEL_ENV === "production";
 const key = process.env.CONVEX_DEPLOY_KEY;
+// The build's own commit, stamped into the bundle and published as /version.json, so an open tab can
+// tell when a change has landed and offer a reload (the wall's data is live; its code needs a refresh).
+const sha = process.env.VERCEL_GIT_COMMIT_SHA || spawnSync("git", ["rev-parse", "HEAD"]).stdout?.toString().trim() || "";
+if (sha) process.env.VITE_BUILD_SHA = sha;
 
 const run = (cmd, args) => {
   const r = spawnSync(cmd, args, { stdio: "inherit", env: process.env });
@@ -18,6 +22,13 @@ if (isProd && key) {
 } else {
   console.log(`[vercel-build] ${isProd ? "production without CONVEX_DEPLOY_KEY" : "preview"}: building the site only`);
   run("pnpm", ["build"]);
+}
+
+try {
+  writeFileSync("dist/version.json", JSON.stringify({ sha, at: Date.now() }));
+  console.log(`[vercel-build] wrote dist/version.json (${sha.slice(0, 7) || "no sha"})`);
+} catch (e) {
+  console.warn("[vercel-build] could not write version.json:", e instanceof Error ? e.message : e);
 }
 
 // The share page (api/share.ts) returns the app's own HTML with per-change preview tags injected.

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Input, Label, Stack, Text, useStore, useViewer } from "@/kit";
+import { Button, Input, Label, Stack, Text, useStore } from "@/kit";
 import type { BlockMeta } from "@/kit";
 
 export const block: BlockMeta = {
@@ -13,7 +13,6 @@ export const block: BlockMeta = {
 type Entry = { text: string };
 
 export default function Guestbook() {
-  const viewer = useViewer();
   const { docs, put } = useStore<Entry>("guestbook");
   const [draft, setDraft] = useState("");
   const entries = [...docs].sort((a, b) => b.at - a.at).slice(0, 20);
@@ -32,12 +31,11 @@ export default function Guestbook() {
         <Input
           value={draft}
           maxLength={140}
-          placeholder={viewer.signedIn ? "Say something small" : "Sign in to write"}
-          disabled={!viewer.signedIn}
+          placeholder="Say something small"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
         />
-        <Button onClick={submit} disabled={!viewer.signedIn || !draft.trim()}>
+        <Button onClick={submit} disabled={!draft.trim()}>
           Sign
         </Button>
       </div>

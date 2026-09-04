@@ -2,8 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { rateLimiter } from "./rateLimits";
 
-/** Proposals nobody voted for in a week come off the board. */
-/** Requests waiting on a human expire after a day so the queue never rots and never swallows new asks. */
+/** Rows in the retired needs_human status (nothing new lands there) expire after a day so they never swallow new asks. */
 export const expireNeedsHuman = internalMutation({
   args: { olderThanMs: v.optional(v.number()) },
   handler: async (ctx, { olderThanMs }) => {
@@ -12,7 +11,7 @@ export const expireNeedsHuman = internalMutation({
     for (const r of rows) {
       await ctx.db.patch(r._id, {
         status: "rejected",
-        verdict: r.verdict ? { ...r.verdict, approved: false, category: "unclear", hint: "Nobody got to this one in time. Ask again, smaller." } : undefined,
+        verdict: r.verdict ? { ...r.verdict, approved: false, category: "unclear", hint: "This one sat in an old queue that no longer exists. Ask again and the judge will decide." } : undefined,
         updatedAt: Date.now(),
       });
     }

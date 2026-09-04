@@ -1,6 +1,7 @@
 import { Minus, Plus, Maximize2 } from "lucide-react";
 import { PickButton } from "@/core/picker/PickButton";
 import { LiveButton } from "@/core/feed/LiveButton";
+import { NewBuild } from "@/core/lib/NewBuild";
 
 /**
  * The bottom bar: zoom, fit, "Change something" (pick mode), Live (the feed drawer), and a one-line
@@ -27,6 +28,7 @@ export function CanvasBar({ zoom, fit, onZoom, onFit, toast, compact = false }: 
       <span className="canvas-bar-sep" />
       <PickButton className="canvas-bar-cta whitespace-nowrap" label={compact ? "Change" : "Change something"} />
       <LiveButton className="canvas-bar-live" />
+      <NewBuild />
       {toast ? (
         <span className="canvas-toast" data-toast>
           <span className="live-dot" aria-hidden />

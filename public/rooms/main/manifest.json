@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-04T17:07:09.897Z",
+  "generatedAt": "2026-09-04T17:39:39.264Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -17,14 +17,6 @@
       "size": "md",
       "order": 1,
       "path": "src/rooms/main/blocks/welcome-message.tsx"
-    },
-    {
-      "id": "hello-note-6e0z",
-      "title": "Hello Note",
-      "description": "A tiny hello note 6e0z at the bottom of the wall.",
-      "size": "sm",
-      "order": 2,
-      "path": "src/rooms/main/blocks/hello-note-6e0z.tsx"
     },
     {
       "id": "thanks-for-visiting",

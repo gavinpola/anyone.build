@@ -65,7 +65,7 @@ export const REJECTION_COPY: Record<RejectionCategory, { title: string; hint: st
   unsafe_code: { title: "Can't ship that", hint: "No scripts, trackers, forms that leave, or off-site calls." },
   out_of_bounds: { title: "Out of bounds", hint: "Only the wall itself can change, not the machinery behind it." },
   unclear: { title: "Couldn't tell what to change", hint: "Point at the thing and say what it should become." },
-  too_big: { title: "Too big for one change", hint: "Split it into a couple of smaller asks." },
+  too_big: { title: "Up for a vote", hint: "It's on the leaderboard for a vote; every round the most-wanted one is built." },
   collided: { title: "Someone else got there first", hint: "The wall moved under you. Try again on the new version." },
   budget_spent: { title: "Today's budget is spent", hint: "Patrons top it up. Or come back after midnight ET." },
   slow_down: { title: "Slow down", hint: "You've hit your limit for now." },
@@ -87,7 +87,7 @@ export function stepIndex(status: RequestStatus): number {
 
 export const STAGE_COPY: Partial<Record<RequestStatus, string>> = {
   judging: "Judging",
-  needs_human: "Waiting for a maintainer",
+  needs_human: "In a retired queue",
   queued: "In line",
   building: "Writing the code",
   validating: "Checking the diff",

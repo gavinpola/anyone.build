@@ -99,11 +99,11 @@ export const run = internalAction({
       console.error("judge failed", e);
       return;
     }
-    // Nobody reviews an "unsure" queue, so unsure is a no with advice on how to re-ask.
+    // There is no human queue: a verdict is approve or reject (and a too_big reject is a proposal).
     let approved = first.verdict === "approve";
     const needsHuman = false;
     // normalizeJudge guarantees category is null or a valid RejectionCategory; narrow for setVerdict.
-    let category = (first.category ?? (first.verdict === "needs_human" ? "unclear" : undefined)) as
+    let category = (first.category ?? undefined) as
       | "not_for_everyone" | "destroys_others_work" | "unsafe_code" | "out_of_bounds" | "unclear" | "too_big" | "collided" | "budget_spent" | "slow_down" | "build_failed" | undefined;
     let hint = first.public_hint;
     if (approved && first.touches_backend && !config.backendEnabled) {

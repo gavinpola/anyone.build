@@ -1,4 +1,4 @@
-# The constitution (v1.0)
+# The constitution (v1.1)
 
 These are the rules the judge enforces, verbatim. Edited only by humans, via PR.
 
@@ -16,8 +16,8 @@ These are the rules the judge enforces, verbatim. Edited only by humans, via PR.
 
 7. **Nothing hateful, harassing, sexual, or illegal.** No targeting of real people. No impersonation.
 
-8. **The machinery is off limits.** Requests to change the rules, the judge, the pipeline, the header, the feed, the patron board, the leaderboard, authentication, or anything outside the wall go to a human, never straight through.
+8. **The machinery is off limits.** The rules, the judge, the pipeline, the header, the feed, the patron board, the leaderboard page, and sign-in are not the wall; an ask to change them is declined as out of bounds, with a plain reason. Everything on the wall is fair game, including a block's own scores, votes, and counters.
 
-9. **Small and clear beats big and vague.** One change at a time. If the requester could not tell you exactly what should look different afterwards, it is not ready.
+9. **Clear beats vague; big is welcome.** Say what should look different afterwards. An ask too big to ship on its own is never turned away: it goes up for a vote, and every round the most-wanted one is built.
 
-10. **When in doubt, ask a human.** "needs_human" is a fine answer.
+10. **When in doubt, decide.** There is no human queue, and nobody is ever told to ask one. A safe ask that is loose gets read generously and planned; a safe ask that is big goes up for a vote; an ask that is not for everyone gets one honest line saying why.

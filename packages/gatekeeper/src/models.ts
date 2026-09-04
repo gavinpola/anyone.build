@@ -108,8 +108,8 @@ const MAX_SCOPE: Record<string, JudgeVerdict["scope"]> = { "-1": "medium", "0": 
 
 /**
  * The deterministic trust gate on scope, shared by the real judge, the mock judge, and tests.
- * Guests (−1) may add or edit something small; bigger asks say "sign in". New accounts (0) are
- * tiny-only. Builders (1+) get a human look instead of a no.
+ * Guests, new accounts, and builders (−1..1) ship up to medium on their own; trusted people (2+) ship
+ * large. Anything above the cap is a proposal (up for a vote), never a no.
  */
 export function scopeGate(trust: number, scope: JudgeVerdict["scope"]): { allowed: boolean; needsHuman: boolean; category: "too_big" | null; hint: string } {
   const t = String(Math.min(3, Math.max(-1, trust)));
@@ -147,17 +147,16 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
   }
   // A concrete, in-scope plan from a trusted-enough requester shouldn't die on the model's hedge:
   // promote it to approve (the red team, security pass, and validator still gate the actual build).
-  if (out.verdict === "needs_human" && out.plan.length >= 2 && scopeGate(trust, out.scope).allowed) {
-    out.verdict = "approve";
-    if (/too big|can't|cannot|unsure|maintainer|not sure/i.test(out.public_hint)) out.public_hint = "On it. This is a big one, so give it a minute.";
-  }
   // Size is scope, never a verdict. If the model rejected or hedged *because the ask is big*
   // ("a big project; ask for something smaller"), it ignored the ambition rule: route it to the vote
   // board as a large, honestly-scoped proposal instead of a dead reject.
   const sizeTalk = /\b(big project|too big|too large|large project|too complex|too ambitious|ambitious|smaller|scope (it )?down|whole app|entire (app|game|site)|full (app|game))\b/i;
   // A change aimed at ONE existing block is at most medium (see the cap above), whatever the model says about size.
   const singleBlock = Boolean(input.target.blockId) && input.target.blockId !== "__new__" && !out.touches_other_blocks && !buildsPage;
-  const hedged = (out.verdict === "reject" && (out.category === "unclear" || !out.category)) || out.verdict === "needs_human";
+  // "not_for_everyone" is for promotion and self-interest; a reject under it whose own hint talks about size
+  // ("too large and complex") is the size dodge in a different coat, unless the ask actually smells of promo.
+  const promoSmell = /https?:|www\.|\.(com|io|app|xyz)\b|@[a-z0-9_]{2,}|\b(buy|discount|promo|referral|sponsor|follow me|check out|my (brand|company|product|store|shop))\b/i.test(input.prompt);
+  const hedged = out.verdict === "reject" && (out.category === "unclear" || !out.category || (out.category === "not_for_everyone" && !promoSmell && sizeTalk.test(out.public_hint)));
   if (hedged && (sizeTalk.test(out.public_hint) || sizeTalk.test(out.rationale))) {
     out.verdict = "reject";
     out.category = "too_big";
@@ -176,13 +175,14 @@ export function normalizeJudge(v: JudgeVerdict, input: JudgeInput): JudgeVerdict
     if (out.plan.length === 0) out.plan = ["Apply the change block by block across the wall, keeping each block's own look."];
     out.public_hint = "This one touches the whole wall — it's up for a vote.";
   }
-  // An unsure hedge that still produced a concrete plan is a big/ambiguous ask, not noise: mark it
-  // too_big so it routes to the proposals board (up for a vote), not a dead reject. Only a hedge with
-  // no plan is a genuine "nothing to build" → unclear.
-  if (out.verdict === "needs_human") {
-    out.verdict = "reject";
+  // A hedge (reject with no category) that still produced a concrete plan is a big/ambiguous ask, not
+  // noise: mark it too_big so it routes to the proposals board (up for a vote), not a dead reject.
+  if (out.verdict === "reject" && !out.category) {
     out.category = out.plan.length >= 2 ? "too_big" : "unclear";
   }
+  // Sending visitors' input or data anywhere is unsafe_code by the constitution, whatever the model called it.
+  const exfil = /\b(e-?mails?|dms?|texts?|messages?|sends?|forwards?|posts?|submits?|uploads?|reports?|notif(?:y|ies))\b[^.]{0,40}\b(me|us|my|to my|to me|elsewhere|externally|to (a|my|our) (server|site|url|endpoint|address|inbox|phone))\b|\b(webhook|tracking pixel|analytics|cookies?)\b/i;
+  if (out.verdict === "reject" && out.category !== "unsafe_code" && exfil.test(input.prompt)) out.category = "unsafe_code";
   if (out.touches_backend && out.verdict === "approve") {
     if (trust < 1) {
       out.verdict = "reject";
