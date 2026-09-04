@@ -29,6 +29,7 @@ import type * as lib_rounds from "../lib/rounds.js";
 import type * as lib_storeRules from "../lib/storeRules.js";
 import type * as life from "../life.js";
 import type * as maintenance from "../maintenance.js";
+import type * as ops from "../ops.js";
 import type * as patrons from "../patrons.js";
 import type * as payments from "../payments.js";
 import type * as pipeline_build from "../pipeline/build.js";
@@ -87,6 +88,7 @@ declare const fullApi: ApiFromModules<{
   "lib/storeRules": typeof lib_storeRules;
   life: typeof life;
   maintenance: typeof maintenance;
+  ops: typeof ops;
   patrons: typeof patrons;
   payments: typeof payments;
   "pipeline/build": typeof pipeline_build;

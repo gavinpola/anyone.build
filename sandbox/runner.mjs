@@ -181,25 +181,49 @@ let text = "";
 let steps = [];
 let totalUsage = { inputTokens: 0, outputTokens: 0 };
 let error;
-try {
-  const result = await generateText({
-    model: openrouter.chat(job.model),
-    system: job.systemPrompt,
-    prompt: job.userPrompt,
-    tools,
-    stopWhen: [stepCountIs(maxSteps), ({ steps: s }) => usageSoFar(s) > maxTokens, () => outOfTime()],
-    abortSignal: AbortSignal.timeout(deadlineMs + 30_000),
-    maxOutputTokens: 8000, // per step; OpenRouter pre-reserves the max against the account balance
-    temperature: 0.2,
-    maxRetries: 2,
-    onStepFinish: (s) => log("step", s.toolCalls?.map((c) => c.toolName).join(",") || "(text)", `in=${s.usage?.inputTokens ?? 0} out=${s.usage?.outputTokens ?? 0}`),
-  });
-  text = result.text ?? "";
-  steps = result.steps ?? [];
-  totalUsage = result.totalUsage ?? totalUsage;
-} catch (e) {
-  error = e instanceof Error ? e.message : String(e);
-  log("model error", error);
+const changedSoFar = () => {
+  try {
+    return execFileSync("git", ["status", "--porcelain", "--", "src/rooms", "convex/rooms"], { cwd: root, encoding: "utf8" }).trim().length > 0;
+  } catch {
+    return false;
+  }
+};
+const onStepFinish = (s) => {
+  log("step", s.toolCalls?.map((c) => c.toolName).join(",") || "(text)", `in=${s.usage?.inputTokens ?? 0} out=${s.usage?.outputTokens ?? 0}`, s.finishReason === "length" ? "(cut off: output cap)" : "");
+  // a refused write is the difference between "made no changes" and knowing why
+  for (const r of s.toolResults ?? []) {
+    const out = typeof r.output === "string" ? r.output : "";
+    if ((r.toolName === "write_file" || r.toolName === "edit_file") && /^(Not allowed|Too |Forbidden|No such|old_string)/.test(out)) log("refused", r.toolName, out.slice(0, 160));
+  }
+};
+// Up to three rounds: a model that answers in text without touching a file gets told, once or twice,
+// to use the tools. Each round shares the deadline, the step cap, and the token budget.
+const NUDGE = "\n\nYou replied with text but changed no files. Make the change now: edit_file for an existing file (an exact old_string → new_string), write_file only for a new file. Never paste code as text: a text reply without a tool call ends the run with nothing changed.";
+for (let round = 0; round < 3; round++) {
+  try {
+    const result = await generateText({
+      model: openrouter.chat(job.model),
+      system: job.systemPrompt,
+      prompt: round === 0 ? job.userPrompt : job.userPrompt + NUDGE,
+      tools,
+      stopWhen: [stepCountIs(Math.max(1, maxSteps - steps.length)), ({ steps: s }) => usageSoFar(steps) + usageSoFar(s) > maxTokens, () => outOfTime()],
+      abortSignal: AbortSignal.timeout(Math.max(1000, deadlineMs - (Date.now() - started) + 30_000)),
+      maxOutputTokens: 16000, // per step: a whole block file must fit in one write_file call (8000 cut mediums off mid-write)
+      temperature: 0.2,
+      maxRetries: 2,
+      onStepFinish,
+    });
+    text = result.text ?? "";
+    steps = steps.concat(result.steps ?? []);
+    const u = result.totalUsage ?? {};
+    totalUsage = { inputTokens: (totalUsage.inputTokens ?? 0) + (u.inputTokens ?? 0), outputTokens: (totalUsage.outputTokens ?? 0) + (u.outputTokens ?? 0) };
+  } catch (e) {
+    error = e instanceof Error ? e.message : String(e);
+    log("model error", error);
+    break;
+  }
+  if (changedSoFar() || outOfTime() || steps.length >= maxSteps) break;
+  log("round", round + 1, "ended with no change; nudging the model to use the tools");
 }
 if (!error && outOfTime()) error = `ran out of time after ${steps.length} steps (${Math.round((Date.now() - started) / 1000)}s)`;
 else if (!error && steps.length >= maxSteps) error = `hit the step limit (${maxSteps}) without finishing`;

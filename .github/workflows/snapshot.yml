@@ -1,0 +1,40 @@
+name: snapshot
+# Agent builds start from a Vercel Sandbox snapshot with dependencies installed. When the lockfile
+# changes on main, rebuild it and tell Convex the new id, so the sandbox never typechecks against a
+# node_modules older than the code.
+on:
+  push:
+    branches: [main]
+    paths: ["pnpm-lock.yaml", "package.json", "packages/*/package.json"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: snapshot
+  cancel-in-progress: true
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the snapshot and register it
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          GITHUB_REPO: ${{ github.repository }}
+          OPS_TOKEN: ${{ secrets.TIMELAPSE_TOKEN }}
+          CONVEX_SITE_URL: https://hushed-ladybug-141.convex.site
+        run: |
+          id=$(node scripts/refresh-snapshot.mjs | grep -o 'SANDBOX_SNAPSHOT_ID=.*' | cut -d= -f2)
+          test -n "$id"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$CONVEX_SITE_URL/ops/snapshot" -H "authorization: Bearer $OPS_TOKEN" -H "content-type: application/json" -d "{\"snapshotId\":\"$id\"}")
+          echo "registered snapshot ${id:0:12}… → $code"
+          test "$code" = "200"

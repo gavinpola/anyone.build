@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalQuery, mutation, query, type QueryCtx } from "./_generated/server";
+import { internalQuery, mutation, query, type QueryCtx, internalMutation } from "./_generated/server";
 import { requireUser } from "./users";
 
 export const DEFAULTS = {
@@ -35,7 +35,12 @@ export const DEFAULTS = {
   fastPathEnabled: true,
   fastModel: "", // empty = coderModel
   maxTurns: 40,
-  sandboxTimeoutMs: 12 * 60 * 1000,
+  // Must stay under Convex's 10-minute action limit with room for the diff and the PR; a build that
+  // outlives the action is stranded with no failure path.
+  sandboxTimeoutMs: 9 * 60 * 1000,
+  // The dependency snapshot agent builds start from (scripts/refresh-snapshot.mjs → POST /ops/snapshot);
+  // empty = the SANDBOX_SNAPSHOT_ID env, or a fresh clone + install when neither is set.
+  sandboxSnapshotId: "",
 } as const;
 
 export type ConfigKey = keyof typeof DEFAULTS;
@@ -86,6 +91,20 @@ export const all_public = query({
     const user = await requireUser(ctx).catch(() => null);
     if (!user || user.trust < 3) return null;
     return getAllConfig(ctx);
+  },
+});
+
+/** Ops-only setter (no viewer): the snapshot endpoint and future automation. Same key check as set(). */
+export const setInternal = internalMutation({
+  args: { key: v.string(), value: v.any() },
+  handler: async (ctx, { key, value }) => {
+    if (!(key in DEFAULTS)) throw new Error("Unknown key");
+    const row = await ctx.db
+      .query("config")
+      .withIndex("by_key", (q) => q.eq("key", key))
+      .unique();
+    if (row) await ctx.db.patch(row._id, { value, updatedAt: Date.now() });
+    else await ctx.db.insert("config", { key, value, updatedAt: Date.now() });
   },
 });
 

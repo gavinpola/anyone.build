@@ -58,20 +58,22 @@ export const run = internalAction({
       model: coderModel,
       maxSteps: config.maxTurns,
       // leave the sandbox ~2 minutes for checkout, checks, and the diff after the model loop ends
-      deadlineMs: Math.max(60_000, config.sandboxTimeoutMs - 150_000),
+      deadlineMs: Math.max(60_000, config.sandboxTimeoutMs - 120_000),
       // The run may not spend more than its reservation: tokens ≈ cap / blended price.
       maxTokens: Math.max(60_000, Math.min(600_000, Math.floor(((request.budgetCents / 100) / ((priceFor(coderModel).inPerM + priceFor(coderModel).outPerM) / 2)) * 1e6))),
       scope,
     };
 
-    const snapshotId = process.env.SANDBOX_SNAPSHOT_ID;
+    const snapshotId = (config.sandboxSnapshotId as string) || process.env.SANDBOX_SNAPSHOT_ID;
     const creds = { token: env("VERCEL_TOKEN"), teamId: env("VERCEL_TEAM_ID"), projectId: env("VERCEL_PROJECT_ID") };
     const networkPolicy = {
       allow: {
         "openrouter.ai": [{ transform: [{ headers: { authorization: `Bearer ${modelKey}` } }] }],
         "github.com": [],
         "codeload.github.com": [],
-        ...(snapshotId ? {} : { "registry.npmjs.org": [], "*.npmjs.org": [] }),
+        // always: with a snapshot the install below is a no-op unless the lockfile moved, and then it must fetch
+        "registry.npmjs.org": [],
+        "*.npmjs.org": [],
       },
     };
     const sandbox = await Sandbox.create({
@@ -90,6 +92,11 @@ export const run = internalAction({
         await sandbox.runCommand("git", ["fetch", "--depth", "50", "origin", baseSha]);
         const co = await sandbox.runCommand("git", ["checkout", "-f", baseSha]);
         if (co.exitCode !== 0) throw new Error("checkout failed: " + (await co.stderr()));
+        // A snapshot older than the lockfile would fail every typecheck on a module it never installed
+        // (that happened the day posthog-js landed). Syncing is seconds when nothing changed.
+        await set("building", "syncing dependencies");
+        const sync = await sandbox.runCommand("corepack", ["pnpm", "install", "--frozen-lockfile", "--prefer-offline"]);
+        if (sync.exitCode !== 0) throw new Error("dependency sync failed: " + (await sync.stderr()).slice(-2000));
       } else {
         await set("building", "installing");
         const install = await sandbox.runCommand("corepack", ["pnpm", "install", "--frozen-lockfile", "--prefer-offline"]);
