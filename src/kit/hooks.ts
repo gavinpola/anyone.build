@@ -151,3 +151,34 @@ export function useTick(callback: (dt: number) => void, opts: { fps?: number; ac
     };
   }, [fps, active]);
 }
+
+// ---- high scores ----
+export type HighScore = { id: string; rank: number; handle: string; score: number; at: number };
+type HighScoresApi = { scores: HighScore[]; submit: (score: number, name?: string) => void; ready: boolean };
+const mockScores = new Map<string, HighScore[]>();
+function useHighScoresMock(game: string, limit = 10): HighScoresApi {
+  const [, force] = useState(0);
+  const submit = useCallback(
+    (score: number, name?: string) => {
+      const list = mockScores.get(game) ?? [];
+      list.push({ id: String(Math.random()), rank: 0, handle: name?.trim() || "you", score: Math.floor(score), at: Date.now() });
+      list.sort((a, b) => b.score - a.score);
+      mockScores.set(game, list.slice(0, 50).map((s, i) => ({ ...s, rank: i + 1 })));
+      force((n) => n + 1);
+    },
+    [game],
+  );
+  return { scores: (mockScores.get(game) ?? []).slice(0, limit), submit, ready: true };
+}
+function useHighScoresConvex(game: string, limit = 10): HighScoresApi {
+  const rows = useQuery(api.scores.top, { game, limit });
+  const submitM = useMutation(api.scores.submit);
+  const submit = useCallback((score: number, name?: string) => void submitM({ game, score, name, anonId: tabSessionId() }).catch(() => {}), [submitM, game]);
+  return { scores: (rows ?? []) as HighScore[], submit, ready: rows !== undefined };
+}
+/**
+ * A leaderboard for a game: the top scores for everyone, and `submit(score, name?)` to post one.
+ * One row per person per game (their best); guests can post too. `game` is a kebab-case id, e.g. the block's id.
+ */
+export const useHighScores: (game: string, limit?: number) => HighScoresApi = hasConvex ? useHighScoresConvex : useHighScoresMock;
+

@@ -127,6 +127,8 @@ export const markLiveBySha = internalMutation({
         flagCount: 0,
         votes: 0,
       });
+    // a landed change is the strongest touch: the block's decay clock resets
+    await ctx.runMutation(internal.life.touchInternal, { roomId: r.roomId, blockIds: r.run?.blockIds?.length ? r.run.blockIds : r.target.blockId ? [r.target.blockId] : [] });
       if (r.userId) await ctx.runMutation(internal.users.adjustStats, { userId: r.userId, liveChanges: 1, linesChanged: (run.linesAdded ?? 0) + (run.linesRemoved ?? 0) });
       await ctx.runMutation(internal.stats.bump, { changes: 1 });
       await ctx.runMutation(internal.requests.settleOnce, { id: r._id, spentCents: run.costCents ?? 0 });

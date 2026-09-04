@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { publicUser } from "./users";
 
@@ -40,8 +41,8 @@ export const top = query({
     const rows = [...agg.entries()].sort((a, b) => (byLines ? b[1].lines - a[1].lines || b[1].changes - a[1].changes : b[1].changes - a[1].changes || b[1].lines - a[1].lines)).slice(0, n);
     const out = [];
     for (const [uid, a] of rows) {
-      const u = await ctx.db.get(uid as never);
-      if (!u || !("handle" in u)) continue;
+      const u = await ctx.db.get(uid as Id<"users">);
+      if (!u) continue;
       out.push({ ...publicUser(u), weekChanges: a.changes, weekLines: a.lines, standing: standing.get(uid) ?? 0 });
     }
     return out;
@@ -82,7 +83,7 @@ export const blockProvenance = query({
   handler: async (ctx, { roomId }) => {
     const recent = await ctx.db.query("changes").withIndex("by_mergedAt").order("desc").take(1000);
     // lastBy is a GitHub handle (shown as @handle); guests show as their public tag.
-    const out: Record<string, { lastBy: string | null; guestTag: string | null; changes: number }> = {};
+    const out: Record<string, { lastBy: string | null; guestTag: string | null; changes: number; lastAt: number }> = {};
     for (const c of recent) {
       if (c.roomId !== (roomId ?? "main") || c.revertedAt) continue;
       for (const b of c.blockIds) {
@@ -90,7 +91,7 @@ export const blockProvenance = query({
         if (!cur) {
           const u = c.userId ? await ctx.db.get(c.userId) : null;
           const g = !u && c.guestId ? await ctx.db.query("guests").withIndex("by_guestId", (q) => q.eq("guestId", c.guestId!)).unique() : null;
-          out[b] = { lastBy: u?.handle ?? null, guestTag: g?.tag ?? (c.guestId ? "guest" : null), changes: 1 };
+          out[b] = { lastBy: u?.handle ?? null, guestTag: g?.tag ?? (c.guestId ? "guest" : null), changes: 1, lastAt: c.mergedAt };
         } else cur.changes++;
       }
     }

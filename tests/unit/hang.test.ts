@@ -47,3 +47,29 @@ describe("how a block hangs on the wall", () => {
     expect((wallStyle({ height: 1500 }, true) as Record<string, string>)["--wall-min-h"]).toBe("1500px");
   });
 });
+
+describe("bodies on the liquid layer", () => {
+  it("a blob has an eight-value outline and a second one to breathe towards", () => {
+    const h = hang({ id: "welcome", size: "md", shape: "blob" }, c);
+    expect(h.body.kind).toBe("blob");
+    expect(h.body.radius.split("/")).toHaveLength(2);
+    expect(h.body.radius.match(/min\([^)]*\)|\d+%/g)).toHaveLength(8);
+    expect(h.body.radius2).not.toBe(h.body.radius);
+    expect(h.body.merge).toBe(true);
+  });
+  it("tints cycle from the canvas palette; a block's own tint, blend, and merge win", () => {
+    const p = ["red", "blue"];
+    const a = hang({ id: "a", size: "md" }, { ...c, palette: p });
+    expect(p).toContain(a.body.tint);
+    const own = hang({ id: "b", size: "md", shape: { tint: "hotpink", blend: "screen", merge: false, radius: "40px" } }, c);
+    expect(own.body).toMatchObject({ kind: "custom", tint: "hotpink", blend: "screen", merge: false, radius: "40px" });
+  });
+  it("a shape that paints its own background, or a bare block, stays off the liquid", () => {
+    expect(hang({ id: "d", size: "md", shape: { background: "#000" } }, c).body.merge).toBe(false);
+    expect(hang({ id: "e", size: "md", shape: "bare" }, c).body.merge).toBe(false);
+    expect(hang({ id: "f", size: "md", shape: "card" }, c).body.merge).toBe(true);
+  });
+  it("the wall's overlap becomes a variable", () => {
+    expect((wallStyle({ overlap: 30 }, false) as Record<string, string>)["--wall-overlap"]).toBe("30px");
+  });
+});

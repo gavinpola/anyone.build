@@ -44,7 +44,7 @@ export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
       </button>
       <p className="placard mt-1 truncate">
         {r.target.line === 0 ? (
-          <span className="text-accent">New block</span>
+          <span className="text-accent">{r.target.tag === "region" ? "A space on the wall" : "New block"}</span>
         ) : (
           <>
             <span className="text-accent">{r.target.blockId === "__canvas__" ? "The wall itself" : (r.target.blockTitle ?? r.target.blockId ?? "wall")}</span>

@@ -208,9 +208,10 @@ body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--a
 }
 
 /* The wall is a canvas, not a spreadsheet. Everything here comes from src/rooms/<room>/canvas.ts (the
-   wall's own editable file) and each block's meta: shape, tilt, stagger, span, free placement. */
+   wall's own editable file) and each block's meta: body (shape, tint, blend), tilt, drift, span, placement.
+   Bodies are painted on the liquid layer underneath (LiquidLayer.tsx) where they fuse; content sits above. */
 .wall {
-  --wall-gap: 24px; --wall-radius: 28px; --wall-pad: 6px; --wall-cols: 12;
+  --wall-gap: 24px; --wall-radius: 28px; --wall-pad: 6px; --wall-cols: 12; --wall-overlap: 0px;
   --wall-bg: radial-gradient(60% 40% at 15% 0%, color-mix(in oklab, var(--accent) 7%, transparent), transparent 70%);
   gap: var(--wall-gap);
   grid-template-columns: repeat(var(--wall-cols), minmax(0, 1fr));
@@ -218,27 +219,195 @@ body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--a
   border-radius: var(--wall-radius);
   padding: var(--wall-pad);
   min-height: var(--wall-min-h, auto);
+  isolation: isolate;
 }
+.wall[data-flow="organic"] { grid-auto-flow: dense; align-items: start; }
 .wall-full { grid-column: 1 / -1; }
 .hung {
   --tilt: 0deg; --stagger: 0px; --span: 6;
+  position: relative;
+  z-index: 1;
   grid-column: span var(--span) / span var(--span);
   margin-top: var(--stagger);
   transform: rotate(var(--tilt));
   transform-origin: 50% 40%;
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
+.wall[data-flow="organic"] .hung { margin-inline: calc(var(--wall-overlap) * -0.5); }
 .hung:hover, .hung:focus-within, body[data-picking] .hung { transform: rotate(0deg); }
-.hung.placed { position: absolute; left: var(--place-x); top: var(--place-y); width: var(--place-w); margin-top: 0; z-index: 1; }
+.hung.placed { position: absolute; left: var(--place-x); top: var(--place-y); width: var(--place-w); margin: 0; z-index: 2; }
+/* a block whose body lives on the liquid layer: no card of its own, the content floats on the liquid */
+.hung.liquid-body { background: transparent; border-color: transparent; box-shadow: none; }
+.hung.liquid-body:hover, body[data-picking] .hung.liquid-body { border-color: color-mix(in oklab, var(--ink) 18%, transparent); }
+.liquid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: visible;
+  opacity: var(--wall-liquid, 1);
+  /* sheets of paper: fused where they touch, lit from above, resting on the wall */
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,.7)) drop-shadow(0 2px 3px rgba(60,40,10,.10)) drop-shadow(0 18px 30px rgba(60,40,10,.12));
+}
+.liquid-goo .body { filter: url(#ab-goo); }
+.body {
+  --body-r: 24px; --body-r2: 24px;
+  --body-clip: none; --body-clip2: none;
+  position: absolute;
+  border-radius: var(--body-r);
+  clip-path: var(--body-clip);
+  background-image: linear-gradient(160deg, rgba(255,255,255,.55), rgba(255,255,255,0) 45%, rgba(60,40,10,.05));
+  will-change: clip-path, transform;
+}
+.body-morph { animation: ab-breathe 16s ease-in-out infinite alternate; }
+@keyframes ab-breathe { from { clip-path: var(--body-clip); } to { clip-path: var(--body-clip2); } }
+/* paper grain over the whole wall */
+.wall::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit;
+  opacity: .07; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
 @media (max-width: 767px) {
   .wall { grid-template-columns: 1fr; }
-  .hung { grid-column: 1 / -1; transform: none; margin-top: 0; }
+  .hung { grid-column: 1 / -1; transform: none; margin: 0; }
   .hung.placed { position: static; width: auto; }
 }
-@media (prefers-reduced-motion: reduce) { .hung { transform: none; transition: none; } }
+@media (prefers-reduced-motion: reduce) { .hung { transform: none; transition: none; } .body-morph { animation: none; } }
 .frame-soft { border-radius: 26px; }
 .frame-round { border-radius: 999px; }
 .frame-round > .frame-body { padding-inline: 10px; }
+.frame-blob > .frame-body { padding: 8px 14px; }
 .frame-bare { background: transparent; border-color: transparent; box-shadow: none; }
 .frame-bare:hover, body[data-picking] .frame-bare { border-color: var(--line); }
 .frame-custom { overflow: hidden; }
+
+/* The bounded canvas: a fixed world inside a viewport you zoom and pan. */
+.canvas-viewport {
+  position: relative; height: min(84vh, 1100px); min-height: 520px; overflow: hidden;
+  border-radius: 28px; background: var(--paper-2); border: 1px solid var(--line);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  cursor: grab;
+}
+.canvas-viewport[data-pan="active"] { cursor: grabbing; }
+body[data-picking] .canvas-viewport { cursor: crosshair; }
+.canvas-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; padding: 0 !important; }
+.canvas-world .hung { position: absolute; margin: 0 !important; grid-column: auto; }
+.canvas-world .hung.dragging { transition: none; box-shadow: 0 24px 50px rgba(60,40,10,.25); }
+.canvas-world .hung .frame-body { user-select: text; -webkit-user-select: text; }
+.canvas-pages { position: absolute; z-index: 5; }
+.canvas-add {
+  position: absolute; z-index: 1;
+  border: 1px dashed color-mix(in oklab, var(--ink) 22%, transparent); border-radius: var(--radius-frame);
+}
+body[data-picking] .canvas-add { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 5%, transparent); }
+.marquee {
+  position: absolute; z-index: 40; pointer-events: none; border-radius: 12px;
+  border: 1.5px dashed var(--accent); background: color-mix(in oklab, var(--accent) 10%, transparent);
+}
+.canvas-bar {
+  position: absolute; left: 14px; bottom: 14px; z-index: 50;
+  display: flex; align-items: center; gap: 2px; padding: 4px;
+  border-radius: 999px; background: var(--card); border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(60,40,10,.12);
+}
+.pins { position: absolute; inset: 0; z-index: 35; pointer-events: none; }
+.pin {
+  position: absolute; width: 22px; height: 22px; border-radius: 999px; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--card); color: var(--ink); font-size: 11px; font-weight: 600;
+  border: 2px solid var(--warn); box-shadow: 0 2px 6px rgba(0,0,0,.18);
+}
+.pin[data-status="live"] { border-color: var(--ok); }
+.pin[data-status="proposed"] { border-color: var(--accent); }
+.pin img { width: 100%; height: 100%; object-fit: cover; }
+.cursor-label {
+  position: absolute; left: 14px; top: 14px; white-space: nowrap;
+  padding: 1px 7px; border-radius: 999px; color: white; font-size: 11px; line-height: 16px; font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+/* the stacked (phone) wall keeps the grid rules */
+.wall-stack { grid-template-columns: 1fr; }
+
+/* ===== The instrument skin: crisp cards with a mono header on a dotted ground (the mockup) ===== */
+.canvas-shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 14px; align-items: stretch; }
+@media (max-width: 1023px) { .canvas-shell { grid-template-columns: 1fr; } .canvas-directory { display: none; } }
+.directory {
+  display: flex; flex-direction: column; min-height: 520px; max-height: min(84vh, 1100px);
+  border: 1px solid var(--line); border-radius: 22px; background: var(--card); overflow: hidden;
+}
+.directory-tab {
+  height: 22px; padding: 0 8px; border-radius: 6px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); background: var(--paper-2);
+}
+.directory-tab.is-on { background: var(--accent); color: var(--accent-ink); }
+.directory-row { display: flex; gap: 10px; width: 100%; padding: 9px 14px; text-align: left; border-left: 2px solid transparent; }
+.directory-row:hover { background: var(--paper-2); }
+.directory-row.is-editing { border-left-color: var(--accent); background: color-mix(in oklab, var(--accent) 8%, transparent); }
+.directory-row.is-faded { opacity: .55; }
+.directory-avatar {
+  flex: none; width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper-2); border: 1px solid var(--line); font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .06em; color: var(--ink-2);
+}
+.canvas-viewport[data-grid="dots"] { background-color: var(--paper-2); background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px); background-size: 22px 22px; }
+.canvas-viewport[data-grid="lines"] { background-color: var(--paper-2); background-image: linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; }
+[data-skin="instrument"] .canvas-world { background: transparent !important; border-radius: 0; }
+[data-skin="instrument"] .canvas-world::after { display: none; }
+.heat { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; transition: background-image 600ms ease; }
+.minimap {
+  position: absolute; right: 14px; bottom: 14px; z-index: 50; padding: 8px 10px 10px;
+  border-radius: 14px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(60,40,10,.12);
+}
+.minimap-ground { fill: var(--paper-2); }
+.minimap-block { fill: color-mix(in oklab, var(--ink) 28%, transparent); }
+.minimap-block.is-hot { fill: var(--accent); }
+.minimap-view { fill: color-mix(in oklab, var(--accent) 12%, transparent); stroke: var(--accent); stroke-width: 14; }
+.canvas-bar { border-radius: 12px; gap: 2px; }
+.canvas-bar-sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+.canvas-bar-cta { height: 32px !important; border-radius: 8px !important; }
+.canvas-toast {
+  display: inline-flex; align-items: center; gap: 8px; max-width: 360px; margin-left: 8px; padding: 0 12px; height: 32px;
+  border-radius: 8px; border: 1px solid color-mix(in oklab, var(--ok) 40%, var(--line)); background: color-mix(in oklab, var(--ok) 8%, var(--card));
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2);
+}
+.presence-dot {
+  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 999px;
+  border: 2px solid var(--paper); color: white; font-family: var(--font-mono, ui-monospace, monospace); font-size: 9.5px; letter-spacing: .06em;
+}
+.presence-more { background: var(--paper-2); color: var(--ink-2); }
+
+/* Objects are the objects: no wrapper, no corners. The only chrome is a small mono label floating above,
+   which is also the handle you drag. A block that asks for a shape (card, soft, custom) gets it. */
+.hung.object { background: transparent; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+.hung.object > .frame-body { padding: 0; }
+/* a shape that needs clipping clips its body, never its label */
+.hung.object.frame-soft > .frame-body, .hung.object.frame-round > .frame-body, .hung.object.frame-custom > .frame-body { overflow: hidden; border-radius: inherit; clip-path: inherit; }
+.hung.object.frame-custom { overflow: visible; clip-path: none; }
+.hung.object.editing { outline: 1.5px solid var(--accent); outline-offset: 8px; }
+.hung.object.faded { opacity: .38; filter: saturate(.3); }
+body[data-picking] .hung.object:hover { outline: 1px dashed color-mix(in oklab, var(--accent) 70%, transparent); outline-offset: 6px; }
+.object-label {
+  position: absolute; left: 0; top: -22px; z-index: 6; max-width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  cursor: grab; user-select: none; -webkit-user-select: none; white-space: nowrap;
+}
+.object-label:hover { color: var(--ink-2); }
+.object-status { flex: none; color: var(--ink-2); }
+.object-label.is-new .object-status { color: var(--ok); }
+.object-label.is-new .object-status::before { content: "● "; }
+.object-label.is-editing .object-status { color: var(--accent); }
+.object-label.is-dying .object-status { color: var(--warn); }
+.object-label.is-faded .object-status { color: var(--bad); }
+.hung.dragging .object-label { cursor: grabbing; }
+.hung.dragging { filter: drop-shadow(0 18px 30px rgba(60,40,10,.22)); }
+.wall-stack .hung.object { margin-top: 26px; }
+.wall-stack .object-label { top: -20px; }
+/* the world's own corners go too */
+.canvas-viewport { border-radius: 0; border-left: 0; border-right: 0; }
+.directory { border-radius: 0; }
+.canvas-bar, .minimap, .canvas-toast { border-radius: 6px; }
+.canvas-add { border-radius: 0; }
+.marquee { border-radius: 0; }
+.canvas-bar-cta { border-radius: 6px !important; }
+/* one pick button at a time: the canvas bar has its own */
+body:has([data-canvas]) [data-global-pick] { display: none; }
+/* the bar is a row under the viewport, never over the world */
+.canvas-column { display: flex; flex-direction: column; min-width: 0; gap: 10px; }
+.canvas-bar { position: static; left: auto; bottom: auto; width: fit-content; }
+

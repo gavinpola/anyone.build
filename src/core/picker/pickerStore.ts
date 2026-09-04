@@ -7,6 +7,8 @@ export type PickerTarget = Target & {
   point?: { x: number; y: number };
   /** "word" when the pointer is over a specific word of text inside the element */
   granularity?: "element" | "word" | "block";
+  /** a prefilled ask (e.g. from dragging a block): the person can edit it before sending */
+  draft?: string;
 };
 
 type State = {
@@ -19,6 +21,9 @@ type State = {
 };
 
 let state: State = { arming: false, sticky: false, hover: null, selected: null };
+// The canvas handles some pointer gestures itself (a drag over a space, dragging a block); the click that
+// ends such a gesture must not also be treated as a pick.
+let suppressUntil = 0;
 const listeners = new Set<() => void>();
 
 function set(p: Partial<State>) {
@@ -49,6 +54,13 @@ export const pickerStore = {
   },
   clear() {
     set({ selected: null, hover: null, arming: false, sticky: false });
+  },
+  /** Ignore the next click (within 400ms): a gesture already decided what happens. */
+  suppressClick() {
+    suppressUntil = Date.now() + 400;
+  },
+  clickSuppressed() {
+    return Date.now() < suppressUntil;
   },
 };
 

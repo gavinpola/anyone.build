@@ -1,18 +1,30 @@
 import type { CanvasMeta } from "@/kit";
 
 /**
- * The wall itself. Its background, its spacing, the shapes it hands to blocks that don't pick their own,
- * how much they tilt: all of it is changeable by asking, like anything on the wall. Only the site's chrome
- * (header, feed, leaderboard) is not.
+ * The wall itself. Its flow, its liquid (bodies that fuse where they touch), its palette, its spacing:
+ * all of it is changeable by asking, like anything on the wall. Only the site's chrome (header, feed,
+ * leaderboard) is not.
  */
 export const canvas: CanvasMeta = {
-  background:
-    "radial-gradient(60% 40% at 15% 0%, rgba(255, 216, 77, 0.10), transparent 70%), radial-gradient(50% 35% at 90% 30%, rgba(20, 16, 10, 0.05), transparent 70%)",
-  gap: 24,
-  radius: 28,
-  padding: 6,
+  size: { w: 2400, h: 1600 },
+  skin: "instrument",
+  grid: "dots",
+  decay: 7,
+  heat: true,
+  minimap: true,
+  flow: "organic",
+  goo: false, // the paper skin turns this on
+  morph: true,
+  overlap: 26,
+  gap: 14,
+  radius: 40,
+  padding: 18,
   columns: 12,
-  shapes: ["card", "soft", "card", "round", "soft", "card", "bare"],
-  tilt: 1.2,
-  stagger: 14,
+  background: "radial-gradient(80% 50% at 20% 0%, rgba(255, 216, 77, 0.07), transparent 70%), linear-gradient(180deg, rgba(60, 40, 10, 0.012), rgba(60, 40, 10, 0.03))",
+  shapes: ["blob", "blob", "soft", "blob", "blob", "round", "blob", "bare"],
+  // sheets of paper, warm and close to the wall's own paper; one accent at most
+  palette: ["#fbf6ea", "#f3e9d2", "#f6e7de", "#e9eddf", "#f9e8c6", "#eddcc4", "#fbf6ea", "#ffe9a3"],
+  liquid: 1,
+  tilt: 1.6,
+  stagger: 26,
 };

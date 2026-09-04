@@ -61,6 +61,11 @@ export function Picker() {
       pickerStore.hover(targetAt(e.clientX, e.clientY));
     };
     const onClick = (e: MouseEvent) => {
+      if (pickerStore.clickSuppressed()) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       const t = targetAt(e.clientX, e.clientY);
       if (!t) return;
       e.preventDefault();
@@ -138,7 +143,7 @@ export function Picker() {
         <div className="picker-placard" style={{ top: placardTop, left: Math.max(8, Math.min(r.left, window.innerWidth - 380)) }}>
           <span className="text-accent">{t.blockTitle ?? t.blockId ?? "wall"}</span>
           <span className="opacity-60"> · </span>
-          <span>{t.line === 0 ? "add something here" : t.granularity === "word" ? `“${t.text}”` : `<${t.tag}>`}</span>
+          <span>{t.tag === "region" ? "this space" : t.line === 0 ? "add something here" : t.granularity === "word" ? `“${t.text}”` : `<${t.tag}>`}</span>
           {t.line !== 0 ? (
             <>
               <span className="opacity-60"> · </span>

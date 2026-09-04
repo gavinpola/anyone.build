@@ -293,6 +293,7 @@ export default defineSchema({
     x: v.number(),
     y: v.number(),
     hue: v.number(),
+    name: v.optional(v.string()),
     at: v.number(),
   })
     .index("by_room_session", ["roomId", "sessionId"])
@@ -374,6 +375,41 @@ export default defineSchema({
   })
     .index("by_site", ["siteId", "createdAt"])
     .index("by_site_status", ["siteId", "status", "createdAt"]),
+
+  /** High scores for games on the wall: one row per person per game (their best), top 50 kept. */
+  scores: defineTable({
+    game: v.string(),
+    score: v.number(),
+    handle: v.string(),
+    owner: v.string(), // u:<userId> or a:<anonId>
+    userId: v.optional(v.id("users")),
+    at: v.number(),
+  })
+    .index("by_game_score", ["game", "score"])
+    .index("by_game_owner", ["game", "owner"]),
+
+  /**
+   * Decay: each block has a clock that resets when someone touches it (plays, clicks, moves, changes it).
+   * When the clock runs out the block fades (hidden from the wall, never deleted; a touch revives it).
+   */
+  blockLife: defineTable({
+    roomId: v.string(),
+    blockId: v.string(),
+    lastTouchedAt: v.number(),
+    touches: v.number(),
+    fadedAt: v.optional(v.number()),
+  }).index("by_room_block", ["roomId", "blockId"]),
+
+  /** The wall, every hour: a frame per hour from a scheduled screenshot, kept 30 days. */
+  timelapse: defineTable({
+    at: v.number(),
+    storageId: v.id("_storage"),
+    width: v.number(),
+    height: v.number(),
+    bytes: v.number(),
+    changes: v.number(),
+    here: v.number(),
+  }).index("by_at", ["at"]),
 
   webhookEvents: defineTable({
     source: v.union(v.literal("github"), v.literal("vercel"), v.literal("stripe")),

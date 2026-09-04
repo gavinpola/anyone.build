@@ -7,8 +7,6 @@ export const block: BlockMeta = {
   description: "A tiny hello note 6e0z at the bottom of the wall.",
   order: 2,
   size: "sm",
-  shape: "bare",
-  tilt: -1.3,
 };
 
 export default function HelloNote6e0z() {

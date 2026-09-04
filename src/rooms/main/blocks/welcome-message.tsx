@@ -7,7 +7,7 @@ export const block: BlockMeta = {
   description: "A small line inviting everyone to add something to the wall.",
   order: 1,
   size: "md",
-  shape: "soft",
+  pinned: true,
 };
 
 export default function WelcomeMessage() {

@@ -1,0 +1,30 @@
+name: timelapse
+# The wall, every hour: one screenshot of the live site, stored for 30 days and shown on the leaderboard.
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: timelapse
+  cancel-in-progress: false
+jobs:
+  frame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Screenshot the wall and post the frame
+        env:
+          SITE_URL: https://anyone-build.vercel.app
+          CONVEX_SITE_URL: https://hushed-ladybug-141.convex.site
+          TIMELAPSE_TOKEN: ${{ secrets.TIMELAPSE_TOKEN }}
+        run: node scripts/timelapse.mjs

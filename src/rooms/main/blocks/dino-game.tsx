@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Stack, Text } from "@/kit";
 import type { BlockMeta } from "@/kit";
-import { useTick } from "@/kit";
+import { useTick, useHighScores, HighScores } from "@/kit";
 
 export const block: BlockMeta = {
   id: "dino-game",
@@ -46,6 +46,7 @@ export default function DinoGame() {
   });
   const [phase, setPhase] = useState<Phase>("ready");
   const [lastScore, setLastScore] = useState(0);
+  const { submit } = useHighScores("dino-game");
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -158,6 +159,7 @@ export default function DinoGame() {
             g.phase = "over";
             g.best = Math.max(g.best, Math.floor(g.distance / 10));
             setLastScore(Math.floor(g.distance / 10));
+            submit(Math.floor(g.distance / 10));
             setPhase("over");
             break;
           }
@@ -201,6 +203,7 @@ export default function DinoGame() {
           </div>
         )}
       </div>
+      <HighScores game="dino-game" limit={5} title="Best runs, everyone" />
     </Stack>
   );
 }

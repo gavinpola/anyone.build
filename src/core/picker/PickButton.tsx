@@ -5,7 +5,7 @@ import { pickerStore, usePicker } from "./pickerStore";
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 /** Discoverable entry into pick mode for people who don't know the chord. */
-export function PickButton({ className }: { className?: string }) {
+export function PickButton({ className, label = "Change something" }: { className?: string; label?: string }) {
   const { arming, sticky } = usePicker();
   const on = arming && sticky;
   return (
@@ -20,7 +20,7 @@ export function PickButton({ className }: { className?: string }) {
       aria-pressed={on}
     >
       {on ? <X size={14} /> : <Crosshair size={14} />}
-      {on ? "Click anything" : "Change something"}
+      {on ? "Click anything" : label}
       {!on ? (
         <span className="placard hidden items-center gap-0.5 sm:inline-flex">
           <kbd className="rounded border border-line bg-paper-2 px-1">⇧</kbd>

@@ -14,4 +14,8 @@ crons.daily("promote top proposal", { hourUTC: 5, minuteUTC: 7 }, internal.propo
 crons.daily("expire unvoted proposals", { hourUTC: 5, minuteUTC: 12 }, internal.maintenance.expireStaleProposals, {});
 // Keep the presence tables tiny.
 crons.interval("sweep presence", { minutes: 10 }, internal.presence.sweep, {});
+crons.daily("prune timelapse frames older than 30 days", { hourUTC: 5, minuteUTC: 20 }, internal.timelapse.prune, {});
+
+crons.daily("decay: fade what ran out", { hourUTC: 5, minuteUTC: 33 }, internal.life.sweep, {});
+
 export default crons;

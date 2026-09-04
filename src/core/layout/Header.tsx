@@ -4,6 +4,7 @@ import { CircleHelp } from "lucide-react";
 import { cn } from "@/core/lib/cn";
 import { AuthButton } from "@/core/auth/AuthButton";
 import { LiveCounters } from "./LiveCounters";
+import { PresenceStack } from "./PresenceStack";
 import { PatronSlot } from "@/core/patrons/PatronSlot";
 import { HelpPanel } from "@/core/help/HelpPanel";
 
@@ -21,6 +22,7 @@ export function Header() {
           anyone<span className="text-accent">.</span>build
         </Link>
         <LiveCounters />
+        <PresenceStack />
         <PatronSlot />
         <nav className="ml-auto flex items-center gap-1">
           {nav.map((n) => (

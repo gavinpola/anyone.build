@@ -44,7 +44,7 @@ export function FeedRail() {
       {/* floating controls */}
       {/* Above the drawer (z-55/56) so the pill stays a toggle while the drawer is open. */}
       <div className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 lg:bottom-6 lg:right-6" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <PickButton />
+        <span data-global-pick><PickButton /></span>
         <button
           type="button"
           onClick={() => feedStore.toggle()}

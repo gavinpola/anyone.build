@@ -36,7 +36,7 @@ export function Composer() {
 
 function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const viewer = useViewer();
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(t.draft ?? "");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
@@ -47,6 +47,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const [forTarget, setForTarget] = useState(t);
   if (forTarget !== t) {
     setForTarget(t);
+    setPrompt(t.draft ?? "");
     setSubmittedId(null);
     setError(null);
     setSending(false);
@@ -116,7 +117,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
         <span className="placard truncate">
           <span className="text-accent">{t.blockTitle ?? t.blockId ?? "wall"}</span>
           <span className="opacity-60"> · </span>
-          {t.line === 0 ? "add something here" : `<${t.tag}>`}
+          {t.tag === "region" ? "this space" : t.line === 0 ? "add something here" : `<${t.tag}>`}
           {t.line !== 0 ? (
             <>
               <span className="opacity-60"> · </span>

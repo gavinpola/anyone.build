@@ -16,6 +16,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   submitGuest: { kind: "fixed window", rate: 500, period: DAY },
   guestPlusOne: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
   claim: { kind: "fixed window", rate: 20, period: DAY },
+  // game high scores: a person can post a few a minute; a tab without an account, fewer
+  scoreSubmit: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 30 },
+  scoreSubmitAnon: { kind: "token bucket", rate: 10, period: MINUTE, capacity: 10 },
+  // touching a block (keeps it alive): a tab can touch a few times a minute
+  touch: { kind: "token bucket", rate: 12, period: MINUTE, capacity: 12 },
   // burst protection
   submitBurst: { kind: "token bucket", rate: 8, period: MINUTE, capacity: 8 }, // a human iterating fast, not a script
   // global approvals per hour (cost control)

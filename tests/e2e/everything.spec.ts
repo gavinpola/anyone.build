@@ -82,7 +82,12 @@ test.describe("the picker", () => {
     // element + word level need a block on the wall (VITE_E2E_BLOCKS=1)
     const h1 = page.locator('[data-ab-block="welcome"] h1');
     if (await h1.count()) {
-      await h1.hover({ position: { x: 40, y: 20 } });
+      // zoom in on the block the way a person would (the directory jumps to it): picking a word at the
+      // overview zoom is imprecise by nature
+      const row = page.locator('[data-directory-item="welcome"]');
+      if (await row.count()) await row.click();
+      await page.waitForTimeout(450);
+      await h1.hover({ position: { x: 14, y: 14 } }); // the first word; the centre lands on the one-word <em>, which is targeted as an element by design
       await expect(page.locator(".picker-placard")).toContainText(/“\w+”/);
       const p = page.locator('[data-ab-block="welcome"] p').first();
       await p.hover({ position: { x: 2, y: 2 } });

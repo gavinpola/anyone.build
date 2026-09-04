@@ -34,7 +34,7 @@ test("a big ask becomes a proposal, appears on the leaderboard, and can be voted
   await expect(section.getByRole("heading", { name: /up for a vote/i })).toBeVisible();
   const row = section.locator("li", { hasText: tag }).first();
   await expect(row).toBeVisible({ timeout: 15_000 });
-  const voteBtn = row.getByRole("button");
+  const voteBtn = row.getByRole("button").first();
   const before = Number(((await voteBtn.innerText()).match(/(\d+)/) ?? [])[1] ?? "0");
   await voteBtn.click();
   await expect(voteBtn).toContainText(String(before + 1), { timeout: 10_000 });

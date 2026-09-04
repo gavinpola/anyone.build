@@ -22,6 +22,15 @@ The wall is live in production (anyone-build.vercel.app, Convex `hushed-ladybug-
 - [x] **Spend panel on /admin.** By day (spent / held / cap) and by scope (builds, average cost, live vs failed).
 - [ ] NEXT: feed the playtester's reasons back into the coder loop (a second sandbox pass with "the playtester said: …") instead of failing the PR; a nightly playtest sweep of the whole wall so regressions from one block's change to another are caught; a `useKeys()` kit helper.
 
+## The canvas (Gavin + Yash, 2026-09-03 night: "model this off Figma", the Claude design mockup)
+
+- [x] **A bounded world.** `canvas.size` (2400 × 1600 at zoom 1) inside a viewport you zoom (⌘/ctrl + wheel, pinch, the bar) and pan (wheel, drag empty ground); fits on load. Blocks are placed by `place` or packed into free space (skyline, deterministic, tested); sizes are card widths in px (sm 360 · md 520 · lg 760 · full 1120), not fractions of the world.
+- [x] **Objects are the objects.** No wrapper, no corners: the only chrome is a tiny mono label above each object (who · what · time left) which is also the handle. A block that asks for a shape (card, soft, custom, blob) gets it. `canvas.skin` switches the whole wall between `instrument` (this) and `paper` (the liquid); `canvas.grid` dots/lines/none.
+- [x] **Drag out a space** (⇧⌘ + drag on empty ground) → the composer for that region ("region x,y,w,h · contains: …"); click a point → "here x,y". **Drag an object by its label** → the ask to move it is written for you. The judge and coder understand both.
+- [x] **Decay.** `canvas.decay` days; touching (click, key, drag, a landed change) resets the clock; faded objects hide (`?all` shows them), never deleted; `pinned: true` never fades. Daily sweep. The directory shows what's dying.
+- [x] **Directory** (on the canvas · hot / new / dying · click to go), **presence stack** in the header, **cursor names**, **pins** where asks landed, **heat** where people work, **minimap**, a **ship toast** in the bottom bar, **NOTE** quick-add, **the wall** button for canvas.ts.
+- [ ] NEXT: resize by dragging an object's corner (writes "make this W wide"); "follow" a cursor; typing indicators; touch pinch-zoom on tablets; an image object type (needs the assets pipeline); world-level "flows" (river, timeline) as canvas presets; the 2a/2b/2c directions from the design artifact once they can be read.
+
 ## The wall is a canvas (Gavin, 2026-09-03: "the boundaries should be malleable")
 
 - [x] **The wall's own file.** `src/rooms/main/canvas.ts` (background, gap, radius, padding, columns, shape palette, tilt, stagger, height) is agent-editable like any block; pointing at the gaps between blocks targets it ("The wall itself"). Blocks carry `shape` (preset or custom radius/clip/background/border/shadow), `span`, `tilt`, and `place` (free x/y/w on the canvas). Judge + coder + docs know. Existing one-line blocks got honest sizes so the wall reads as a collage, not rows.
