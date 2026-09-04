@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import type { Placed, Pan, World } from "./canvas";
+import { parsePoint, parseRegion, type Placed, type Pan, type Rect, type World } from "./canvas";
 import { readPref, writePref } from "@/core/lib/prefs";
+import { usePicker } from "@/core/picker/pickerStore";
 
 /**
  * A map of the world, bottom-right: every block as a small rectangle, the viewport as a frame.
  * Click to go there; click a block to jump to it. It folds to a chip (remembered per browser) and
- * steps aside while you point.
+ * steps aside while you point. Orange on the map means the same as orange on the wall: what you're
+ * pointing at (a block, a dragged-out space, a point); the viewport frame is ink so the two never mix.
  */
 export function Minimap({
   world,
@@ -16,7 +18,7 @@ export function Minimap({
   viewport,
   onGo,
   onGoBlock,
-  highlight,
+  mark,
   compact = false,
 }: {
   world: World;
@@ -26,9 +28,16 @@ export function Minimap({
   viewport: { w: number; h: number };
   onGo: (worldPoint: { x: number; y: number }) => void;
   onGoBlock?: (id: string) => void;
-  highlight?: string | null;
+  /** a space being dragged out right now, in world px */
+  mark?: Rect | null;
   compact?: boolean;
 }) {
+  // what's highlighted on the wall shows here too
+  const { hover, selected } = usePicker();
+  const target = hover ?? selected;
+  const hot = target?.blockId ?? null;
+  const region = mark ?? (target?.tag === "region" ? parseRegion(target.text) : null);
+  const point = !region && target ? parsePoint(target.text) : null;
   const [open, setOpen] = useState(() => {
     const v = readPref("map");
     return v ? v === "open" : !compact;
@@ -72,7 +81,7 @@ export function Minimap({
               width={p.w}
               height={p.h}
               rx={0}
-              className={"minimap-block" + (highlight === p.id ? " is-hot" : "")}
+              className={"minimap-block" + (hot === p.id ? " is-hot" : "")}
               onPointerDown={(e) => {
                 if (!onGoBlock) return;
                 e.stopPropagation();
@@ -80,6 +89,8 @@ export function Minimap({
               }}
             />
           ))}
+          {region ? <rect data-map-mark x={region.x} y={region.y} width={region.w} height={region.h} className="minimap-mark" /> : null}
+          {point ? <circle data-map-mark cx={point.x} cy={point.y} r={28} className="minimap-dot" /> : null}
           <rect x={vx} y={vy} width={vw} height={vh} className="minimap-view" />
         </svg>
       ) : null}

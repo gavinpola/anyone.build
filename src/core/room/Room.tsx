@@ -444,7 +444,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             <Cursors roomId={room.id} boxRef={wallRef} scale={1 / zoom} />
           </div>
 
-          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} /> : null}
+          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} mark={gesture?.kind === "marquee" ? gesture.rect : null} /> : null}
           <CanvasBar
             zoom={zoom}
             fit={fit}

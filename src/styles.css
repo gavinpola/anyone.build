@@ -498,3 +498,9 @@ body:has([data-canvas]) [data-feed-pills] { display: none; }
 /* while pointing (chord held or Change pressed) the map, the pages strip and the ? get out of the way; the bar keeps the cancel */
 body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking] .canvas-howto { pointer-events: none; opacity: 0.35; transition: opacity 120ms ease; }
 
+/* ===== The map: ink is where you are, orange is what you point at ===== */
+.minimap-view { fill: color-mix(in oklab, var(--ink) 6%, transparent); stroke: var(--ink); stroke-width: 12; }
+.minimap-block.is-hot { fill: var(--accent); }
+.minimap-mark { fill: color-mix(in oklab, var(--accent) 22%, transparent); stroke: var(--accent); stroke-width: 12; }
+.minimap-dot { fill: var(--accent); }
+

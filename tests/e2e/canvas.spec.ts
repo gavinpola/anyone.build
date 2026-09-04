@@ -188,6 +188,41 @@ test("the map folds to a chip, remembers it, and opens again", async ({ page }) 
   expect(await page.locator("[data-map-block]").count()).toBeGreaterThan(0);
 });
 
+test("the map shows what you point at: a hovered block, a dragged-out space, a point", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const first = page.locator("[data-world] [data-ab-block]:not([data-ab-block='__new__'])").first();
+  const id = (await first.getAttribute("data-ab-block"))!;
+  await page.locator(`[data-map-block="${id}"]`).dispatchEvent("pointerdown");
+  await page.waitForTimeout(450);
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  const box = (await first.boundingBox())!;
+  await page.mouse.move(box.x + 30, box.y + 30);
+  await expect(page.locator(`[data-map-block="${id}"]`)).toHaveClass(/is-hot/);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: /fit the whole wall/i }).click();
+  await page.waitForTimeout(300);
+  const world = page.locator("[data-world]");
+  const wb = (await world.boundingBox())!;
+  const zoom = wb.width / 2400;
+  const contentBottom = Number(await world.getAttribute("data-content-bottom"));
+  const y = wb.y + (contentBottom + 50) * zoom;
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  await page.mouse.move(wb.x + 200 * zoom, y);
+  await page.mouse.down();
+  await page.mouse.move(wb.x + 900 * zoom, y + 60 * zoom, { steps: 8 });
+  await expect(page.locator("rect[data-map-mark]")).toBeVisible();
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeVisible();
+  await expect(page.locator("rect[data-map-mark]")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  await page.mouse.click(wb.x + 1200 * zoom, y);
+  await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeVisible();
+  await expect(page.locator("circle[data-map-mark]")).toBeVisible();
+  await page.keyboard.press("Escape");
+});
+
 test("the ? says how, and opens the full story", async ({ page }) => {
   await page.goto(url);
   await ready(page);
