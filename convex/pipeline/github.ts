@@ -112,6 +112,14 @@ export const tryMerge = internalAction({
     const state = await checksGreen(kit, r.run.headSha);
     if (state === "pending") return;
     if (state === "red") {
+      // The fast path has no compiler in its loop; when its PR goes red, the sandbox (which does) gets one go.
+      if (r.run.turns === 1 && !r.run.fastFailed) {
+        console.log("fast path PR went red; handing the request to the sandbox:", requestId);
+        await closePullRequest(kit, r.run.prNumber, r.run.branch);
+        await ctx.runMutation(internal.pipeline.state.requeue, { id: requestId, costCents: r.run.costCents, fastFailed: true });
+        await ctx.runMutation(internal.pipeline.executor.release, { requestId });
+        return;
+      }
       await ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category: "build_failed", hint: "The checks didn't pass. Try a smaller ask.", error: "CI failed" });
       await closePullRequest(kit, r.run.prNumber, r.run.branch);
       await ctx.runMutation(internal.pipeline.executor.release, { requestId });

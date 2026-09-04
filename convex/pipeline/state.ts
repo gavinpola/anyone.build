@@ -41,11 +41,13 @@ export const fail = internalMutation({
 
 /** Fast path → sandbox: put an in-flight request back in the queue, keeping what the attempt cost. */
 export const requeue = internalMutation({
-  args: { id: v.id("requests"), costCents: v.optional(v.number()) },
-  handler: async (ctx, { id, costCents }) => {
+  args: { id: v.id("requests"), costCents: v.optional(v.number()), fastFailed: v.optional(v.boolean()) },
+  handler: async (ctx, { id, costCents, fastFailed }) => {
     const r = await ctx.db.get(id);
-    if (!r || !["queued", "building", "validating", "reviewing"].includes(r.status)) return;
-    await ctx.db.patch(id, { status: "queued", stage: undefined, run: { ...(r.run ?? {}), costCents: costCents ?? r.run?.costCents }, updatedAt: Date.now() });
+    if (!r || !["queued", "building", "validating", "reviewing", "preview"].includes(r.status)) return;
+    // back to the queue with the fast path's PR details cleared (the sandbox opens its own), cost carried
+    const { prNumber: _pr, prUrl: _url, headSha: _sha, previewUrl: _prev, ...rest } = r.run ?? {};
+    await ctx.db.patch(id, { status: "queued", stage: fastFailed ? "trying again in the sandbox" : undefined, run: { ...rest, costCents: costCents ?? r.run?.costCents, ...(fastFailed ? { fastFailed: true } : {}) }, updatedAt: Date.now() });
   },
 });
 

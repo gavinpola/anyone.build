@@ -109,3 +109,10 @@ describe("fastEligible", () => {
     expect(fastEligible({ target: { path: PATH, blockId: "hello" }, verdict: null }, on).ok).toBe(false);
   });
 });
+
+describe("a fast-path PR that went red", () => {
+  it("is not fast-pathed a second time", () => {
+    expect(fastEligible({ target: { path: PATH, blockId: "hello" }, verdict: { scope: "tiny" }, run: { fastFailed: true } }, { fastPathEnabled: true }).ok).toBe(false);
+    expect(fastEligible({ target: { path: PATH, blockId: "hello" }, verdict: { scope: "tiny" }, run: {} }, { fastPathEnabled: true }).ok).toBe(true);
+  });
+});

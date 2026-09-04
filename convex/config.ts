@@ -28,7 +28,8 @@ export const DEFAULTS = {
   coderModel: "deepseek/deepseek-v4-flash-0731", // tiny + small (and the fast path)
   // Bigger asks get better coders. Medium is every creative ask, so a mid-price coder; large only builds when a
   // proposal wins the daily vote (≤1/day), so the best one is affordable. Each build is still capped by scopeCapsCents.
-  coderModelMedium: "qwen/qwen3-coder-plus",
+  // qwen3-coder-plus (tried 2026-09-04) read files then dumped the code as 8k tokens of prose instead of calling write_file: 2 of 3 medium builds died with "no changes". The flash coder uses the tools.
+  coderModelMedium: "deepseek/deepseek-v4-flash-0731",
   coderModelLarge: "anthropic/claude-sonnet-5",
   // Tiny asks on one existing file: one model call, no sandbox (pipeline/fast.ts); the sandbox is the fallback.
   fastPathEnabled: true,

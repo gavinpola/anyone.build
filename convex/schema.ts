@@ -129,6 +129,7 @@ export default defineSchema({
         blockIds: v.optional(v.array(v.string())),
         mergeSha: v.optional(v.string()),
         securityRisk: v.optional(v.string()), // none | low | medium | high, from the security pass
+        fastFailed: v.optional(v.boolean()), // the fast path's PR went red in CI; the sandbox is building instead
       }),
     ),
     budgetCents: v.number(), // reserved cap for this request

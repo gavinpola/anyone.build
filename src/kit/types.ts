@@ -11,7 +11,7 @@ export type BlockMeta = {
   /** Width on the 12-column wall. */
   size: "sm" | "md" | "lg" | "full";
   /**
-   * How the block sits on the wall. A preset ("card" = the classic frame, "soft" = big rounded corners,
+   * How the block sits on the wall. A preset ("card" = the classic frame, "square" = a plain box with no corners, "soft" = big rounded corners,
    * "round" = a pill, "bare" = no card at all, the content sits straight on the paper) or your own shape.
    * Unset = picked from the wall's palette (src/rooms/<room>/canvas.ts), so the wall varies on its own.
    */
@@ -31,7 +31,7 @@ export type BlockMeta = {
 };
 
 /** "blob" = an organic eight-radius body that morphs slowly and merges with its neighbours on the liquid layer. */
-export type ShapePreset = "card" | "soft" | "round" | "bare" | "blob";
+export type ShapePreset = "card" | "square" | "soft" | "round" | "bare" | "blob";
 
 /** Any shape: CSS values, no URLs (the validator refuses them). */
 export type CustomShape = {

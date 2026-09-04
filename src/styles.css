@@ -269,6 +269,7 @@ body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--a
   .hung.placed { position: static; width: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .hung { transform: none; transition: none; } .body-morph { animation: none; } }
+.frame-square { border-radius: 0; }
 .frame-soft { border-radius: 26px; }
 .frame-round { border-radius: 999px; }
 .frame-round > .frame-body { padding-inline: 10px; }

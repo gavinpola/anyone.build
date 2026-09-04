@@ -62,7 +62,7 @@ export function cutPath(seed: number, jitter: number, points = 18, phase = 0): s
   return `polygon(${pts.join(", ")})`;
 }
 
-const CUT: Record<ShapePreset, number> = { card: 0.018, soft: 0.035, round: 0.03, bare: 0, blob: 0.09 };
+const CUT: Record<ShapePreset, number> = { card: 0.018, square: 0.012, soft: 0.035, round: 0.03, bare: 0, blob: 0.09 };
 
 export type Body = {
   /** the block's shape preset, or "custom" */
@@ -90,7 +90,7 @@ export type Hung = {
   place: BlockMeta["place"] | undefined;
 };
 
-const PRESET_RADIUS: Record<Exclude<ShapePreset, "blob">, string> = { card: "12px", soft: "26px", round: "999px", bare: "12px" };
+const PRESET_RADIUS: Record<Exclude<ShapePreset, "blob">, string> = { card: "12px", square: "0px", soft: "26px", round: "999px", bare: "12px" };
 
 export function hang(meta: Pick<BlockMeta, "id" | "size"> & Partial<Pick<BlockMeta, "shape" | "tilt" | "span" | "place">>, c: CanvasMeta): Hung {
   const h = hashId(meta.id);
@@ -124,6 +124,7 @@ export function hang(meta: Pick<BlockMeta, "id" | "size"> & Partial<Pick<BlockMe
 
 const PRESET_CLASS: Record<ShapePreset, string> = {
   card: "frame",
+  square: "frame frame-square",
   soft: "frame frame-soft",
   round: "frame frame-round",
   bare: "frame frame-bare",
