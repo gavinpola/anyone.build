@@ -58,7 +58,6 @@ export default function HelloWall() {
   return (
     <Stack className="p-5 sm:p-6" gap={3}>
       <Stack gap={1}>
-        <Text className="placard smallcaps text-muted">hello, welcome to the wall</Text>
         <Text className="max-w-2xl">{copy}</Text>
       </Stack>
 
