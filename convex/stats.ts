@@ -54,3 +54,46 @@ export const bump = internalMutation({
     });
   },
 });
+
+/**
+ * How it's going, without anyone's words: counts of asks by outcome over the last N days, why the
+ * rejected ones were rejected (category), how the failed ones failed (the hint the requester saw, and
+ * the pipeline's own error line), and how long live changes took. No prompts, no ids, no names.
+ */
+export const outcomes = query({
+  args: { days: v.optional(v.number()) },
+  handler: async (ctx, { days }) => {
+    const d = Math.max(1, Math.min(30, Math.floor(days ?? 7)));
+    const cutoff = Date.now() - d * 24 * 3600 * 1000;
+    const statuses = ["live", "rejected", "failed", "proposed", "queued", "building", "validating", "reviewing", "preview", "merging", "judging", "cancelled", "needs_human"] as const;
+    const byStatus: Record<string, number> = {};
+    const rejectedBy: Record<string, number> = {};
+    const failedBy: Record<string, number> = {};
+    const scopes: Record<string, number> = {};
+    const recentFailures: Array<{ at: number; scope: string | null; hint: string; error: string | null; costCents: number | null; turns: number | null; fastFailed: boolean }> = [];
+    const buildSeconds: number[] = [];
+    for (const status of statuses) {
+      const rows = await ctx.db
+        .query("requests")
+        .withIndex("by_status", (q) => q.eq("status", status).gt("createdAt", cutoff))
+        .order("desc")
+        .take(500);
+      byStatus[status] = rows.length;
+      for (const r of rows) {
+        if (status === "rejected") rejectedBy[r.verdict?.category ?? "none"] = (rejectedBy[r.verdict?.category ?? "none"] ?? 0) + 1;
+        if (status === "live" || status === "failed" || status === "proposed") scopes[r.verdict?.scope ?? "?"] = (scopes[r.verdict?.scope ?? "?"] ?? 0) + 1;
+        if (status === "live") buildSeconds.push(Math.round((r.updatedAt - r.createdAt) / 1000));
+        if (status === "failed") {
+          const key = (r.verdict?.hint ?? r.run?.error ?? "unknown").slice(0, 70);
+          failedBy[key] = (failedBy[key] ?? 0) + 1;
+          if (recentFailures.length < 25) recentFailures.push({ at: r.createdAt, scope: r.verdict?.scope ?? null, hint: (r.verdict?.hint ?? "").slice(0, 120), error: r.run?.error ? r.run.error.slice(0, 160) : null, costCents: r.run?.costCents ?? null, turns: r.run?.turns ?? null, fastFailed: Boolean(r.run?.fastFailed) });
+        }
+      }
+    }
+    buildSeconds.sort((a, b) => a - b);
+    const median = buildSeconds.length ? buildSeconds[Math.floor(buildSeconds.length / 2)]! : null;
+    const p90 = buildSeconds.length ? buildSeconds[Math.floor(buildSeconds.length * 0.9)]! : null;
+    return { days: d, byStatus, rejectedBy, failedBy, scopes, recentFailures, liveBuildSeconds: { median, p90, n: buildSeconds.length } };
+  },
+});
+
