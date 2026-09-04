@@ -70,7 +70,7 @@ export const outcomes = query({
     const rejectedBy: Record<string, number> = {};
     const failedBy: Record<string, number> = {};
     const scopes: Record<string, number> = {};
-    const recentFailures: Array<{ at: number; scope: string | null; hint: string; error: string | null; costCents: number | null; turns: number | null; fastFailed: boolean }> = [];
+    const recentFailures: Array<{ at: number; scope: string | null; hint: string; error: string | null; log: string[]; costCents: number | null; turns: number | null; fastFailed: boolean }> = [];
     const buildSeconds: number[] = [];
     for (const status of statuses) {
       const rows = await ctx.db
@@ -86,7 +86,12 @@ export const outcomes = query({
         if (status === "failed") {
           const key = (r.verdict?.hint ?? r.run?.error ?? "unknown").slice(0, 70);
           failedBy[key] = (failedBy[key] ?? 0) + 1;
-          if (recentFailures.length < 25) recentFailures.push({ at: r.createdAt, scope: r.verdict?.scope ?? null, hint: (r.verdict?.hint ?? "").slice(0, 120), error: r.run?.error ? r.run.error.slice(0, 160) : null, costCents: r.run?.costCents ?? null, turns: r.run?.turns ?? null, fastFailed: Boolean(r.run?.fastFailed) });
+          if (recentFailures.length < 25) {
+            // the runner's own step lines are metadata (tool names, token counts, timings), never anyone's words
+            const lines = (r.run?.error ?? "").split("\n");
+            const log = lines.filter((l) => /^\[runner/.test(l.trim()) || /^(checks failed|the agent made no changes|CI failed|review rejected)/i.test(l.trim())).slice(0, 40).map((l) => l.trim().slice(0, 140));
+            recentFailures.push({ at: r.createdAt, scope: r.verdict?.scope ?? null, hint: (r.verdict?.hint ?? "").slice(0, 120), error: lines[0] ? lines[0].slice(0, 160) : null, log, costCents: r.run?.costCents ?? null, turns: r.run?.turns ?? null, fastFailed: Boolean(r.run?.fastFailed) });
+          }
         }
       }
     }
