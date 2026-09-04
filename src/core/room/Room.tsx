@@ -24,6 +24,7 @@ import { Heat } from "./Heat";
 import { useTouch } from "./useTouch";
 import { clampPan, clampZoom, fitZoom, lifeLeft, packBlocks, parsePoint, parseRegion, pointText, regionText, toWorld, widthFor, worldSize, zoomAround, type Pan, type Rect } from "./canvas";
 import { pickerStore, resolveTarget } from "@/core/picker/pickerStore";
+import { loadView, saveView } from "@/core/lib/view";
 
 // Every file in src/rooms/main/blocks is a block. Adding one never touches another file.
 const modules = import.meta.glob<BlockModule>("/src/rooms/main/blocks/*.tsx", {
@@ -152,8 +153,10 @@ function CanvasRoom({ compact }: { compact: boolean }) {
 
   // viewport, zoom, pan
   const [vp, setVp] = useState({ w: 0, h: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
+  // a quiet refresh (a change just landed) comes back exactly where you were
+  const [savedView] = useState(() => loadView(`${world.w}x${world.h}`));
+  const [zoom, setZoom] = useState(savedView?.zoom ?? 1);
+  const [pan, setPan] = useState<Pan>(savedView?.pan ?? { x: 0, y: 0 });
   const fit = fitZoom(vp, { w: world.w, h: worldH });
   const fitted = useRef(false);
   useLayoutEffect(() => {
@@ -169,10 +172,19 @@ function CanvasRoom({ compact }: { compact: boolean }) {
   useLayoutEffect(() => {
     if (!vp.w || fitted.current) return;
     fitted.current = true;
+    if (savedView) return; // already where you were
+    // the one place the fit is set from a measurement: a layout effect after the first ResizeObserver read
+    /* eslint-disable react-hooks/set-state-in-effect */
     setZoom(fit);
     setPan(clampPan({ x: 0, y: 0 }, fit, vp, { w: world.w, h: worldH }));
+    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vp.w]);
+  useEffect(() => {
+    if (!fitted.current) return;
+    const t = setTimeout(() => saveView({ pan, zoom, world: `${world.w}x${world.h}` }), 250);
+    return () => clearTimeout(t);
+  }, [pan, zoom, world.w, world.h]);
   const applyZoom = useCallback(
     (next: number, around?: { x: number; y: number }) => {
       const z = clampZoom(next, fit);

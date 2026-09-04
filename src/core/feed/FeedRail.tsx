@@ -7,7 +7,6 @@ import { PickButton } from "@/core/picker/PickButton";
 import { RequestCard } from "./RequestCard";
 import { feedStore, useFeedOpen } from "./feedStore";
 import { LiveButton } from "./LiveButton";
-import { NewBuild } from "@/core/lib/NewBuild";
 import { TERMINAL } from "./active";
 
 function useSortedRequests() {
@@ -44,7 +43,6 @@ export function FeedRail() {
       {/* floating controls */}
       {/* Above the drawer (z-55/56) so the pill stays a toggle while the drawer is open. */}
       <div className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 lg:bottom-6 lg:right-6" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-feed-pills>
-        <NewBuild />
         <span data-global-pick><PickButton /></span>
         <LiveButton />
       </div>

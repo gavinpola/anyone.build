@@ -156,3 +156,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] Octokit throttling + retry on the GitHub client (secondary rate limits wait and retry twice; transient 5xx retried). The adopt cron is gone (the legacy namespace emptied).
 - [ ] NEXT: a stress drill against production (20 asks in 5 minutes as guests) now that the snapshot and nudges are in; then a GitHub merge queue so a burst of green PRs becomes one deploy (the structural fix for 100 asks at once: today merges are one at a time and each is a deploy).
 - [x] A skinny drag is still a space: a marquee counts when either side is ≥ 40 px (a 600×3 line included); only a click-sized twitch is a point. Blocks placed in a space narrower than 120 px get the packer's minimum width.
+
+## Nothing to reload (Gavin, 2026-09-04: "I don't want to have to reload as things get updated… like the drawing that updates")
+- [x] The page refreshes itself the first moment you pause after a change lands (no pointer or key for six seconds, nothing focused, no dialog open; a hidden tab at once), and comes back exactly where you were: the room keeps its pan and zoom in sessionStorage, pages keep their scroll. The "reload" button is gone. Hot-swapping new code into the running page isn't safe (each build carries its own React and kit chunks), so a quiet refresh is the honest version of "it just updates".
+

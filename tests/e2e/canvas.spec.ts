@@ -302,7 +302,7 @@ test("while pointing, a marquee started over the map still reaches the canvas", 
   await page.keyboard.press("Escape");
 });
 
-test("when a change lands after the tab loaded, the bar offers a reload", async ({ page }) => {
+test("when a change lands after the tab loaded, the page refreshes itself when you pause and comes back where you were", async ({ page }) => {
   // the first answers (this tab's baseline; dev strict mode asks twice) are one build, then a newer one lands
   let first = 0;
   await page.route("**/version.json*", (route) => {
@@ -311,8 +311,16 @@ test("when a change lands after the tab loaded, the bar offers a reload", async 
   });
   await page.goto(url);
   await ready(page);
-  await expect(page.locator("[data-new-build]")).toHaveCount(0);
-  // the next poll (every few seconds under the e2e flag) answers with a different build: the pill appears in the bar
-  await expect(page.locator("[data-canvas-bar] [data-new-build]")).toBeVisible({ timeout: 15_000 });
+  // zoom in, so the quiet refresh has something to bring back
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  const zoomed = zoomOf(await page.locator("[data-world]").getAttribute("style"));
+  // the next poll (every few seconds under the e2e flag) answers with a different build: the page refreshes
+  // itself once the person pauses (the test's clicks count as activity, so a short pause first)
+  await page.waitForEvent("load", { timeout: 20_000 });
+  await ready(page);
+  expect(await page.locator("[data-new-build]").count()).toBe(0); // there is no button; it just happens
+  const back = zoomOf(await page.locator("[data-world]").getAttribute("style"));
+  expect(Math.abs(back - zoomed)).toBeLessThan(0.02); // came back where it was, not re-fitted
 });
 

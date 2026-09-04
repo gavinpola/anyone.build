@@ -1,6 +1,8 @@
 import { useEffect, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { trackPageview } from "@/core/lib/analytics";
+import { restoreScroll } from "@/core/lib/view";
+import { QuietRefresh } from "@/core/lib/QuietRefresh";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ClaimPrompt } from "@/core/auth/ClaimPrompt";
@@ -18,8 +20,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     pickerStore.clear();
     trackPageview(pathname);
   }, [pathname]);
+  useEffect(() => {
+    restoreScroll();
+  }, []);
   return (
-    <div className="flex min-h-dvh flex-col pb-20">
+    <>
+      <QuietRefresh />
+      <div className="flex min-h-dvh flex-col pb-20">
       <Header />
       <ClaimPrompt />
       <main className="flex-1">{children}</main>
@@ -27,5 +34,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Picker />
       <Composer />
     </div>
+    </>
   );
 }
