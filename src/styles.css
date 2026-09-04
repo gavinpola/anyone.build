@@ -510,3 +510,10 @@ body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking
 [data-feed-pills] .new-build { height: 36px; border-radius: 999px; }
 .canvas-bar:has(.new-build) .canvas-toast { display: none; }
 
+/* ===== The header: what's clickable looks clickable, what isn't doesn't ===== */
+.nav-tab { position: relative; border-radius: 0; }
+.nav-tab.is-active::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 2px; height: 2px; background: var(--ink); border-radius: 1px; }
+.patron-cta { border-bottom: 1px dashed color-mix(in oklab, var(--accent) 45%, transparent); padding-bottom: 1px; }
+.patron-cta:hover { border-bottom-style: solid; }
+[data-live-counters] .presence-dot { width: 18px; height: 18px; font-size: 9px; }
+

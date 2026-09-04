@@ -7,6 +7,7 @@ import { timeAgo } from "@/core/lib/useNow";
 import { useViewer } from "@/core/auth/useViewer";
 import { cn } from "@/core/lib/cn";
 import { LEDGER_ROWS, ScrollHint, WhoAsked } from "./Ledger";
+import { track } from "@/core/lib/analytics";
 import { useNow } from "@/core/lib/useNow";
 import { untilRoundEnd } from "../../../convex/lib/rounds";
 
@@ -33,7 +34,10 @@ export function ProposalsSection() {
               <li key={p.id} data-proposal={p.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
                 <button
                   type="button"
-                  onClick={() => (viewer.signedIn ? void vote({ requestId: p.id }).catch(() => {}) : viewer.signIn())}
+                  onClick={() => {
+                    track("proposal_vote", { signedIn: viewer.signedIn });
+                    return viewer.signedIn ? void vote({ requestId: p.id }).catch(() => {}) : viewer.signIn();
+                  }}
                   className={cn(
                     "flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-md border text-[12px] tabular-nums transition",
                     p.myVote ? "border-accent bg-accent-soft text-accent" : "border-line bg-card text-ink-2 hover:border-line-2",

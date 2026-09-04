@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
+import { trackPageview } from "@/core/lib/analytics";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ClaimPrompt } from "@/core/auth/ClaimPrompt";
@@ -15,6 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   useEffect(() => {
     pickerStore.clear();
+    trackPageview(pathname);
   }, [pathname]);
   return (
     <div className="flex min-h-dvh flex-col pb-20">

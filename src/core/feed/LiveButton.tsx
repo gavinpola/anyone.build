@@ -1,6 +1,7 @@
 import { cn } from "@/core/lib/cn";
 import { feedStore, useFeedOpen } from "./feedStore";
 import { useActiveCount } from "./active";
+import { track } from "@/core/lib/analytics";
 
 /** The Live toggle: opens the feed drawer. It sits in the canvas bar on the wall and floats as a pill on other pages. */
 export function LiveButton({ className }: { className?: string }) {
@@ -9,7 +10,10 @@ export function LiveButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={() => feedStore.toggle()}
+      onClick={() => {
+        track("live_toggle", { open: !open });
+        feedStore.toggle();
+      }}
       aria-pressed={open}
       data-live-button
       className={cn(

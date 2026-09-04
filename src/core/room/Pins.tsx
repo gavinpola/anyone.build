@@ -2,18 +2,19 @@ import { useRequests } from "@/core/lib/useRequests";
 import { useNow } from "@/core/lib/useNow";
 import { parsePoint, parseRegion, type Placed } from "./canvas";
 
-const LIVE_FOR = 24 * 60 * 60 * 1000;
-const SHOW = new Set(["queued", "building", "validating", "reviewing", "preview", "merging", "live", "proposed"]);
+const LANDED_FOR = 3 * 60 * 1000; // a landed change keeps its pin for a few minutes, then the object speaks for itself
+const IN_FLIGHT = new Set(["judging", "queued", "building", "validating", "reviewing", "preview", "merging"]);
 
 /**
- * Asks, pinned where they landed: a small avatar on the block (or the space) someone pointed at, for a
- * day. The wall shows its own conversation. Not interactive; the feed is.
+ * Asks in flight, pinned where they point: a small avatar on the block (or the space) someone is
+ * changing right now, and for a few minutes after it lands. A bubble means activity, so the bubbles
+ * on the wall and the people count never tell different stories. Not interactive; the feed is.
  */
 export function Pins({ at }: { at: Map<string, Placed> }) {
   const requests = useRequests();
-  const now = useNow(60_000);
+  const now = useNow(15_000);
   const pins = requests
-    .filter((r) => SHOW.has(r.status) && now - r.createdAt < LIVE_FOR)
+    .filter((r) => IN_FLIGHT.has(r.status) || (r.status === "live" && now - r.updatedAt < LANDED_FOR))
     .map((r) => {
       let x: number | null = null;
       let y: number | null = null;

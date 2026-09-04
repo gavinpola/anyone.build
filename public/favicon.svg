@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#111"/><path d="M14 46 L32 14 L50 46 M22 34 H42" stroke="#ff5a1f" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- a.b — anyone.build. Geometry, not text, so it needs no font: single-storey a and b as ring + stem, the orange dot on the baseline. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#262219"/>
+      <stop offset="1" stop-color="#14120e"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="13.5" fill="none" stroke="#f3efe6" stroke-opacity="0.08"/>
+  <g fill="none" stroke="#f3efe6" stroke-width="5.5" stroke-linecap="round">
+    <!-- a: bowl + right stem -->
+    <circle cx="15.5" cy="40" r="8"/>
+    <path d="M23.5 31 V50"/>
+    <!-- b: ascender + bowl -->
+    <path d="M40.5 14 V50"/>
+    <circle cx="48.5" cy="40" r="8"/>
+  </g>
+  <!-- the dot -->
+  <circle cx="32" cy="47.5" r="3.4" fill="#ff5a1f"/>
+</svg>

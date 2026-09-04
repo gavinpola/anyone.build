@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CircleHelp } from "lucide-react";
 import { helpStore } from "@/core/help/helpStore";
 import { usePicker } from "@/core/picker/pickerStore";
+import { track } from "@/core/lib/analytics";
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform + navigator.userAgent);
 
@@ -66,7 +67,12 @@ export function HowTo() {
         title="How to use the canvas"
         aria-expanded={open}
         aria-controls="canvas-howto"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() =>
+          setOpen((o) => {
+            if (!o) track("howto_open");
+            return !o;
+          })
+        }
       >
         <CircleHelp size={16} />
       </button>

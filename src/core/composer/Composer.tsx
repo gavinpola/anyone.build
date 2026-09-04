@@ -7,6 +7,7 @@ import { submitRequest, useRequest } from "@/core/lib/useRequests";
 import { useViewer } from "@/core/auth/useViewer";
 import { REJECTION_COPY, STAGE_COPY } from "@/core/lib/types";
 import { cn } from "@/core/lib/cn";
+import { track } from "@/core/lib/analytics";
 import { feedStore } from "@/core/feed/feedStore";
 import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { friendlyError } from "@/core/lib/errors";
@@ -76,6 +77,13 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
     const left = Math.max(8, Math.min(r.left, window.innerWidth - W - 8));
     setPos({ top, left, above: !below });
   }, [t, request?.status]);
+  // the outcome, once per ask: what the judge said and what happened next
+  useEffect(() => {
+    if (!request) return;
+    if (request.status === "rejected" || request.status === "proposed" || request.status === "live" || request.status === "failed") {
+      track("ask_outcome", { status: request.status, category: request.verdict?.category ?? null, scope: request.verdict?.scope ?? null });
+    }
+  }, [request?.id, request?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     ref.current?.focus();
@@ -88,6 +96,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
     setError(null);
     const { rect: _r, element: _e, point: _p, granularity: _g, ...target } = t;
     try {
+      track("ask_sent", { where: target.tag === "region" ? "space" : target.blockId === "__new__" || target.path.endsWith("/blocks/") ? "new" : "block", granularity: target.granularity ?? "element", signedIn: viewer.signedIn });
       const id = await submitRequest({ prompt: p, target, handle: viewer.handle, avatarUrl: viewer.avatarUrl });
       setSubmittedId(id);
     } catch (e) {

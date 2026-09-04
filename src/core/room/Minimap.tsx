@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { parsePoint, parseRegion, type Placed, type Pan, type Rect, type World } from "./canvas";
 import { readPref, writePref } from "@/core/lib/prefs";
 import { usePicker } from "@/core/picker/pickerStore";
+import { track } from "@/core/lib/analytics";
 
 /**
  * A map of the world, bottom-right: every block as a small rectangle, the viewport as a frame.
@@ -46,6 +47,7 @@ export function Minimap({
     const next = !open;
     setOpen(next);
     writePref("map", next ? "open" : "closed");
+    track("map_toggle", { open: next });
   };
   const W = 168;
   const k = W / world.w;

@@ -24,7 +24,8 @@
     "sync:manifest": "node scripts/gen-manifest.mjs",
     "e2e": "E2E_URL=http://127.0.0.1:5173 playwright test tests/e2e",
     "sync:constitution": "node scripts/sync-constitution.mjs",
-    "playtest": "playwright test --config playwright.blocks.config.ts"
+    "playtest": "playwright test --config playwright.blocks.config.ts",
+    "favicon": "node scripts/gen-favicon.mjs"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.12.5",
@@ -42,6 +43,7 @@
     "convex": "^1.45.0",
     "lucide-react": "^1.39.0",
     "motion": "^13.2.0",
+    "posthog-js": "^1.425.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "resend": "^6.25.0",
