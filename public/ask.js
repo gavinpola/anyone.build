@@ -1,7 +1,7 @@
-/* anyone.build · ask.js
+/* everyones.lol · ask.js
    Point at anything on your site and say what should change.
 
-   <script src="https://anyone.build/ask.js" data-site="site_…" defer></script>
+   <script src="https://everyones.lol/ask.js" data-site="site_…" defer></script>
 
    Optional: data-api (where notes go), data-color (accent). No dependencies, no cookies,
    nothing tracked. Styles live in a shadow root so they can't touch your page. */
@@ -11,7 +11,7 @@
   if (!script || window.__anyoneBuildAsk) return;
   const key = script.getAttribute("data-site");
   if (!key) {
-    console.warn("[anyone.build] ask.js needs data-site");
+    console.warn("[everyones.lol] ask.js needs data-site");
     return;
   }
   window.__anyoneBuildAsk = true;
@@ -54,7 +54,7 @@
     <textarea placeholder="Say it plainly. One thing at a time." maxlength="1000" aria-label="What should change"></textarea>
     <div class="row"><button type="button" class="cancel">Cancel</button><button type="button" class="send">Send</button></div>
     <p class="msg" aria-live="polite"></p>
-    <p class="by">Powered by <a href="https://anyone.build/for-your-site" target="_blank" rel="noopener noreferrer">anyone.build</a></p>
+    <p class="by">Powered by <a href="https://everyones.lol/for-your-site" target="_blank" rel="noopener noreferrer">everyones.lol</a></p>
   </div>`;
 
   const $ = (s) => root.querySelector(s);

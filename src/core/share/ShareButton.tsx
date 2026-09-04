@@ -4,7 +4,7 @@ import { cn } from "@/core/lib/cn";
 
 /** The link for a thing someone asked for: /c/<request id> for a change, /p/<request id> for a proposal. */
 export function shareUrl(kind: "c" | "p", requestId: string): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://anyone.build";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://everyones.lol";
   return `${origin}/${kind}/${requestId}`;
 }
 

@@ -5,19 +5,19 @@ import { Resend } from "resend";
 export async function sendEmail(to: string, msg: { subject: string; html: string; text: string }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return;
-  const from = process.env.RESEND_FROM ?? "anyone.build <patron@mail.anyone.build>";
+  const from = process.env.RESEND_FROM ?? "everyones.lol <patron@mail.anyone.build>";
   const resend = new Resend(key);
   await resend.emails.send({ from, to, subject: msg.subject, html: msg.html, text: msg.text }).catch((e) => console.error("resend", e));
 }
 
 const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-const site = () => process.env.SITE_URL ?? "https://anyone.build";
+const site = () => process.env.SITE_URL ?? "https://everyones.lol";
 
 /** One design: black card, one orange number, one line, one button. */
 function layout(o: { eyebrow: string; big: string; line: string; cta: string; href: string; foot: string }) {
   return `<!doctype html><html><body style="margin:0;background:#f3efe6;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#16140f">
 <div style="max-width:520px;margin:32px auto;padding:0 16px">
-  <div style="font:600 12px/1 'SF Mono',Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:#7d7768;margin:0 0 12px">anyone.build</div>
+  <div style="font:600 12px/1 'SF Mono',Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:#7d7768;margin:0 0 12px">everyones.lol</div>
   <div style="background:#16140f;color:#f3efe6;border-radius:14px;padding:28px 28px 24px">
     <div style="font:500 12px/1 'SF Mono',Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:#b9b2a2">${o.eyebrow}</div>
     <div style="font:800 64px/1 Helvetica Neue,Helvetica,Arial,sans-serif;letter-spacing:-.03em;color:#ff6a33;margin:14px 0 10px">${o.big}</div>
@@ -40,7 +40,7 @@ export function outbidEmail(i: { name: string; theirCents: number; newCents: num
       href: `${site()}/leaderboard`,
       foot: "Only the highest bid at midnight ET is charged. Everyone else's hold is released automatically.",
     }),
-    text: `You've been outbid on anyone.build. The high bid is now ${usd(i.newCents)}. ${take} takes it back: ${site()}/leaderboard`,
+    text: `You've been outbid on everyones.lol. The high bid is now ${usd(i.newCents)}. ${take} takes it back: ${site()}/leaderboard`,
   };
 }
 
@@ -55,7 +55,7 @@ export function wonEmail(i: { name: string; cents: number; slotDay: string }) {
       href: site(),
       foot: "Half of it funds the day's AI budget. Clicks are counted on the leaderboard.",
     }),
-    text: `You won today's patron slot on anyone.build for ${usd(i.cents)}. ${site()}`,
+    text: `You won today's patron slot on everyones.lol for ${usd(i.cents)}. ${site()}`,
   };
 }
 
@@ -70,6 +70,6 @@ export function releasedEmail(i: { name: string; cents: number; slotDay: string;
       href: `${site()}/leaderboard`,
       foot: "Holds show as pending on your statement and disappear within a few days.",
     }),
-    text: `Your hold of ${usd(i.cents)} on anyone.build was released. Today's slot went for ${usd(i.winningCents)}. ${site()}/leaderboard`,
+    text: `Your hold of ${usd(i.cents)} on everyones.lol was released. Today's slot went for ${usd(i.winningCents)}. ${site()}/leaderboard`,
   };
 }

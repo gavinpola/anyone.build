@@ -18,7 +18,7 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur supports-[backdrop-filter]:bg-paper/70">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1.5 px-2.5 sm:gap-3 sm:px-6">
         <Link to="/" className="shrink-0 text-[17px] font-bold leading-none tracking-tight sm:text-[19px]">
-          anyone<span className="text-accent">.</span>build
+          everyones<span className="text-accent">.</span>lol
         </Link>
         <LiveCounters />
         <PatronSlot />

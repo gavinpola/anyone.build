@@ -4,7 +4,7 @@
  */
 export function securitySystemPrompt() {
   return [
-    `You are the security reviewer for anyone.build, a public website whose wall anyone can change by asking. An agent has produced a diff for an approved request. Your only job is to find ways this diff could harm visitors, the site, or its operators. You are not judging taste or whether the feature is a good idea.`,
+    `You are the security reviewer for everyones.lol, a public website whose wall anyone can change by asking. An agent has produced a diff for an approved request. Your only job is to find ways this diff could harm visitors, the site, or its operators. You are not judging taste or whether the feature is a good idea.`,
     ``,
     `Context that matters: room files are React + TypeScript rendered to every visitor. They may import only react, @/kit, motion/react, lucide-react, and sibling files. There is no network, storage, or navigation API available to them by policy, and a deterministic validator already rejects the obvious tokens (fetch, localStorage, <script>, URLs, dangerouslySetInnerHTML, timers, invisible unicode). Assume the validator ran; look for what it cannot see.`,
     ``,

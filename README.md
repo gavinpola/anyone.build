@@ -1,4 +1,4 @@
-# anyone.build
+# everyones.lol
 
 **The website anyone can change.** Hold ⇧⌘, click anything on the wall, say what should change. If it's good for everyone, an agent writes the code, checks it, opens a pull request, and it ships. Everyone watches it happen.
 

@@ -33,7 +33,7 @@ export function shareMeta(kind: "c" | "p", id: string, d: ShareData | null, orig
   const url = `${origin}/${kind}/${id}`;
   const image = `${origin}/api/og?kind=${kind}&id=${encodeURIComponent(id)}`;
   if (!d) {
-    return { kind, title: "anyone.build", description: "The website anyone can change. Point at something, say what should change, watch it ship.", url, image };
+    return { kind, title: "everyones.lol", description: "The website anyone can change. Point at something, say what should change, watch it ship.", url, image };
   }
   const ask = tidy(d.ask, 90);
   if (kind === "p" || d.status === "proposed") {
@@ -41,7 +41,7 @@ export function shareMeta(kind: "c" | "p", id: string, d: ShareData | null, orig
     return {
       kind: "p",
       title: `Vote for: “${ask}”`,
-      description: `${votes} ${votes === 1 ? "vote" : "votes"} so far. Asked by ${byLine(d)} on anyone.build, the website anyone can change. Sign in to vote; the most-wanted one gets built.`,
+      description: `${votes} ${votes === 1 ? "vote" : "votes"} so far. Asked by ${byLine(d)} on everyones.lol, the website anyone can change. Sign in to vote; the most-wanted one gets built.`,
       url,
       image,
     };
@@ -49,10 +49,10 @@ export function shareMeta(kind: "c" | "p", id: string, d: ShareData | null, orig
   const live = d.status === "live";
   return {
     kind: "c",
-    title: `“${ask}” · made on anyone.build`,
+    title: `“${ask}” · made on everyones.lol`,
     description: live
-      ? `${d.summary ? tidy(d.summary, 120) + " " : ""}Asked by ${byLine(d)}${d.reverted ? " (since replaced)" : ""}. anyone.build is the website anyone can change.`
-      : `Being built right now, asked by ${byLine(d)}. anyone.build is the website anyone can change: point at something, say what should change, watch it ship.`,
+      ? `${d.summary ? tidy(d.summary, 120) + " " : ""}Asked by ${byLine(d)}${d.reverted ? " (since replaced)" : ""}. everyones.lol is the website anyone can change.`
+      : `Being built right now, asked by ${byLine(d)}. everyones.lol is the website anyone can change: point at something, say what should change, watch it ship.`,
     url,
     image,
   };
@@ -75,7 +75,7 @@ export function injectMeta(html: string, m: ShareMeta): string {
     `<meta property="og:image" content="${escapeHtml(m.image)}" />`,
     `<meta property="og:image:width" content="1200" />`,
     `<meta property="og:image:height" content="630" />`,
-    `<meta property="og:site_name" content="anyone.build" />`,
+    `<meta property="og:site_name" content="everyones.lol" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(m.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(m.description)}" />`,

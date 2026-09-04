@@ -7,7 +7,7 @@ import { cn } from "@/core/lib/cn";
  * can never smuggle in a phishing or promo link.
  */
 export const LINK_ALLOWLIST = [
-  "anyone.build",
+  "everyones.lol", "anyone.build",
   "github.com",
   "en.wikipedia.org",
   "developer.mozilla.org",

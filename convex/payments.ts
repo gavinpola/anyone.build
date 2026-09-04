@@ -42,9 +42,9 @@ export const placeBid = action({
     const session = await s.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: amount, product_data: { name: "Patron of the day — anyone.build", description: `Bid for the ${slotDay} slot. Only the winner is charged, at midnight ET.` } } }],
+      line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: amount, product_data: { name: "Patron of the day — everyones.lol", description: `Bid for the ${slotDay} slot. Only the winner is charged, at midnight ET.` } } }],
       custom_text: { submit: { message: "This places a hold, not a charge. Only the top bid at midnight ET is charged; every other hold is released." } },
-      payment_intent_data: { capture_method: "manual", description: `anyone.build patron bid · ${slotDay} · ${name}`, metadata: { slotDay, handle: me.handle } },
+      payment_intent_data: { capture_method: "manual", description: `everyones.lol patron bid · ${slotDay} · ${name}`, metadata: { slotDay, handle: me.handle } },
       success_url: `${site}/leaderboard?bid=held&cs={CHECKOUT_SESSION_ID}`,
       cancel_url: `${site}/leaderboard?bid=cancelled`,
       metadata: { slotDay, handle: me.handle, name },

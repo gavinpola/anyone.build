@@ -56,7 +56,7 @@ const steps: Array<[string, string]> = [
   ["Ship", "You merge, or on Ships your CI merges for you. Either way it deploys with the rest of your site."],
 ];
 
-const snippet = `<script src="https://anyone.build/ask.js" data-site="site_…" defer></script>`;
+const snippet = `<script src="https://everyones.lol/ask.js" data-site="site_…" defer></script>`;
 
 /** The one page that sells. Everything on it is true today or labeled invite-only. */
 export function ForYourSitePage() {
@@ -66,7 +66,7 @@ export function ForYourSitePage() {
         <p className="placard smallcaps">For your site</p>
         <h1 className="mt-2 font-display text-4xl leading-[1.05] sm:text-5xl">Your visitors point at things. You ship the fix.</h1>
         <p className="mt-5 text-[17px] leading-relaxed text-ink-2">
-          anyone.build for your site turns what people say on your pages into changes you control: a triaged inbox, a judge with your rules,
+          everyones.lol for your site turns what people say on your pages into changes you control: a triaged inbox, a judge with your rules,
           pull requests drafted by an agent, and, when you want it, changes that ship themselves. The wall you just used runs on the same loop
           with nobody in it.
         </p>

@@ -33,7 +33,7 @@ function ago(ts: number): string {
 }
 
 function snippetFor(key: string): string {
-  const origin = typeof window === "undefined" ? "https://anyone.build" : window.location.origin;
+  const origin = typeof window === "undefined" ? "https://everyones.lol" : window.location.origin;
   return `<script src="${origin}/ask.js" data-site="${key}"${apiUrl ? ` data-api="${apiUrl}"` : ""} defer></script>`;
 }
 

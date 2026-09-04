@@ -1,10 +1,10 @@
-# anyone.build for your site — the product memo
+# everyones.lol for your site — the product memo
 
 _Written 2026-09-03, the night after the wall went live. This is the honest version._
 
 ## The one-line
 
-Your visitors point at the thing on your site and say what should change. It lands in your inbox as a triaged note; with your permission it becomes a pull request; with your CI as the gate it ships itself. The wall at anyone.build is the public demo of the whole loop running with zero humans.
+Your visitors point at the thing on your site and say what should change. It lands in your inbox as a triaged note; with your permission it becomes a pull request; with your CI as the gate it ships itself. The wall at everyones.lol is the public demo of the whole loop running with zero humans.
 
 ## Is it a product?
 
@@ -57,7 +57,7 @@ On a frontier coder the same run is $0.50 to $2.50. Pricing above is set so Draf
 
 ## Signup and payment flow (the whole thing)
 
-1. Sign in with GitHub on anyone.build (already exists).
+1. Sign in with GitHub on everyones.lol (already exists).
 2. `/sites`: add a site by name and origin. Get the snippet. Paste it. Notes work immediately. Nothing to pay.
 3. Upgrade to Drafts: Stripe Checkout subscription (the Stripe account and webhook already exist for patrons), then "Install the GitHub App on one repo" (the same GitHub App, a second installation on the customer's repo; we store the installation id on the site). Then a per-site addendum to the judge's rules and a toggle for internal-only.
 4. Each PR shows in the site's inbox with the diff link and the cost. Monthly usage rolls into the subscription; overage is metered.
@@ -75,9 +75,9 @@ On a frontier coder the same run is $0.50 to $2.50. Pricing above is set so Draf
 
 The wall, the kit, the validator, the constitution, and every prompt stay open. That is the trust argument and the marketing: "here is exactly what decides". The product code (sites, notes, billing) lives in the same repo for now because the moat is not the code; it is the running system, the tuned prompts, the data, and the trust. When there is revenue, the multi-tenant orchestration (customer repos, billing, installations) moves to a private service and the open repo keeps the wall and the gatekeeper. That matches Theo's line: open the malleable surface, keep the orchestration private.
 
-## How it sits inside anyone.build without taking over
+## How it sits inside everyones.lol without taking over
 
-One footer link, one line at the bottom of the help panel, and the `/for-your-site` page. No banners, no header slot. The widget's popover says "Powered by anyone.build" in 11px grey. The wall stays the wall.
+One footer link, one line at the bottom of the help panel, and the `/for-your-site` page. No banners, no header slot. The widget's popover says "Powered by everyones.lol" in 11px grey. The wall stays the wall.
 
 ## Built tonight
 
@@ -105,5 +105,5 @@ Whenever the autonomous loop runs out of plan work, spend the tick here: think a
 3. **Onboarding.** Add site → paste tag → first note within a minute, with a "we got it" confirmation on the dashboard. Then "connect a repo" as the upgrade moment.
 4. **Retention.** Daily digest email (Resend) of open notes and shipped PRs; a weekly "what shipped and what it cost" mail; Slack digest on Ships.
 5. **Trust.** A public status page for the pipeline, per-PR cost and risk shown to customers, a written data policy, and the SOC 2 path for Enterprise.
-6. **Distribution.** The wall as the demo, "Built with anyone.build" on customer sites (opt-out on paid plans), a gallery of shipped changes, and a template repo for the internal-tools use case.
+6. **Distribution.** The wall as the demo, "Built with everyones.lol" on customer sites (opt-out on paid plans), a gallery of shipped changes, and a template repo for the internal-tools use case.
 7. **Pricing experiments.** Per-PR pricing vs. seats vs. sites; measure conversion from Notes to Drafts and PR volume per site before locking anything in.

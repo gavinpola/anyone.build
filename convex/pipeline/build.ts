@@ -180,7 +180,7 @@ export const run = internalAction({
       const pr = await openPullRequest(kit, {
         branch,
         title: review.summary || result.summary,
-        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)}${reviewDoubts ? " · " + reviewDoubts : ""} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`, ``, `Opened automatically by anyone.build.`].join("\n"),
+        body: [`**Request** by ${user ? "@" + user.handle : requesterHandle}: ${request.prompt}`, ``, `**Plan**`, ...verdict.plan.map((p) => `- ${p}`), ``, `Scope: ${scope} · steps: ${result.steps} · cost: $${(cost / 100).toFixed(2)}${reviewDoubts ? " · " + reviewDoubts : ""} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`, ``, `Opened automatically by everyones.lol.`].join("\n"),
         labels: ["playground"],
       });
       await set("preview", undefined, {

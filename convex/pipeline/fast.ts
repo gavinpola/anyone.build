@@ -124,7 +124,7 @@ export const run = internalAction({
           ``,
           `Scope: tiny · fast path (one model call, no sandbox; CI is the typecheck) · cost: $${(cost / 100).toFixed(2)}${reviewDoubts ? " · " + reviewDoubts : ""} · security: ${sec.review.risk}${resourceNotes ? " (resource-only notes; the kit caps storage)" : ""}${sec.review.findings.length ? " (" + sec.review.findings.join("; ").slice(0, 300) + ")" : ""}`,
           ``,
-          `Opened automatically by anyone.build.`,
+          `Opened automatically by everyones.lol.`,
         ].join("\n"),
         labels: ["playground"],
       });

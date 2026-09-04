@@ -26,7 +26,7 @@ test.describe("header + navigation", () => {
   test("wordmark, tabs, help panel, sign in and out", async ({ page }) => {
     await page.goto(url);
     await ready(page);
-    await expect(page).toHaveTitle(/anyone\.build/);
+    await expect(page).toHaveTitle(/everyones\.lol/);
     await page.getByRole("link", { name: "Leaderboard" }).click();
     await expect(page).toHaveURL(/\/leaderboard$/);
     await page.getByRole("link", { name: "Room" }).click();

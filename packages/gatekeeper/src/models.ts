@@ -26,7 +26,7 @@ function provider(cfg: Pick<ModelConfig, "apiKey" | "baseURL">) {
   return createOpenRouter({
     apiKey: cfg.apiKey,
     baseURL: cfg.baseURL,
-    headers: { "HTTP-Referer": "https://anyone.build", "X-Title": "anyone.build gatekeeper" },
+    headers: { "HTTP-Referer": "https://everyones.lol", "X-Title": "everyones.lol gatekeeper" },
   });
 }
 

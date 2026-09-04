@@ -50,7 +50,7 @@ export async function GET(req: Request): Promise<Response> {
     h("div", { style: { display: "flex", fontSize: size, lineHeight: 1.15, fontWeight: 400, maxWidth: 1000 } }, d ? `“${ask}”` : ask),
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontSize: 26, color: "#bfb8a8" } }, [
       h("div", { key: "foot" }, foot),
-      h("div", { key: "brand", style: { fontSize: 30, color: "#f4efe3" } }, "anyone.build"),
+      h("div", { key: "brand", style: { fontSize: 30, color: "#f4efe3" } }, "everyones.lol"),
     ]),
   );
 

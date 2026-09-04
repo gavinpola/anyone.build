@@ -73,7 +73,7 @@ function Inner({ id, kind }: { id: string; kind: "c" | "p" }) {
             Open the page
           </Link>
         ) : null}
-        <ShareButton url={shareUrl(proposed ? "p" : "c", d.id)} title={d.ask} text={proposed ? "Vote for this on anyone.build" : "Made on anyone.build, the website anyone can change"} />
+        <ShareButton url={shareUrl(proposed ? "p" : "c", d.id)} title={d.ask} text={proposed ? "Vote for this on everyones.lol" : "Made on everyones.lol, the website anyone can change"} />
         <Link to={proposed ? "/leaderboard" : "/"} className="h-8 rounded-md bg-ink px-3 text-[13px] leading-8 text-paper hover:opacity-90">
           {proposed ? "Vote" : "Change something too"}
         </Link>

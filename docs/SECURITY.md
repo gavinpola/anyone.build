@@ -1,10 +1,10 @@
 # Security
 
-anyone.build lets strangers ask an AI to change a live website. That is the whole point, and the whole threat model. This page says what holds the line and how to report a hole.
+everyones.lol lets strangers ask an AI to change a live website. That is the whole point, and the whole threat model. This page says what holds the line and how to report a hole.
 
 ## Report a vulnerability
 
-Email **security@anyone.build** or open a [private security advisory](https://github.com/gavinpola/anyone.build/security/advisories/new). Please don't file public issues for exploits, and don't test against other people's data. We'll credit you on the leaderboard if you want.
+Email **security@everyones.lol** or open a [private security advisory](https://github.com/gavinpola/anyone.build/security/advisories/new). Please don't file public issues for exploits, and don't test against other people's data. We'll credit you on the leaderboard if you want.
 
 ## What actually holds
 

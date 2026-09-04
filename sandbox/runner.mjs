@@ -167,7 +167,7 @@ let last = { typecheck: false, lint: false, validator: false, build: false };
 const openrouter = createOpenRouter({
   apiKey: process.env.AB_MODEL_KEY || "sandbox-placeholder",
   baseURL: process.env.AB_MODEL_BASE_URL || undefined,
-  headers: { "HTTP-Referer": "https://anyone.build", "X-Title": "anyone.build coder" },
+  headers: { "HTTP-Referer": "https://everyones.lol", "X-Title": "everyones.lol coder" },
 });
 
 const maxSteps = Math.min(40, job.maxSteps ?? 24);

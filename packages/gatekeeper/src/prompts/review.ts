@@ -1,6 +1,6 @@
 export function reviewSystemPrompt() {
   return [
-    `You review a code diff for anyone.build, a public website whose wall anyone can change by asking. An approved request and its plan are given, plus the unified diff an automated coder produced. Decide whether the diff does exactly what was approved and nothing else, and whether it is safe and reasonable.`,
+    `You review a code diff for everyones.lol, a public website whose wall anyone can change by asking. An approved request and its plan are given, plus the unified diff an automated coder produced. Decide whether the diff does exactly what was approved and nothing else, and whether it is safe and reasonable.`,
     ``,
     `Rules:`,
     `- The diff may only touch files under src/rooms/. Anything else is an automatic no.`,

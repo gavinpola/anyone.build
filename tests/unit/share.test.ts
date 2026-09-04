@@ -17,12 +17,12 @@ const HEAD = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>anyone.build — the website anyone can change</title>
+    <title>everyones.lol — the website anyone can change</title>
     <meta name="description" content="An experiment." />
-    <meta property="og:title" content="anyone.build" />
+    <meta property="og:title" content="everyones.lol" />
     <meta property="og:description" content="The website anyone can change." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://anyone.build" />
+    <meta property="og:url" content="https://everyones.lol" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
@@ -31,35 +31,35 @@ const HEAD = `<!doctype html>
 
 describe("share previews", () => {
   it("a live change unfurls with the ask, the summary, and who asked", () => {
-    const m = shareMeta("c", live.id, live, "https://anyone.build");
+    const m = shareMeta("c", live.id, live, "https://everyones.lol");
     expect(m.title).toMatch(/^“turn this into a countdown/);
-    expect(m.title).toContain("made on anyone.build");
+    expect(m.title).toContain("made on everyones.lol");
     expect(m.description).toContain("two-column midnight ET countdown");
     expect(m.description).toContain("@gavin-mill");
-    expect(m.url).toBe("https://anyone.build/c/kh7abc");
-    expect(m.image).toBe("https://anyone.build/api/og?kind=c&id=kh7abc");
+    expect(m.url).toBe("https://everyones.lol/c/kh7abc");
+    expect(m.image).toBe("https://everyones.lol/api/og?kind=c&id=kh7abc");
   });
   it("a proposal unfurls as a vote, with the count", () => {
-    const m = shareMeta("p", proposed.id, proposed, "https://anyone.build");
+    const m = shareMeta("p", proposed.id, proposed, "https://everyones.lol");
     expect(m.title).toMatch(/^Vote for: “/);
     expect(m.description).toMatch(/^3 votes so far/);
-    expect(m.url).toBe("https://anyone.build/p/kh7def");
+    expect(m.url).toBe("https://everyones.lol/p/kh7def");
   });
   it("a change link to a proposal still reads as a vote; a guest reads as a guest; nothing public reads generic", () => {
     expect(shareMeta("c", proposed.id, proposed, "https://x.test").title).toMatch(/^Vote for/);
     expect(shareMeta("c", live.id, { ...live, by: { handle: "guest-a3f9", avatarUrl: null, guest: true } }, "https://x.test").description).toContain("a guest");
     const g = shareMeta("c", "nope", null, "https://x.test");
-    expect(g.title).toBe("anyone.build");
+    expect(g.title).toBe("everyones.lol");
     expect(g.image).toBe("https://x.test/api/og?kind=c&id=nope");
   });
   it("injects tags into the page head, replacing the static ones, with everything escaped", () => {
-    const html = injectMeta(HEAD, shareMeta("c", live.id, live, "https://anyone.build"));
+    const html = injectMeta(HEAD, shareMeta("c", live.id, live, "https://everyones.lol"));
     expect(html.match(/<title>/g)).toHaveLength(1);
     expect(html.match(/property="og:title"/g)).toHaveLength(1);
     expect(html.match(/name="description"/g)).toHaveLength(1);
     expect(html).not.toContain("<script>alert");
     expect(html).toContain("&lt;script&gt;");
-    expect(html).toContain('<meta property="og:image" content="https://anyone.build/api/og?kind=c&amp;id=kh7abc" />');
+    expect(html).toContain('<meta property="og:image" content="https://everyones.lol/api/og?kind=c&amp;id=kh7abc" />');
     expect(html).toContain('<script type="module" src="/src/main.tsx"></script>'); // the app still loads
     expect(html).toContain('<link rel="icon"');
   });

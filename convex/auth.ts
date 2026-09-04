@@ -52,7 +52,8 @@ type GithubProfileLike = {
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
   return betterAuth({
     baseURL: process.env.CONVEX_SITE_URL,
-    trustedOrigins: [siteUrl],
+    // every host the wall answers on: the domain, its www, and the Vercel host that stays as the fallback
+    trustedOrigins: Array.from(new Set([siteUrl, "https://everyones.lol", "https://www.everyones.lol", "https://anyone-build.vercel.app"])),
     database: authComponent.adapter(ctx),
     emailAndPassword: { enabled: false },
     user: {

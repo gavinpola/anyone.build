@@ -25,7 +25,7 @@ export function registerWebhooks(http: HttpRouter) {
       }
       if (!url) return new Response("not found", { status: 404 });
       const u = new URL(url);
-      if (!u.searchParams.has("utm_source")) u.searchParams.set("utm_source", "anyone.build");
+      if (!u.searchParams.has("utm_source")) u.searchParams.set("utm_source", "everyones.lol");
       return new Response(null, { status: 302, headers: { Location: u.toString(), "Cache-Control": "no-store", "Referrer-Policy": "origin" } });
     }),
   });

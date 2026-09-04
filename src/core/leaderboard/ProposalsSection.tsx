@@ -57,7 +57,7 @@ export function ProposalsSection() {
                     <span>· {timeAgo(p.createdAt)}</span>
                   </span>
                 </span>
-                <ShareButton compact url={shareUrl("p", p.id)} title={p.prompt} text="Vote for this on anyone.build" />
+                <ShareButton compact url={shareUrl("p", p.id)} title={p.prompt} text="Vote for this on everyones.lol" />
               </li>
             ))}
           </ul>

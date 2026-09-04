@@ -1,4 +1,4 @@
-# anyone.build roadmap
+# everyones.lol roadmap
 
 _Living document. The autonomous loop updates this every tick: check things off, add what's new, keep the ordering honest. "Now" is what the next tick should pick up. Last updated 2026-09-03._
 
@@ -74,7 +74,7 @@ In order:
 - [ ] **Onboarding.** Add site → paste tag → first note in a minute, with a dashboard confirmation; "connect a repo" as the upgrade moment.
 - [ ] **Retention.** Daily digest email of open notes and shipped PRs (Resend is wired); weekly "what shipped, what it cost"; Slack digest on Ships.
 - [ ] **Trust.** Public pipeline status page; per-PR cost and risk shown to customers; a written data policy; the SOC 2 path for Enterprise.
-- [ ] **Distribution.** The wall as the demo; "Built with anyone.build" (opt-out on paid plans); a gallery of shipped changes; a template repo for the internal-tools use case; the Enterprise "talk to us" needs a real inbox (hello@anyone.build) once the domain is bought.
+- [ ] **Distribution.** The wall as the demo; "Built with everyones.lol" (opt-out on paid plans); a gallery of shipped changes; a template repo for the internal-tools use case; the Enterprise "talk to us" needs a real inbox (hello@everyones.lol) once the domain is bought.
 - [ ] **Pricing experiments.** Per-PR vs. seats vs. sites; measure Notes→Drafts conversion and PR volume per site before locking pricing.
 
 ## Self-hosting models (Gavin asked)
@@ -128,7 +128,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 ## Rounds and the hourly frame (Gavin, 2026-09-04: "maybe it's every 3 hours… and the wall every hour isn't working")
 - [x] Proposals run in three-hour rounds (UTC 00:37, 03:37, …): the most-wanted one is built, every other proposal expires and the board starts over. The board shows "round ends in 1h 12m" (`convex/lib/rounds.ts`, shared by the cron and the client; unit-tested).
 - [x] Timelapse: GitHub's scheduler fired the hourly job twice in ten hours. Now the workflow asks three times an hour and the script posts only when the latest frame is older than 50 minutes (manual runs always post); the cards say when the last frame landed.
-- [x] `timelapseKick` (Convex, hourly): if the latest frame is stale, ask GitHub to run the workflow. Needs the GitHub App's **Actions: read and write** permission (GitHub → Settings → Developer settings → GitHub Apps → anyone.build → Permissions), then accept the new permission on the installation; until then GitHub answers 403 and the kick is a no-op.
+- [x] `timelapseKick` (Convex, hourly): if the latest frame is stale, ask GitHub to run the workflow. Needs the GitHub App's **Actions: read and write** permission (GitHub → Settings → Developer settings → GitHub Apps → everyones.lol → Permissions), then accept the new permission on the installation; until then GitHub answers 403 and the kick is a no-op.
 - [ ] NEXT: if frames still miss hours after a day, move capture to a Vercel cron + headless Chromium function (Hobby allows daily crons only, so this needs Pro) or a screenshot API with a key.
 
 ## Launch readiness (Gavin, 2026-09-04: "is this set up for success?")
@@ -160,3 +160,10 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 ## Nothing to reload (Gavin, 2026-09-04: "I don't want to have to reload as things get updated… like the drawing that updates")
 - [x] The page refreshes itself the first moment you pause after a change lands (no pointer or key for six seconds, nothing focused, no dialog open; a hidden tab at once), and comes back exactly where you were: the room keeps its pan and zoom in sessionStorage, pages keep their scroll. The "reload" button is gone. Hot-swapping new code into the running page isn't safe (each build carries its own React and kit chunks), so a quiet refresh is the honest version of "it just updates".
 - [x] Verified on production (2026-09-04): a tab left open at a zoomed view refreshed itself within a couple of minutes of the next deploy and came back at the same zoom, no button anywhere.
+
+## everyones.lol (Gavin, 2026-09-04: "I just got everyones.lol on GoDaddy")
+- [x] Renamed everywhere people see it: wordmark, title and tagline ("the website everyone can change"), share copy, preview cards, help, FAQ/rules/terms/privacy, the widget snippet, the prompts, the docs. The GitHub repo, the Vercel project, the Convex deployments, and the mail domain keep their names. The tab icon is e.l.
+- [x] `everyones.lol` and `www.everyones.lol` are attached to the Vercel project; sign-in trusts the new hosts and the old Vercel host (`convex/auth.ts`).
+- [ ] **Yours at GoDaddy (one of):** change the nameservers to `ns1.vercel-dns.com` and `ns2.vercel-dns.com` (simplest, Vercel then manages DNS and the www redirect), or add `A @ 76.76.21.21` and `A www 76.76.21.21` and delete the parking A record (76.223.105.230).
+- [ ] When it resolves (the loop checks each tick): set `VITE_SITE_URL=https://everyones.lol` on Vercel production and `SITE_URL=https://everyones.lol` on the Convex production deployment (`npx convex env set --prod SITE_URL https://everyones.lol`), point the timelapse workflow's SITE_URL at it, redeploy, then verify sign-in, a share link, and a preview image on the new name. Resend: verify a sending domain on everyones.lol and update RESEND_FROM (emails silently skip until then).
+

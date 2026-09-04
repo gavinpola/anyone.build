@@ -35,7 +35,7 @@ export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
         <span className="placard">{timeAgo(r.createdAt, now)}</span>
         <StatusPill r={r} now={now} />
         {live || r.status === "proposed" ? (
-          <ShareButton compact className="ml-auto" url={shareUrl(r.status === "proposed" ? "p" : "c", r.id)} title={r.prompt} text={r.status === "proposed" ? "Vote for this on anyone.build" : "Made on anyone.build, the website anyone can change"} />
+          <ShareButton compact className="ml-auto" url={shareUrl(r.status === "proposed" ? "p" : "c", r.id)} title={r.prompt} text={r.status === "proposed" ? "Vote for this on everyones.lol" : "Made on everyones.lol, the website anyone can change"} />
         ) : null}
       </div>
 

@@ -71,7 +71,7 @@ export async function commitFiles(
   }
   const newTree = await kit.rest.git.createTree({ owner, repo, base_tree: base.data.tree.sha, tree });
   const message = opts.coauthor ? `${opts.message}\n\nCo-authored-by: ${opts.coauthor.name} <${opts.coauthor.email}>` : opts.message;
-  const author = { name: process.env.GITHUB_BOT_NAME ?? "anyone.build", email: process.env.GITHUB_BOT_EMAIL ?? "bot@anyone.build", date: new Date().toISOString() };
+  const author = { name: process.env.GITHUB_BOT_NAME ?? "everyones.lol", email: process.env.GITHUB_BOT_EMAIL ?? "bot@everyones.lol", date: new Date().toISOString() };
   const commit = await kit.rest.git.createCommit({ owner, repo, message, tree: newTree.data.sha, parents: [opts.baseSha], author, committer: author });
   try {
     await kit.rest.git.createRef({ owner, repo, ref: `refs/heads/${opts.branch}`, sha: commit.data.sha });
@@ -165,7 +165,7 @@ export const tryMerge = internalAction({
         pull_number: r.run.prNumber,
         merge_method: "squash",
         commit_title: `${r.run.summary ?? "Change on the wall"} (#${r.run.prNumber})`,
-        commit_message: `Requested by ${data?.user ? "@" + data.user.handle : (data?.guest?.handle ?? "a guest")} on anyone.build\n\n${r.prompt}`,
+        commit_message: `Requested by ${data?.user ? "@" + data.user.handle : (data?.guest?.handle ?? "a guest")} on everyones.lol\n\n${r.prompt}`,
       });
       await ctx.runMutation(internal.pipeline.state.markMerged, { id: requestId, mergeSha: merged.data.sha });
       await kit.rest.git.deleteRef({ owner, repo, ref: `heads/${r.run.branch}` }).catch(() => {});

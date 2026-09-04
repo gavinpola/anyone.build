@@ -108,7 +108,7 @@ export const mockStep = internalMutation({
     const run = { ...(r.run ?? {}) };
     if (s.status === "preview") {
       run.previewUrl = "https://anyone-build-preview.vercel.app";
-      run.prUrl = "https://github.com/anyone-build/anyone.build/pull/0";
+      run.prUrl = "https://github.com/anyone-build/everyones.lol/pull/0";
       run.linesAdded = 12;
       run.linesRemoved = 2;
       run.summary = "Did the thing you asked, and nothing else. (mock executor)";

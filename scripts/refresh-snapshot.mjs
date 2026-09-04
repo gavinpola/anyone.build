@@ -1,6 +1,6 @@
 // Builds a Vercel Sandbox snapshot of the repo at main with dependencies installed, so each
 // build skips `pnpm install`. Run nightly (or after dependency changes) and set SANDBOX_SNAPSHOT_ID.
-//   VERCEL_TOKEN=... VERCEL_TEAM_ID=... VERCEL_PROJECT_ID=... GITHUB_REPO=anyone-build/anyone.build node scripts/refresh-snapshot.mjs
+//   VERCEL_TOKEN=... VERCEL_TEAM_ID=... VERCEL_PROJECT_ID=... GITHUB_REPO=anyone-build/everyones.lol node scripts/refresh-snapshot.mjs
 import { Sandbox } from "@vercel/sandbox";
 
 const env = (k) => {

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- a.b — anyone.build. Geometry, not text, so it needs no font: single-storey a and b as ring + stem, the orange dot on the baseline. -->
+  <!-- e.l — everyones.lol. Geometry, not text: a ring with a bar for the e, the orange dot on the baseline, a stem for the l. -->
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#262219"/>
@@ -9,13 +9,11 @@
   <rect width="64" height="64" rx="14" fill="url(#g)"/>
   <rect x="0.5" y="0.5" width="63" height="63" rx="13.5" fill="none" stroke="#f3efe6" stroke-opacity="0.08"/>
   <g fill="none" stroke="#f3efe6" stroke-width="5.5" stroke-linecap="round">
-    <!-- a: bowl + right stem -->
-    <circle cx="15.5" cy="40" r="8"/>
-    <path d="M23.5 31 V50"/>
-    <!-- b: ascender + bowl -->
-    <path d="M40.5 14 V50"/>
-    <circle cx="48.5" cy="40" r="8"/>
+    <!-- e: the bar through the middle, then the ring from the bar's right end up over the top and round to four o'clock -->
+    <path d="M9 40 H27 A9 9 0 1 0 24.9 45.8"/>
+    <!-- l: the stem -->
+    <path d="M44 14 V50"/>
   </g>
   <!-- the dot -->
-  <circle cx="32" cy="47.5" r="3.4" fill="#ff5a1f"/>
+  <circle cx="35" cy="47.5" r="3.4" fill="#ff5a1f"/>
 </svg>

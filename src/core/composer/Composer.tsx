@@ -223,7 +223,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
                 <p className="text-[14px] font-medium text-ok">It's live.</p>
                 <p className="mt-0.5 text-[13px] text-ink-2">Your change is on the wall for everyone. Send someone the link.</p>
                 <div className="mt-2">
-                  <ShareButton label="Share it" url={shareUrl("c", request.id)} title={request.prompt} text="Made on anyone.build, the website anyone can change" />
+                  <ShareButton label="Share it" url={shareUrl("c", request.id)} title={request.prompt} text="Made on everyones.lol, the website anyone can change" />
                 </div>
               </div>
             ) : request?.status === "proposed" ? (
@@ -231,7 +231,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
                 <p className="text-[14px] font-medium text-accent">Up for a vote.</p>
                 <p className="mt-0.5 text-[13px] text-ink-2">This one's big, so the wall put it up for a vote on the leaderboard. Every three hours the most-wanted one is built and the rest start over. Send friends the link to get votes.</p>
                 <div className="mt-2">
-                  <ShareButton label="Share to get votes" url={shareUrl("p", request.id)} title={request.prompt} text="Vote for this on anyone.build" />
+                  <ShareButton label="Share to get votes" url={shareUrl("p", request.id)} title={request.prompt} text="Vote for this on everyones.lol" />
                 </div>
               </div>
             ) : request?.status === "needs_human" ? (

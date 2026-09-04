@@ -70,7 +70,7 @@ async function askVision(id: string, meta: { title: string; description: string 
   ];
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "HTTP-Referer": "https://anyone.build", "X-Title": "anyone.build playtest" },
+    headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "HTTP-Referer": "https://everyones.lol", "X-Title": "everyones.lol playtest" },
     body: JSON.stringify({ model, messages: [{ role: "user", content }], response_format: { type: "json_object" }, temperature: 0, max_tokens: 400 }),
     signal: AbortSignal.timeout(60_000),
   });
