@@ -96,7 +96,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
     setError(null);
     const { rect: _r, element: _e, point: _p, granularity: _g, ...target } = t;
     try {
-      track("ask_sent", { where: target.tag === "region" ? "space" : target.blockId === "__new__" || target.path.endsWith("/blocks/") ? "new" : "block", granularity: target.granularity ?? "element", signedIn: viewer.signedIn });
+      track("ask_sent", { where: target.tag === "region" ? "space" : target.blockId === "__new__" || target.path.endsWith("/blocks/") ? "new" : "block", signedIn: viewer.signedIn });
       const id = await submitRequest({ prompt: p, target, handle: viewer.handle, avatarUrl: viewer.avatarUrl });
       setSubmittedId(id);
     } catch (e) {
