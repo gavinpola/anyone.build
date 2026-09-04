@@ -159,4 +159,4 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 
 ## Nothing to reload (Gavin, 2026-09-04: "I don't want to have to reload as things get updated… like the drawing that updates")
 - [x] The page refreshes itself the first moment you pause after a change lands (no pointer or key for six seconds, nothing focused, no dialog open; a hidden tab at once), and comes back exactly where you were: the room keeps its pan and zoom in sessionStorage, pages keep their scroll. The "reload" button is gone. Hot-swapping new code into the running page isn't safe (each build carries its own React and kit chunks), so a quiet refresh is the honest version of "it just updates".
-
+- [x] Verified on production (2026-09-04): a tab left open at a zoomed view refreshed itself within a couple of minutes of the next deploy and came back at the same zoom, no button anywhere.
