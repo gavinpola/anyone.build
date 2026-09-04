@@ -26,7 +26,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Screenshot the wall and post the frame
         env:
-          SITE_URL: https://anyone-build.vercel.app
+          SITE_URL: https://everyones.lol
           CONVEX_SITE_URL: https://hushed-ladybug-141.convex.site
           CONVEX_URL: https://hushed-ladybug-141.convex.cloud
           FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
