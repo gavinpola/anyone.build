@@ -310,7 +310,8 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     if (g.kind === "marquee") {
       pickerStore.suppressClick();
       const r = viewportRef.current!.getBoundingClientRect();
-      if (g.rect && g.rect.w >= 40 && g.rect.h >= 40) {
+      // a space is anything you dragged out, a skinny line included; only a click-sized twitch is a point
+      if (g.rect && Math.max(g.rect.w, g.rect.h) >= 40 && Math.min(g.rect.w, g.rect.h) >= 3) {
         const rect = g.rect;
         const contains = layout.placed.filter((p) => p.x < rect.x + rect.w && p.x + p.w > rect.x && p.y < rect.y + rect.h && p.y + p.h > rect.y).map((p) => p.id);
         const client = new DOMRect(r.left + pan.x + rect.x * zoom, r.top + pan.y + rect.y * zoom, rect.w * zoom, rect.h * zoom);

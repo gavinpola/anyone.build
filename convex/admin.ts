@@ -16,6 +16,38 @@ export const needsHuman = query({
   },
 });
 
+/** The last failed builds (maintainers): what the person asked, why it died, and enough of the runner's log to see. */
+export const failedRecent = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireUser(ctx).catch(() => null);
+    if (!user || user.trust < 3) return null;
+    const rows = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "failed")).order("desc").take(30);
+    return rows.map((r) => ({
+      id: r._id,
+      at: r.createdAt,
+      prompt: r.prompt.slice(0, 160),
+      scope: r.verdict?.scope ?? null,
+      category: r.verdict?.category ?? null,
+      hint: r.verdict?.hint ?? "",
+      error: (r.run?.error ?? "").split("\n")[0]?.slice(0, 140) ?? "",
+      costCents: r.run?.costCents ?? 0,
+      rebuildable: Boolean(r.verdict) && (r.verdict?.category === "build_failed" || r.verdict?.category === "collided" || r.verdict?.category === "unsafe_code"),
+    }));
+  },
+});
+
+/** Rebuild a failed ask (maintainers): same requester, same verdict, a fresh budget reservation. */
+export const rebuild = mutation({
+  args: { id: v.id("requests") },
+  handler: async (ctx, { id }) => {
+    const me = await requireUser(ctx);
+    if (me.trust < 3) throw new Error("Maintainers only");
+    await ctx.runMutation(internal.requests.rebuildFailed, { id });
+    return { ok: true };
+  },
+});
+
 export const revert = mutation({
   args: { changeId: v.id("changes"), reason: v.optional(v.string()) },
   handler: async (ctx, { changeId }) => {

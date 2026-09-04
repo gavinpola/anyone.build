@@ -19,11 +19,108 @@ export function AdminPage() {
   }
   return (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-10 px-4 py-8 sm:px-6">
+      <HowItsGoing />
+      <FailedBuilds />
       <NeedsHuman />
       <Flagged />
       <Spend />
       <Config />
     </div>
+  );
+}
+
+/** The numbers, without anyone's words: outcomes over the last 7 days from stats.outcomes. */
+function HowItsGoing() {
+  const o = useQuery(api.stats.outcomes, hasConvex ? { days: 7 } : "skip");
+  const rows = (rec: Record<string, number>) => Object.entries(rec).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  return (
+    <section data-how-its-going>
+      <h2 className="font-display text-2xl">How it's going</h2>
+      <p className="placard mt-1">The last 7 days. Counts only, never anyone's words. Failures list the reason the asker saw.</p>
+      {!o ? (
+        <p className="mt-3 text-[14px] text-muted">Loading…</p>
+      ) : (
+        <div className="mt-3 grid gap-4 md:grid-cols-3">
+          <div className="frame p-4">
+            <p className="placard">asks by outcome</p>
+            <table className="mt-2 w-full text-[13px]">
+              <tbody>
+                {rows(o.byStatus).map(([k, n]) => (
+                  <tr key={k} className="border-t border-line"><td className="py-1.5">{k}</td><td className="py-1.5 text-right tabular-nums">{n}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="placard mt-3">live builds: median {o.liveBuildSeconds.median ?? "–"}s · p90 {o.liveBuildSeconds.p90 ?? "–"}s · {o.liveBuildSeconds.n}</p>
+          </div>
+          <div className="frame p-4">
+            <p className="placard">why rejected</p>
+            <table className="mt-2 w-full text-[13px]">
+              <tbody>
+                {rows(o.rejectedBy).map(([k, n]) => (
+                  <tr key={k} className="border-t border-line"><td className="py-1.5">{k}</td><td className="py-1.5 text-right tabular-nums">{n}</td></tr>
+                ))}
+                {rows(o.rejectedBy).length === 0 ? <tr><td className="py-1.5 text-muted">none</td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+          <div className="frame p-4">
+            <p className="placard">how failed</p>
+            <table className="mt-2 w-full text-[13px]">
+              <tbody>
+                {rows(o.failedBy).map(([k, n]) => (
+                  <tr key={k} className="border-t border-line"><td className="py-1.5 pr-2">{k}</td><td className="py-1.5 text-right tabular-nums">{n}</td></tr>
+                ))}
+                {rows(o.failedBy).length === 0 ? <tr><td className="py-1.5 text-muted">none</td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Failed builds, with one click to rebuild under the same requester and verdict. */
+function FailedBuilds() {
+  const rows = useQuery(api.admin.failedRecent, hasConvex ? {} : "skip");
+  const rebuild = useMutation(api.admin.rebuild);
+  const [busy, setBusy] = useState<string | null>(null);
+  return (
+    <section data-failed-builds>
+      <h2 className="font-display text-2xl">Failed builds</h2>
+      <p className="placard mt-1">Rebuild re-runs the same ask for the same person with a fresh budget reservation. It queues like any other build.</p>
+      <div className="frame mt-3 overflow-hidden">
+        {rows && rows.length ? (
+          <ul>
+            {rows.map((r) => (
+              <li key={r.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px]">{r.prompt}</span>
+                  <span className="placard block truncate">
+                    {timeAgo(r.at)} · {r.scope ?? "?"} · {r.hint} {r.error ? `· ${r.error}` : ""} · {(r.costCents / 100).toFixed(2)}$
+                  </span>
+                </span>
+                {r.rebuildable ? (
+                  <button
+                    type="button"
+                    disabled={busy === r.id}
+                    onClick={() => {
+                      setBusy(r.id);
+                      void rebuild({ id: r.id }).catch(() => {}).finally(() => setBusy(null));
+                    }}
+                    className="rounded-md border border-line bg-card px-2.5 py-1 text-[12px] font-medium hover:border-line-2 disabled:opacity-50"
+                  >
+                    Rebuild
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="p-5 text-[14px] text-muted">{rows === null ? "Maintainers only." : rows ? "Nothing failed. Nice." : "Loading…"}</p>
+        )}
+      </div>
+    </section>
   );
 }
 

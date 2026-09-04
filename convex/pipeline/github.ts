@@ -1,6 +1,18 @@
 "use node";
 import { App } from "@octokit/app";
-import { Octokit } from "@octokit/rest";
+import { Octokit as OctokitCore } from "@octokit/rest";
+import { throttling } from "@octokit/plugin-throttling";
+import { retry } from "@octokit/plugin-retry";
+
+// A burst of merges hits GitHub's secondary rate limits; the throttling plugin waits and retries
+// (twice) instead of failing the request, and the retry plugin covers transient 5xx.
+const Octokit = OctokitCore.plugin(throttling, retry).defaults({
+  throttle: {
+    onRateLimit: (_retryAfter: number, _options: unknown, _kit: unknown, retryCount: number) => retryCount < 2,
+    onSecondaryRateLimit: (_retryAfter: number, _options: unknown, _kit: unknown, retryCount: number) => retryCount < 2,
+  },
+  retry: { doNotRetry: [400, 401, 403, 404, 422] },
+});
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
@@ -20,9 +32,9 @@ function repoParts() {
 
 export async function octokit() {
   const app = new App({ appId: env("GITHUB_APP_ID"), privateKey: env("GITHUB_APP_PRIVATE_KEY").replace(/\\n/g, "\n"), Octokit });
-  return (await app.getInstallationOctokit(Number(env("GITHUB_APP_INSTALLATION_ID")))) as unknown as Octokit;
+  return (await app.getInstallationOctokit(Number(env("GITHUB_APP_INSTALLATION_ID")))) as unknown as Kit;
 }
-export type Kit = Octokit;
+export type Kit = InstanceType<typeof Octokit>;
 
 export async function headSha(kit: Kit, branch = "main"): Promise<string> {
   const { owner, repo } = repoParts();

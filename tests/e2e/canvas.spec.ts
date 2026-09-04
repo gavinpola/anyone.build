@@ -68,6 +68,25 @@ test("drag out a space and the composer opens for that space; click a point and 
   await page.keyboard.press("Escape");
 });
 
+test("a skinny drag is still a space", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const world = page.locator("[data-world]");
+  const box = (await world.boundingBox())!;
+  const zoom = box.width / 2400;
+  const contentBottom = Number(await world.getAttribute("data-content-bottom"));
+  const y = box.y + (contentBottom + 50) * zoom;
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  await page.mouse.move(box.x + 200 * zoom, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 1400 * zoom, y + 3, { steps: 8 }); // a long, thin line
+  await page.mouse.up();
+  const dialog = page.getByRole("dialog", { name: /ask for a change/i });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("This space")).toBeVisible();
+  await page.keyboard.press("Escape");
+});
+
 test("in pick mode, drag an object and the ask to move it is written for you", async ({ page }) => {
   await page.goto(url);
   await ready(page);
