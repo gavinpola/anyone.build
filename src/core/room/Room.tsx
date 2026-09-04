@@ -396,48 +396,27 @@ function CanvasRoom({ compact }: { compact: boolean }) {
           data-grid={canvas.grid ?? "dots"}
           data-pan={gesture?.kind === "pan" ? "active" : ""}
           onPointerDownCapture={(e) => {
-
             if (!pickerStore.get().arming) return;
-
             onPointerDown(e); // the canvas gesture (marquee, point, drag) still starts
-
             e.stopPropagation(); // the block under the pointer never hears it
-
           }}
-
           onPointerMoveCapture={(e) => {
-
             if (!pickerStore.get().arming) return;
-
             onPointerMove(e);
-
-            e.stopPropagation();
-
+            // no stopPropagation: the picker's hover listener lives on window and needs the move; a block cannot draw from a move it never got a pointerdown for
           }}
-
           onPointerUpCapture={(e) => {
-
             if (!pickerStore.get().arming) return;
-
             onPointerUp(e);
-
             e.stopPropagation();
-
           }}
-
           onPointerDown={(e) => {
-
             if (pickerStore.get().arming) return; // already handled in the capture phase
-
             onPointerDown(e);
-
           }}
           onPointerMove={(e) => {
-
             if (pickerStore.get().arming) return;
-
             onPointerMove(e);
-
           }}
           onPointerUp={(e) => {
 
