@@ -412,3 +412,14 @@ body:has([data-canvas]) [data-global-pick] { display: none; }
 .canvas-column { display: flex; flex-direction: column; min-width: 0; gap: 10px; }
 .canvas-bar { position: static; left: auto; bottom: auto; width: fit-content; }
 
+/* Phones: the stacked wall is the same medium, objects on the dotted ground, nothing wrapping them. */
+.wall-stack[data-skin="instrument"] {
+  background-color: var(--paper-2);
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  border-radius: 0; padding: 14px 14px 18px; gap: 14px;
+}
+.wall-stack[data-skin="instrument"]::after { display: none; }
+.wall-stack[data-skin="instrument"] .hung.object { margin-top: 24px; }
+.wall-stack[data-skin="instrument"] [data-ab-block="__new__"] { border-radius: 0; border-color: color-mix(in oklab, var(--ink) 22%, transparent); }
+

@@ -22,7 +22,7 @@ export function TimelapseSection() {
     <section data-timelapse={n}>
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-2xl">The wall, every hour</h2>
-        <span className="placard">{n ? `${n} frames · last 30 days` : ""}</span>
+        <span className="placard">{n ? `${n} ${n === 1 ? "frame" : "frames"} · last 30 days` : ""}</span>
       </div>
       <div className="frame mt-3 overflow-hidden">
         {!frames ? (

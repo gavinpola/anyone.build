@@ -20,7 +20,7 @@ export function AuthButton() {
     <button
       type="button"
       onClick={v.signIn}
-      className="ml-1 h-9 whitespace-nowrap rounded-md border border-line bg-card px-3 text-[13px] font-medium hover:border-line-2"
+      className="ml-1 h-9 whitespace-nowrap rounded-md border border-line bg-card px-2.5 sm:px-3 text-[13px] font-medium hover:border-line-2"
     >
       <span className="sm:hidden">Sign in</span>
       <span className="hidden sm:inline">Sign in with GitHub</span>
