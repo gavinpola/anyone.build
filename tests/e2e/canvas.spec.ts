@@ -150,9 +150,10 @@ test("a signed-out visitor's stroke on the open canvas survives a reload", async
   await page.mouse.down();
   await page.mouse.move(box2.x + box2.width * 0.45, box2.y + box2.height * 0.75, { steps: 12 });
   await page.mouse.up();
+  // the eraser is circular and splits what it crosses (PR #18), so the count moves: down for a short stroke, up for a split
   await expect
     .poll(async () => Number((await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? NaN), { timeout: 15_000 })
-    .toBeLessThan(Number(before) + 1);
+    .not.toBe(Number(before) + 1);
 });
 
 test("anyone can erase anyone's stroke: a second visitor rubs out the first one's", async ({ browser }) => {
@@ -185,8 +186,10 @@ test("anyone can erase anyone's stroke: a second visitor rubs out the first one'
   await b.mouse.down();
   await b.mouse.move(boxB.x + boxB.width * 0.3, boxB.y + boxB.height * 0.45, { steps: 12 });
   await b.mouse.up();
-  await expect.poll(() => count(b), { timeout: 15_000 }).toBeLessThan(start + 1);
-  await expect.poll(() => count(a), { timeout: 15_000 }).toBeLessThan(start + 1);
+  // B's eraser changed A's stroke (split or gone), and A sees the same picture B does
+  await expect.poll(() => count(b), { timeout: 15_000 }).not.toBe(start + 1);
+  const seenByB = await count(b);
+  await expect.poll(() => count(a), { timeout: 15_000 }).toBe(seenByB);
 });
 
 test("a block marked removed is off the wall and off the map", async ({ page }) => {
@@ -194,6 +197,50 @@ test("a block marked removed is off the wall and off the map", async ({ page }) 
   await ready(page);
   await expect(page.locator('[data-ab-block="hello-note-6e0z"]')).toHaveCount(0);
   await expect(page.locator('[data-map-block="hello-note-6e0z"]')).toHaveCount(0);
+});
+
+test("in pick mode a drag over the open canvas picks, it does not draw", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const chip = page.locator('[data-map-block="collaborative-art"]');
+  test.skip((await chip.count()) === 0, "no open canvas on this wall");
+  await chip.dispatchEvent("pointerdown");
+  await page.waitForTimeout(500);
+  const block = page.locator('[data-ab-block="collaborative-art"]');
+  const before = (await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? "0";
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  const box = (await block.locator("canvas").boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(1500);
+  await expect(block).toContainText(new RegExp(`${before} strokes?`)); // nothing drawn
+  await page.keyboard.press("Escape");
+});
+
+test("while a change is being proposed the wall holds still under the composer", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const world = page.locator("[data-world]");
+  const box = (await world.boundingBox())!;
+  const zoom = box.width / 2400;
+  const contentBottom = Number(await world.getAttribute("data-content-bottom"));
+  const y = box.y + (contentBottom + 50) * zoom;
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  await page.mouse.click(box.x + 1200 * zoom, y);
+  const dialog = page.getByRole("dialog", { name: /ask for a change/i });
+  await expect(dialog).toBeVisible();
+  const style = await world.getAttribute("style");
+  const dbox = (await dialog.boundingBox())!;
+  await page.mouse.move(box.x + 600 * zoom, y - 100);
+  await page.mouse.wheel(0, 300);
+  await page.mouse.wheel(200, 0);
+  await page.waitForTimeout(300);
+  expect(await world.getAttribute("style")).toBe(style); // no pan
+  const dbox2 = (await dialog.boundingBox())!;
+  expect(Math.abs(dbox2.y - dbox.y)).toBeLessThan(2); // the composer stayed put
+  await page.keyboard.press("Escape");
 });
 
 test("the map folds to a chip, remembers it, and opens again", async ({ page }) => {

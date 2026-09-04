@@ -170,4 +170,5 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 ## The timelapse, change by change (Gavin, 2026-09-04: "only 6 screenshots… let's have that video take up to 10 seconds")
 - [x] Six frames in a day was GitHub's scheduler dropping runs (gaps of two to five hours even at three crons an hour). Frames are now taken on every production deploy, posted only when the changes count grew, with a six-hour heartbeat for quiet days; the schedule is just the heartbeat carrier.
 - [x] The player runs the whole set in ten seconds (60 ms to 800 ms a frame, more frames = faster), plays once, stops on the latest, and restarts from the first when you press play at the end.
+- [x] Pick mode owns the pointer: holding the chord (or pressing Change) no longer draws, plays, or presses anything under the pointer; the viewport handles pointer events in the capture phase while picking. While a change is being proposed the wall holds still: no pan, zoom, marquee, or drag until the composer closes, so the composer stays put.
 

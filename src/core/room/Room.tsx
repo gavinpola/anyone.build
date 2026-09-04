@@ -208,6 +208,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      if (pickerStore.get().selected) return; // a change is being proposed: the wall holds still under the composer
       const r = el.getBoundingClientRect();
       if (e.ctrlKey || e.metaKey) {
         applyZoom(zoom * Math.exp(-e.deltaY * 0.0022), { x: e.clientX - r.left, y: e.clientY - r.top });
@@ -246,6 +247,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
       }
     }
     if (e.button !== 0) return;
+    if (pickerStore.get().selected) return; // proposing a change: no pan, no marquee, no drag until the composer closes
     const target = e.target as HTMLElement;
     if (target.closest("[data-canvas-bar], [data-minimap], [data-canvas-ui]")) return;
     const section = target.closest<HTMLElement>("[data-ab-block]");
@@ -393,9 +395,57 @@ function CanvasRoom({ compact }: { compact: boolean }) {
           data-canvas
           data-grid={canvas.grid ?? "dots"}
           data-pan={gesture?.kind === "pan" ? "active" : ""}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
+          onPointerDownCapture={(e) => {
+
+            if (!pickerStore.get().arming) return;
+
+            onPointerDown(e); // the canvas gesture (marquee, point, drag) still starts
+
+            e.stopPropagation(); // the block under the pointer never hears it
+
+          }}
+
+          onPointerMoveCapture={(e) => {
+
+            if (!pickerStore.get().arming) return;
+
+            onPointerMove(e);
+
+            e.stopPropagation();
+
+          }}
+
+          onPointerUpCapture={(e) => {
+
+            if (!pickerStore.get().arming) return;
+
+            onPointerUp(e);
+
+            e.stopPropagation();
+
+          }}
+
+          onPointerDown={(e) => {
+
+            if (pickerStore.get().arming) return; // already handled in the capture phase
+
+            onPointerDown(e);
+
+          }}
+          onPointerMove={(e) => {
+
+            if (pickerStore.get().arming) return;
+
+            onPointerMove(e);
+
+          }}
+          onPointerUp={(e) => {
+
+            if (pickerStore.get().arming) return;
+
+            onPointerUp(e);
+
+          }}
           onPointerCancel={(e) => {
             pointers.current.delete(e.pointerId);
             if (pointers.current.size < 2) pinch.current = null;
