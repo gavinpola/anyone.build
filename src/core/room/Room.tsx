@@ -19,6 +19,7 @@ import { LiquidLayer } from "./LiquidLayer";
 import { CanvasBar } from "./CanvasBar";
 import { Pins } from "./Pins";
 import { Minimap } from "./Minimap";
+import { HowTo } from "./HowTo";
 import { Heat } from "./Heat";
 import { useTouch } from "./useTouch";
 import { clampPan, clampZoom, fitZoom, lifeLeft, packBlocks, parsePoint, parseRegion, pointText, regionText, toWorld, widthFor, worldSize, zoomAround, type Pan, type Rect } from "./canvas";
@@ -48,8 +49,6 @@ export const blocks = Object.entries({ ...examples, ...modules })
   );
 
 const NEW_BLOCK_PATH = `src/rooms/${room.id}/blocks/`;
-/** The wall itself: its file. Reached from the canvas bar. */
-export const CANVAS_PATH = `src/rooms/${room.id}/canvas.ts`;
 const ADD_ZONE = 420;
 /** Height the floating bar takes at the bottom of the viewport; the world fits above it. */
 const BAR_INSET = 72; // px of always-empty canvas at the bottom: "point here to add something" (tall enough to point at when fitted)
@@ -369,12 +368,6 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     "--zoom": String(zoom),
   } as CSSProperties;
   const liquid = skin === "paper" ? hung.filter((b) => b.h.body.merge).map((b) => ({ id: b.meta.id, body: b.h.body, tilt: b.h.tilt })) : [];
-  const [noteAsk, setNoteAsk] = useState(0);
-  const askNote = (rect: DOMRect) => {
-    setNoteAsk((n) => n + 1);
-    const p = { x: pad + 80 + (noteAsk % 5) * 40, y: Math.min(layout.bottom + 40, worldH - ADD_ZONE - 200) };
-    pickerStore.select({ path: NEW_BLOCK_PATH, line: 0, blockId: undefined, blockTitle: "New block", tag: "wall", text: pointText(p), rect, element: wallRef.current!, granularity: "block", draft: "A small note here that says: " });
-  };
 
   return (
     <RoomContext.Provider value={room.id}>
@@ -451,15 +444,13 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             <Cursors roomId={room.id} boxRef={wallRef} scale={1 / zoom} />
           </div>
 
-          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} /> : null}
+          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} /> : null}
           <CanvasBar
             zoom={zoom}
             fit={fit}
             onZoom={(z) => applyZoom(z)}
             onFit={() => applyZoom(fit)}
-            onNote={askNote}
             compact={compact}
-            onWall={(rect) => pickerStore.select({ path: CANVAS_PATH, line: 1, blockId: "__canvas__", blockTitle: "The wall itself", tag: "canvas", text: undefined, rect, element: viewportRef.current!, granularity: "block" })}
             toast={shipped ? `${shipped.user.guest ? "a guest" : "@" + shipped.user.handle} shipped: ${shipped.run?.summary ?? shipped.prompt}` : dyingToday ? `${dyingToday} ${dyingToday === 1 ? "thing fades" : "things fade"} today unless touched` : null}
           />
           {pages.length ? (
@@ -472,6 +463,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
               ))}
             </nav>
           ) : null}
+          <HowTo />
         </div>
         </div>
       </div>

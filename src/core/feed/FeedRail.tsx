@@ -6,9 +6,8 @@ import { useNow } from "@/core/lib/useNow";
 import { PickButton } from "@/core/picker/PickButton";
 import { RequestCard } from "./RequestCard";
 import { feedStore, useFeedOpen } from "./feedStore";
-import { cn } from "@/core/lib/cn";
-
-const TERMINAL = new Set(["live", "rejected", "failed", "cancelled"]);
+import { LiveButton } from "./LiveButton";
+import { TERMINAL } from "./active";
 
 function useSortedRequests() {
   const all = useRequests();
@@ -25,7 +24,7 @@ function useSortedRequests() {
 
 /**
  * The feed lives in a drawer. The wall is the page; the feed is a window onto the machine.
- * Opens from the floating "Live" pill, or when the composer hands off to it.
+ * Opens from the floating "Live" pill, the canvas bar's Live button, or when the composer hands off to it.
  */
 export function FeedRail() {
   const open = useFeedOpen();
@@ -43,20 +42,9 @@ export function FeedRail() {
     <>
       {/* floating controls */}
       {/* Above the drawer (z-55/56) so the pill stays a toggle while the drawer is open. */}
-      <div className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 lg:bottom-6 lg:right-6" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 lg:bottom-6 lg:right-6" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} data-feed-pills>
         <span data-global-pick><PickButton /></span>
-        <button
-          type="button"
-          onClick={() => feedStore.toggle()}
-          className={cn(
-            "inline-flex h-9 items-center gap-2 rounded-full border px-3 text-[13px] font-medium shadow-frame transition",
-            open ? "border-ink bg-ink text-paper" : "border-line bg-card text-ink hover:border-line-2",
-          )}
-          aria-pressed={open}
-        >
-          <span className={active ? "judging-dot" : "live-dot"} />
-          Live{active ? <span className="num">{active}</span> : null}
-        </button>
+        <LiveButton />
       </div>
 
       <AnimatePresence>

@@ -464,10 +464,8 @@ body:has([data-canvas]) [data-global-pick] { display: none; }
 .canvas-viewport { height: calc(100dvh - 57px); min-height: 480px; border: 0; border-radius: 0; }
 .canvas-shell.is-compact .canvas-viewport { height: calc(100dvh - 57px); margin: 0; width: 100%; }
 .canvas-bar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: auto; max-width: calc(100% - 28px); z-index: 50; }
-.canvas-shell.is-compact .canvas-bar { position: absolute; left: 8px; right: 112px; bottom: 12px; transform: none; width: auto; max-width: none; justify-content: space-between; }
-.canvas-shell.is-compact .bar-optional { display: none; }
+.canvas-shell.is-compact .canvas-bar { position: absolute; left: 8px; right: 8px; bottom: 12px; transform: none; width: auto; max-width: none; justify-content: space-between; }
 .minimap { bottom: 64px; }
-.canvas-shell.is-compact .minimap { display: none; }
 .canvas-pages { position: absolute; left: 14px; top: 12px; z-index: 50; display: flex; align-items: center; gap: 6px; }
 .canvas-directory, .directory-strip { display: none; }
 .object-label { display: none; }
@@ -478,4 +476,25 @@ body:has([data-canvas]) .flex.min-h-dvh { padding-bottom: 0; }
 /* ===== Ledgers on the leaderboard: five rows, then scroll ===== */
 .ledger-scroll { max-height: calc(5 * 66px); overflow-y: auto; overscroll-behavior: contain; }
 .ledger-hint { color: var(--muted); text-align: center; }
+
+/* ===== Floating UI over the canvas: nothing blocks pointing (2026-09-04) ===== */
+.canvas-bar { max-width: calc(100% - 140px); } /* the corners stay free for the map and the ? */
+.canvas-bar .canvas-toast { min-width: 0; flex: 0 1 auto; }
+.canvas-bar-live { height: 32px !important; border-radius: 6px !important; }
+.canvas-shell.is-compact .canvas-bar-live .num { display: none; }
+body:has([data-canvas]) [data-feed-pills] { display: none; }
+.minimap-toggle { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 2px; color: var(--muted); }
+.minimap-toggle:hover { color: var(--ink-2); }
+.minimap[data-minimap-open="0"] { padding: 5px 8px; }
+.canvas-shell.is-compact .minimap { display: block; right: 52px; bottom: 60px; transform: none; padding: 6px 8px 8px; }
+.canvas-shell.is-compact .minimap-toggle { height: 30px; }
+.canvas-howto { position: absolute; right: 14px; bottom: 14px; z-index: 50; }
+.canvas-howto-btn { width: 36px; height: 36px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--line); color: var(--ink-2); box-shadow: 0 8px 24px rgba(60, 40, 10, 0.12); }
+.canvas-howto-btn:hover, .canvas-howto-btn[aria-expanded="true"] { color: var(--ink); border-color: var(--line-2); }
+.canvas-howto-pop { position: absolute; right: 0; bottom: 44px; width: 300px; max-width: calc(100vw - 28px); z-index: 52; padding: 12px 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(60, 40, 10, 0.12); font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.canvas-howto-pop kbd { border: 1px solid var(--line); background: var(--paper-2); border-radius: 3px; padding: 0 4px; font-family: var(--font-mono); font-size: 11px; }
+.canvas-howto-pop strong { color: var(--ink); font-weight: 600; }
+.canvas-shell.is-compact .canvas-howto { right: 8px; bottom: 60px; }
+/* while pointing (chord held or Change pressed) the map, the pages strip and the ? get out of the way; the bar keeps the cancel */
+body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking] .canvas-howto { pointer-events: none; opacity: 0.35; transition: opacity 120ms ease; }
 

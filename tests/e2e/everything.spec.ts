@@ -256,6 +256,11 @@ test.describe("mobile", () => {
     await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeHidden();
     await page.getByRole("button", { name: /^live/i }).tap();
     await expect(page.getByRole("dialog", { name: /live feed/i })).toBeVisible();
+    await page.keyboard.press("Escape");
+    // the map is a chip on phones; it opens on request
+    await expect(page.locator("[data-minimap]")).toHaveAttribute("data-minimap-open", "0");
+    await page.getByRole("button", { name: /show the map/i }).tap();
+    await expect(page.locator("[data-minimap]")).toHaveAttribute("data-minimap-open", "1");
   });
 });
 

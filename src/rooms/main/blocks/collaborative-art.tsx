@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Row, Stack, Text, cn, useStore, useViewer } from "@/kit";
+import { Row, Stack, Text, cn, useStore, useViewer } from "@/kit";
 import type { BlockMeta } from "@/kit";
 import { motion } from "motion/react";
 import { Eraser } from "lucide-react";
@@ -15,6 +15,7 @@ export const block: BlockMeta = {
 const W = 960;
 const H = 420;
 const BRUSH = 4;
+const ERASER_R = 14; // world px around the pointer that the eraser rubs out
 const MAX_STROKES = 200;
 const MAX_POINTS = 90;
 
@@ -26,17 +27,23 @@ type Stroke = { color: string; width: number; points: Pt[] };
 const makeKey = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 export default function CollaborativeArt() {
-  const { docs, put, remove, ready } = useStore<Stroke>("collab-art");
+  // an open: namespace is a whiteboard: anyone can erase anyone's strokes
+  const { docs, put, remove, removeMany, ready } = useStore<Stroke>("open:collab-art");
   const { signedIn } = useViewer();
   const [color, setColor] = useState<string>(COLORS[0] ?? "#ff4d6d");
+  const [tool, setTool] = useState<"brush" | "eraser">("brush");
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const lastRef = useRef<Pt | null>(null);
   const localRef = useRef<Stroke | null>(null);
   const docsRef = useRef(docs);
+  const erasedRef = useRef(new Set<string>()); // strokes rubbed out locally, ahead of the server
+  const eraseBatchRef = useRef(new Set<string>()); // keys to send when the drag ends
   useEffect(() => {
     docsRef.current = docs;
+    const live = new Set(docs.map((d) => d.key));
+    for (const k of erasedRef.current) if (!live.has(k)) erasedRef.current.delete(k);
   }, [docs]);
 
   const drawStroke = useCallback((ctx: CanvasRenderingContext2D, s: Stroke) => {
@@ -82,7 +89,7 @@ export default function CollaborativeArt() {
       ctx.lineTo(W, y);
     }
     ctx.stroke();
-    for (const d of docs) drawStroke(ctx, d.value);
+    for (const d of docs) if (!erasedRef.current.has(d.key)) drawStroke(ctx, d.value);
     if (localRef.current) drawStroke(ctx, localRef.current);
   }, [docs, drawStroke]);
 
@@ -115,6 +122,10 @@ export default function CollaborativeArt() {
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const p = getPos(e);
     drawingRef.current = true;
+    if (tool === "eraser") {
+      eraseAt(p);
+      return;
+    }
     lastRef.current = p;
     localRef.current = { color, width: BRUSH, points: [p] };
     const ctx = canvasRef.current?.getContext("2d");
@@ -129,8 +140,13 @@ export default function CollaborativeArt() {
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawingRef.current || !localRef.current) return;
+    if (!drawingRef.current) return;
     const p = getPos(e);
+    if (tool === "eraser") {
+      eraseAt(p);
+      return;
+    }
+    if (!localRef.current) return;
     const last = lastRef.current;
     if (!last) {
       lastRef.current = p;
@@ -162,14 +178,54 @@ export default function CollaborativeArt() {
   const onPointerUp = () => {
     if (!drawingRef.current) return;
     drawingRef.current = false;
+    if (tool === "eraser") {
+      flushErase();
+      return;
+    }
     lastRef.current = null;
     const s = localRef.current;
     localRef.current = null;
     if (s && s.points.length > 0) commit(s);
   };
 
-  const clear = () => {
-    for (const d of docsRef.current) remove(d.key); // only your own strokes go; the store keeps everyone else's
+  /** Distance from p to the stroke's polyline (a single point is a dot). */
+  const distanceTo = (s: Stroke, p: Pt): number => {
+    const pts = s.points;
+    if (pts.length === 0) return Infinity;
+    const first = pts[0]!;
+    if (pts.length === 1) return Math.hypot(p.x - first.x, p.y - first.y);
+    let best = Infinity;
+    let a = first;
+    for (const b of pts.slice(1)) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len2 = dx * dx + dy * dy || 1;
+      const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+      const d = Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+      if (d < best) best = d;
+      a = b;
+    }
+    return best;
+  };
+
+  /** Rub out every stroke under the eraser at p: gone on screen at once, sent when the drag ends. */
+  const eraseAt = (p: Pt) => {
+    let hit = false;
+    for (const d of docsRef.current) {
+      if (erasedRef.current.has(d.key)) continue;
+      if (distanceTo(d.value, p) <= d.value.width / 2 + ERASER_R) {
+        erasedRef.current.add(d.key);
+        eraseBatchRef.current.add(d.key);
+        hit = true;
+      }
+    }
+    if (hit) redraw();
+  };
+
+  const flushErase = () => {
+    if (eraseBatchRef.current.size === 0) return;
+    removeMany(Array.from(eraseBatchRef.current));
+    eraseBatchRef.current.clear();
   };
 
   return (
@@ -177,7 +233,7 @@ export default function CollaborativeArt() {
       <Stack gap={1}>
         <Text className="placard smallcaps text-muted">open canvas — everyone draws here</Text>
         <Text className="max-w-2xl">
-          One canvas for the whole wall. Pick a color, draw a stroke, and it appears for everyone in real time.
+          One canvas for the whole wall. Pick a color, draw a stroke, and it appears for everyone in real time. Anyone can erase, too.
         </Text>
       </Stack>
 
@@ -186,7 +242,7 @@ export default function CollaborativeArt() {
           ref={canvasRef}
           width={W}
           height={H}
-          className="block h-auto w-full touch-none"
+          className={cn("block h-auto w-full touch-none", tool === "eraser" ? "cursor-cell" : "cursor-crosshair")}
           aria-label="Collaborative drawing canvas. Draw with your mouse or finger."
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -209,19 +265,33 @@ export default function CollaborativeArt() {
               key={c}
               type="button"
               aria-label={`draw in ${c}`}
-              onClick={() => setColor(c)}
+              onClick={() => {
+                setColor(c);
+                setTool("brush");
+              }}
+              aria-pressed={tool === "brush" && color === c}
               className={cn(
                 "h-7 w-7 rounded-full border transition",
-                color === c ? "scale-110 border-white/80" : "border-white/20 hover:scale-105",
+                tool === "brush" && color === c ? "scale-110 border-white/80" : "border-white/20 hover:scale-105",
               )}
-              style={{ backgroundColor: c, boxShadow: color === c ? `0 0 12px ${c}` : undefined }}
+              style={{ backgroundColor: c, boxShadow: tool === "brush" && color === c ? `0 0 12px ${c}` : undefined }}
             />
           ))}
         </Row>
-        <Button variant="secondary" size="sm" onClick={clear} disabled={docs.length === 0}>
-          <Eraser size={14} />
-          Clear
-        </Button>
+        <button
+          type="button"
+          aria-label="eraser"
+          aria-pressed={tool === "eraser"}
+          onClick={() => setTool("eraser")}
+          title="Eraser: rub out any stroke, anyone's"
+          className={cn(
+            "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[12px] transition",
+            tool === "eraser" ? "border-ink bg-ink text-paper" : "border-line text-ink-2 hover:border-line-2",
+          )}
+        >
+          <Eraser size={13} />
+          erase
+        </button>
       </Row>
 
       <Row gap={2} className="text-[13px]">

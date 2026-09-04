@@ -25,6 +25,7 @@ import type * as lib_claim from "../lib/claim.js";
 import type * as lib_days from "../lib/days.js";
 import type * as lib_guest from "../lib/guest.js";
 import type * as lib_notes from "../lib/notes.js";
+import type * as lib_storeRules from "../lib/storeRules.js";
 import type * as life from "../life.js";
 import type * as maintenance from "../maintenance.js";
 import type * as patrons from "../patrons.js";
@@ -80,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   "lib/days": typeof lib_days;
   "lib/guest": typeof lib_guest;
   "lib/notes": typeof lib_notes;
+  "lib/storeRules": typeof lib_storeRules;
   life: typeof life;
   maintenance: typeof maintenance;
   patrons: typeof patrons;

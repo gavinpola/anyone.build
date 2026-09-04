@@ -2,7 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 
 /**
  * The bounded canvas: a fixed world you zoom and pan; drag out a space to work on it; click a point to
- * add there; drag a block by its bar to propose a move; the directory jumps to a block.
+ * add there; drag an object in pick mode to propose a move; the map jumps to a block and folds away;
+ * the "?" says how; nothing floating ever blocks pointing.
  */
 const url = process.env.E2E_URL ?? "http://127.0.0.1:5173";
 
@@ -119,4 +120,123 @@ test("a signed-out visitor's stroke on the open canvas survives a reload", async
   await page.reload();
   await ready(page);
   await expect(page.locator('[data-ab-block="collaborative-art"]')).toContainText(new RegExp(`${Number(before) + 1} strokes?`), { timeout: 20_000 });
+
+  // and the eraser rubs it out again (a vertical sweep across the stroke's path)
+  await page.locator('[data-map-block="collaborative-art"]').dispatchEvent("pointerdown");
+  await page.waitForTimeout(500);
+  const block = page.locator('[data-ab-block="collaborative-art"]');
+  await block.getByRole("button", { name: "eraser" }).click();
+  const box2 = (await art.boundingBox())!;
+  await page.mouse.move(box2.x + box2.width * 0.45, box2.y + box2.height * 0.35);
+  await page.mouse.down();
+  await page.mouse.move(box2.x + box2.width * 0.45, box2.y + box2.height * 0.75, { steps: 12 });
+  await page.mouse.up();
+  await expect
+    .poll(async () => Number((await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? NaN), { timeout: 15_000 })
+    .toBeLessThan(Number(before) + 1);
+});
+
+test("anyone can erase anyone's stroke: a second visitor rubs out the first one's", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const a = await (await browser.newContext()).newPage();
+  const b = await (await browser.newContext()).newPage();
+  await a.goto(url);
+  await ready(a);
+  test.skip((await a.locator('[data-map-block="collaborative-art"]').count()) === 0, "no open canvas on this wall");
+  const count = async (page: Page) => Number((await page.locator('[data-ab-block="collaborative-art"]').innerText()).match(/(\d+) strokes?/)?.[1] ?? NaN);
+  const jump = async (page: Page) => {
+    await page.locator('[data-map-block="collaborative-art"]').dispatchEvent("pointerdown");
+    await page.waitForTimeout(500);
+    return (await page.locator('[data-ab-block="collaborative-art"] canvas').boundingBox())!;
+  };
+  const boxA = await jump(a);
+  const start = await count(a);
+  await a.mouse.move(boxA.x + boxA.width * 0.2, boxA.y + boxA.height * 0.25);
+  await a.mouse.down();
+  await a.mouse.move(boxA.x + boxA.width * 0.4, boxA.y + boxA.height * 0.25, { steps: 8 });
+  await a.mouse.up();
+  await expect(a.locator('[data-ab-block="collaborative-art"]')).toContainText(new RegExp(`${start + 1} strokes?`), { timeout: 15_000 });
+
+  await b.goto(url);
+  await ready(b);
+  const boxB = await jump(b);
+  await expect.poll(() => count(b), { timeout: 15_000 }).toBe(start + 1);
+  await b.locator('[data-ab-block="collaborative-art"]').getByRole("button", { name: "eraser" }).click();
+  await b.mouse.move(boxB.x + boxB.width * 0.3, boxB.y + boxB.height * 0.1);
+  await b.mouse.down();
+  await b.mouse.move(boxB.x + boxB.width * 0.3, boxB.y + boxB.height * 0.45, { steps: 12 });
+  await b.mouse.up();
+  await expect.poll(() => count(b), { timeout: 15_000 }).toBeLessThan(start + 1);
+  await expect.poll(() => count(a), { timeout: 15_000 }).toBeLessThan(start + 1);
+});
+
+test("the map folds to a chip, remembers it, and opens again", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const map = page.locator("[data-minimap]");
+  await expect(map).toHaveAttribute("data-minimap-open", "1");
+  expect(await page.locator("[data-map-block]").count()).toBeGreaterThan(0);
+  await page.getByRole("button", { name: /hide the map/i }).click();
+  await expect(map).toHaveAttribute("data-minimap-open", "0");
+  await expect(map).toBeVisible();
+  await expect(page.locator("[data-map-block]")).toHaveCount(0);
+  await page.reload();
+  await ready(page);
+  await expect(page.locator("[data-minimap]")).toHaveAttribute("data-minimap-open", "0");
+  await page.getByRole("button", { name: /show the map/i }).click();
+  await expect(page.locator("[data-minimap]")).toHaveAttribute("data-minimap-open", "1");
+  expect(await page.locator("[data-map-block]").count()).toBeGreaterThan(0);
+});
+
+test("the ? says how, and opens the full story", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  await page.getByRole("button", { name: /how to use the canvas/i }).click();
+  const pop = page.locator("[data-canvas-howto]");
+  await expect(pop).toBeVisible();
+  await expect(pop.getByText(/hold ⇧/i)).toBeVisible();
+  await pop.getByRole("button", { name: /the full story/i }).click();
+  const help = page.getByRole("dialog", { name: /how this works/i });
+  await expect(help).toBeVisible();
+  expect((await help.boundingBox())!.height).toBeGreaterThan(300);
+  await page.keyboard.press("Escape");
+  await expect(help).toBeHidden();
+  await page.getByRole("button", { name: /how to use the canvas/i }).click();
+  await expect(pop).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(pop).toBeHidden();
+});
+
+test("Live lives in the bar and opens the feed", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const live = page.getByRole("button", { name: /^live/i });
+  await expect(live).toHaveCount(1);
+  await expect(page.locator("[data-canvas-bar] [data-live-button]")).toBeVisible();
+  await live.click();
+  await expect(page.getByRole("dialog", { name: /live feed/i })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: /live feed/i })).toBeHidden();
+});
+
+test("while pointing, a marquee started over the map still reaches the canvas", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const map = page.locator("[data-minimap]");
+  const m = (await map.boundingBox())!;
+  const w = (await page.locator("[data-world]").boundingBox())!;
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  await expect(map).toHaveCSS("pointer-events", "none");
+  // inside the map's box, over empty ground to the right of the centred world
+  const x = Math.max(m.x + 12, w.x + w.width + 12);
+  expect(x).toBeLessThan(m.x + m.width - 8);
+  const y = m.y + 16;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 420, y - 220, { steps: 10 });
+  await page.mouse.up();
+  const dialog = page.getByRole("dialog", { name: /ask for a change/i });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("This space")).toBeVisible();
+  await page.keyboard.press("Escape");
 });

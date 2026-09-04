@@ -52,7 +52,15 @@ function useStoreMock<T>(namespace: string) {
     },
     [namespace],
   );
-  return { docs, put, remove, ready: true };
+  const removeMany = useCallback(
+    (keys: string[]) => {
+      const gone = new Set(keys);
+      memory.set(namespace, (memory.get(namespace) ?? []).filter((d) => !gone.has(d.key)));
+      emit(namespace);
+    },
+    [namespace],
+  );
+  return { docs, put, remove, removeMany, ready: true };
 }
 
 // ---- convex ----
@@ -60,16 +68,25 @@ function useStoreConvex<T>(namespace: string) {
   const rows = useQuery(api.store.list, { namespace });
   const putM = useMutation(api.store.put);
   const removeM = useMutation(api.store.remove);
+  const removeManyM = useMutation(api.store.removeMany);
   const put = useCallback((key: string, value: T) => void putM({ namespace, key, value, anonId: tabSessionId() }).catch(() => {}), [putM, namespace]);
   const remove = useCallback((key: string) => void removeM({ namespace, key, anonId: tabSessionId() }).catch(() => {}), [removeM, namespace]);
-  return { docs: (rows ?? []) as StoreDoc<T>[], put, remove, ready: rows !== undefined };
+  const removeMany = useCallback(
+    (keys: string[]) => {
+      for (let i = 0; i < keys.length; i += 50) void removeManyM({ namespace, keys: keys.slice(i, i + 50), anonId: tabSessionId() }).catch(() => {});
+    },
+    [removeManyM, namespace],
+  );
+  return { docs: (rows ?? []) as StoreDoc<T>[], put, remove, removeMany, ready: rows !== undefined };
 }
 
 /**
- * A tiny per-namespace document store: public read, signed-in write.
- * Limits: 5,000 docs and 1 MB per namespace, 4 KB per doc, rate-limited writes.
+ * A tiny per-namespace document store: public read, anyone writes (author-owned docs: by account
+ * when signed in, by browser tab when not). A namespace that starts with "open:" is a whiteboard:
+ * anyone can remove any doc in it; removeMany(keys) batches those deletes.
+ * Limits: 5,000 docs and 1 MB per namespace, 4 KB per doc, rate-limited writes and erases.
  */
-export const useStore: <T = unknown>(namespace: string) => { docs: StoreDoc<T>[]; put: (key: string, value: T) => void; remove: (key: string) => void; ready: boolean } =
+export const useStore: <T = unknown>(namespace: string) => { docs: StoreDoc<T>[]; put: (key: string, value: T) => void; remove: (key: string) => void; removeMany: (keys: string[]) => void; ready: boolean } =
   hasConvex ? useStoreConvex : useStoreMock;
 
 function useCounterMock(name: string) {

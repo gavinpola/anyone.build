@@ -112,6 +112,16 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 ## The room is the canvas (2026-09-04)
 - [x] No labels over objects and no directory: the canvas fills the Room page edge to edge under the header; the bar floats at the bottom centre, the map above the Live pill, pages as a strip top-left. Hovering an object shows its title and who touched it last (native tooltip). Moving an object: pick mode, then drag it.
 - [x] The map jumps to an object (each block is a clickable rect, `data-map-block`).
-- [x] Phones: the bar is zoom + Change beside the Live pill; the map is off (it covered the add zone).
+- [x] Phones: the bar is zoom + Change + Live across the bottom; the map is a chip that opens on request.
 - [x] The vote board: five rows, scroll for the rest; every hour the top proposal is built and leaves the board (`crons.hourly promoteTop`); who asked, linked to their GitHub when they signed in with it. Same five-row ledger on Changes.
 - [ ] NEXT: an object's facts (who, when, days left) belong in the pick placard and the composer header, not a native tooltip; a "faded" object needs a visible way to revive from the map.
+
+## Floating UI never blocks the canvas (Gavin, 2026-09-04: "I can't build stuff over the map / live")
+- [x] The map folds to a chip and opens again (`ab:map` remembered per browser; chip by default on phones); every object in it is clickable.
+- [x] The bar is zoom · Change something · Live · toast. "note" and "the wall" are gone (the wall's own file is asked for in words).
+- [x] Live moved into the bar on the wall (`LiveButton`, shared with the floating pill elsewhere); the floating pills hide on canvas pages.
+- [x] A "?" bottom-right: "Hold ⇧⌘ and point at anything, then say what should change…" with "The full story" opening the help panel (`helpStore`).
+- [x] While pointing (chord or Change), the map, the pages strip and the "?" fade and let pointer events through; the bar keeps the cancel. e2e: a marquee started over the map reaches the canvas.
+- [x] The open canvas has an eraser instead of Clear: `open:` store namespaces are whiteboards (anyone erases anything), `store.removeMany` batches a drag's deletes under a `storeErase` bucket, the legacy strokes are adopted (never deleted) by an hourly one-off cron.
+- [ ] NEXT: undo the last erase (keep a short local tombstone list and re-put); delete the adopt cron once `collab-art` is empty; an object's facts (who, when, days left) in the pick placard instead of a tooltip.
+

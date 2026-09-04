@@ -264,7 +264,7 @@ export default defineSchema({
     value: v.any(),
     by: v.optional(v.string()), // handle
     byUserId: v.optional(v.id("users")),
-    byAnonId: v.optional(v.string()), // a signed-out writer: this tab's id; only they can overwrite or remove it
+    byAnonId: v.optional(v.string()), // a signed-out writer: this tab's id; only they can overwrite it (or remove it, unless the namespace is an open: whiteboard)
     at: v.number(),
     bytes: v.number(),
   })

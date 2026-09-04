@@ -17,5 +17,8 @@ crons.interval("sweep presence", { minutes: 10 }, internal.presence.sweep, {});
 crons.daily("prune timelapse frames older than 30 days", { hourUTC: 5, minuteUTC: 20 }, internal.timelapse.prune, {});
 
 crons.daily("decay: fade what ran out", { hourUTC: 5, minuteUTC: 33 }, internal.life.sweep, {});
+// One-off, kept until the legacy namespace is empty: the open canvas moved to a whiteboard namespace
+// (open:collab-art) so anyone can erase; the strokes drawn before that are adopted, never deleted.
+crons.hourly("adopt the legacy open canvas", { minuteUTC: 41 }, internal.store.adoptOpen, { from: "collab-art", to: "open:collab-art" });
 
 export default crons;

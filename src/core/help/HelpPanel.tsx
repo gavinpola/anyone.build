@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
@@ -22,6 +23,14 @@ const rules = [
 
 export function HelpPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const s = useLiveStats();
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
   // Portaled: the sticky header's backdrop-blur would otherwise become the containing block for
   // these fixed elements and squash the panel into the header.
   return createPortal(

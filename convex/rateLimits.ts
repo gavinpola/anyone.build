@@ -28,6 +28,8 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // kit store writes
   storeWrite: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 30 },
   storeWriteAnon: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
+  // erasing on a whiteboard: one token per remove call (up to 50 keys each), signed-in or not
+  storeErase: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 30 },
   // flags
   flag: { kind: "fixed window", rate: 20, period: DAY },
   // "for your site": notes from visitors, per site and overall; sites per owner
