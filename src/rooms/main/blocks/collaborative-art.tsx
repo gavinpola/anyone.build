@@ -208,7 +208,7 @@ export default function CollaborativeArt() {
     return best;
   };
 
-  /** Rub out every stroke under the eraser at p: gone on screen at once, sent when the drag ends. */
+  /** Rub out every stroke under the eraser at p: gone from the canvas at once, sent when the drag ends. */
   const eraseAt = (p: Pt) => {
     let hit = false;
     for (const d of docsRef.current) {
@@ -293,6 +293,10 @@ export default function CollaborativeArt() {
           erase
         </button>
       </Row>
+
+      <Text muted className="text-sm text-muted">
+        {"brush or eraser, it's everyone's canvas"}
+      </Text>
 
       <Row gap={2} className="text-[13px]">
         <motion.span
