@@ -21,7 +21,7 @@ function Stat({ value, label, live }: { value: number; label: string; live?: boo
 export function LiveCounters() {
   const s = useLiveStats();
   return (
-    <div className="hidden items-center gap-3 md:flex" data-live-counters>
+    <div className="ml-4 hidden items-center gap-3 md:flex lg:ml-7" data-live-counters>
       <Stat value={s.online} label="here" live />
       <PresenceStack />
       <span className="h-3 w-px bg-line-2/70" aria-hidden />
