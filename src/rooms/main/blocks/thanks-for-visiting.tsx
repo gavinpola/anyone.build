@@ -12,7 +12,7 @@ export const block: BlockMeta = {
 export default function ThanksForVisiting() {
   return (
     <Stack className="p-5 sm:p-6" gap={2}>
-      <Text className="max-w-2xl">Thanks for visiting! Come back anytime — the wall will be here waiting.</Text>
+      <Text className="max-w-2xl">where the people at?i love you all!!</Text>
     </Stack>
   );
 }
