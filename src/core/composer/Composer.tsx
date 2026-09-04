@@ -38,7 +38,7 @@ export function Composer() {
 
 function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const viewer = useViewer();
-  const turnstile = useTurnstile(turnstileOn && !viewer.signedIn);
+  const { attach: attachTurnstile, getToken: turnstileToken } = useTurnstile(turnstileOn && !viewer.signedIn);
   const [prompt, setPrompt] = useState(t.draft ?? "");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +101,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
       // signed-out askers pass the bot check first (only when the site key is configured)
       let turnstileTicket: string | undefined;
       if (turnstileOn && !viewer.signedIn) {
-        const token = await turnstile.getToken();
+        const token = await turnstileToken();
         if (!token) {
           setError("Please complete the check and try again.");
           return;
@@ -173,7 +173,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
             placeholder={example}
             className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-ink outline-none placeholder:text-muted"
           />
-              {turnstileOn && !viewer.signedIn ? <div ref={turnstile.attach} className="mt-2" data-turnstile /> : null}
+              {turnstileOn && !viewer.signedIn ? <div ref={attachTurnstile} className="mt-2" data-turnstile /> : null}
           {error ? <p role="alert" className="mt-2 rounded-md bg-bad-soft px-3 py-2 text-[13px] text-bad">{error}</p> : null}
           <div className="mt-2 flex items-center gap-2">
             <span className="placard">
