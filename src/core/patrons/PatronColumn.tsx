@@ -21,6 +21,8 @@ function countdown(to: number, now: number) {
 export function PatronColumn() {
   const board = useQuery(api.patrons.board, hasConvex ? {} : "skip");
   const history = useQuery(api.patrons.history, hasConvex ? { limit: 7 } : "skip");
+  // only days someone actually won; an empty slate says nothing rather than "nobody"
+  const won = (history ?? []).filter((d) => d.winner);
   const stats = useLiveStats();
   const now = useNow(1000);
   const [open, setOpen] = useState(false);
@@ -113,11 +115,11 @@ export function PatronColumn() {
         ) : null}
       </div>
 
-      {history && history.length ? (
+      {won.length ? (
         <div className="frame overflow-hidden">
           <div className="border-b border-line px-4 py-2 text-[14px] font-semibold">Past days</div>
           <ul>
-            {history.map((d) => (
+            {won.map((d) => (
               <li key={d.day} className="flex items-center gap-2 border-t border-line px-4 py-2 first:border-t-0">
                 <span className="placard num w-12">{d.day.slice(5).replace("-", "/")}</span>
                 <span className="min-w-0 flex-1 truncate text-[13px]">{d.winner?.name ?? "nobody"}</span>
