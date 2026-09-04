@@ -40,6 +40,19 @@ export const ban = mutation({
   },
 });
 
+/** Ban a guest id (signed-out asker): their asks stop at submit. Maintainers only. */
+export const banGuest = mutation({
+  args: { guestId: v.string(), banned: v.boolean() },
+  handler: async (ctx, { guestId, banned }) => {
+    const me = await requireUser(ctx);
+    if (me.trust < 3) throw new Error("Maintainers only");
+    const g = await ctx.db.query("guests").withIndex("by_guestId", (q) => q.eq("guestId", guestId)).unique();
+    if (!g) throw new Error("No such guest");
+    await ctx.db.patch(g._id, { banned });
+    return { ok: true };
+  },
+});
+
 /** Spend, for the admin page: the last 7 days' budgets and what the last 200 finished builds cost by scope. */
 export const costs = query({
   args: {},

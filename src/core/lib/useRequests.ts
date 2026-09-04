@@ -43,3 +43,15 @@ export function useRequest(id: string | null): FeedRequest | null {
 export function useSubmitMutation() {
   return useMutation(api.requests.submit);
 }
+
+/** Swap a Turnstile token for a single-use ticket; null when the server has no secret configured or the token failed. */
+export async function verifyTurnstile(token: string): Promise<string | null> {
+  if (!hasConvex || !convex) return null;
+  try {
+    const r = await convex.action(api.turnstile.verify, { token, guestId: guestId() });
+    return r.ticket ?? null;
+  } catch {
+    return null;
+  }
+}
+

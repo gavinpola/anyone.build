@@ -130,6 +130,7 @@ export default defineSchema({
         mergeSha: v.optional(v.string()),
         securityRisk: v.optional(v.string()), // none | low | medium | high, from the security pass
         fastFailed: v.optional(v.boolean()), // the fast path's PR went red in CI; the sandbox is building instead
+        collidedRetry: v.optional(v.boolean()), // the PR collided with a newer main once; rebuilt from the new base
       }),
     ),
     budgetCents: v.number(), // reserved cap for this request

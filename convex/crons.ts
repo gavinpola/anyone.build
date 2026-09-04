@@ -13,6 +13,8 @@ crons.hourly("expire stale needs_human", { minuteUTC: 23 }, internal.maintenance
 crons.cron("proposal round: build the top one, the rest start over", "37 */3 * * *", internal.proposals.promoteTop, {});
 // Keep the presence tables tiny.
 crons.interval("sweep presence", { minutes: 10 }, internal.presence.sweep, {});
+// Nothing stays stuck: re-try merges that missed a webhook, settle deploys that never reported, fail dead builds.
+crons.interval("reconcile stuck requests", { minutes: 10 }, internal.maintenance.reconcile, {});
 crons.daily("prune timelapse frames older than 30 days", { hourUTC: 5, minuteUTC: 20 }, internal.timelapse.prune, {});
 // GitHub drops scheduled runs on quiet repos: once an hour, if the latest frame is stale, ask it to run
 // the timelapse workflow (works once the GitHub App has the Actions permission; harmless until then).

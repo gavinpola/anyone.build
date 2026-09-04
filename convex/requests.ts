@@ -100,7 +100,7 @@ export const queuePosition = query({
   handler: async (ctx, { id }) => {
     const r = await ctx.db.get(id);
     if (!r || r.status !== "queued") return null;
-    const ahead = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "queued").lt("createdAt", r.createdAt)).collect();
+    const ahead = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "queued").lt("createdAt", r.createdAt)).take(200);
     return ahead.length + 1;
   },
 });
@@ -363,6 +363,12 @@ export const setVerdict = internalMutation({
     const hourly = await rateLimiter.limit(ctx, "approvalsGlobal", { key: "global" });
     if (!hourly.ok) {
       await ctx.db.patch(a.id, { status: "rejected", verdict: { ...verdict, approved: false, category: "slow_down", hint: "The wall is busy. Try again in a bit." }, updatedAt: Date.now() });
+      return { ok: true, queued: false };
+    }
+    // Backpressure: past 60 in line, say so instead of growing a queue nobody will wait for.
+    const inLine = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "queued")).take(61);
+    if (inLine.length >= 60) {
+      await ctx.db.patch(a.id, { status: "rejected", verdict: { ...verdict, approved: false, category: "slow_down", hint: "The wall is busy right now: sixty changes are in line. Ask again in a few minutes." }, updatedAt: Date.now() });
       return { ok: true, queued: false };
     }
     const reserved = await reserve(ctx, a.capCents);

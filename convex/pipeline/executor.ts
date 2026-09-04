@@ -27,8 +27,9 @@ export const pump = internalMutation({
     const locks = await ctx.db.query("buildLocks").collect();
     // Expire dead locks (a crashed build) after 12 minutes.
     const now = Date.now();
-    for (const l of locks) if (now - l.lockedAt > 12 * 60 * 1000) await ctx.db.delete(l._id);
-    const live = locks.filter((l) => now - l.lockedAt <= 12 * 60 * 1000);
+    // 25 min: longer than CI's longest job (playtest, 15) so a same-block build never starts under a live one
+    for (const l of locks) if (now - l.lockedAt > 25 * 60 * 1000) await ctx.db.delete(l._id);
+    const live = locks.filter((l) => now - l.lockedAt <= 25 * 60 * 1000);
     let running = live.filter((l) => l.key.startsWith("run:")).length;
     if (running >= c.maxConcurrentBuilds) return;
     const held = new Set(live.map((l) => l.key));

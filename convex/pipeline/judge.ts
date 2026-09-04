@@ -1,6 +1,6 @@
 "use node";
 import { v } from "convex/values";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import { judgeWithSecondLooks, BACKEND_OFF_ADDENDUM, redTeam, costCents, priceFor, scopeGate, type JudgeInput, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { fetchManifest, fetchSnippet } from "./source";
@@ -15,6 +15,13 @@ export const run = internalAction({
       ? { handle: user.handle, trust: user.trust, liveChanges: user.liveChanges }
       : { handle: guest?.handle ?? "guest", trust: -1, liveChanges: 0 };
     const config = await ctx.runQuery(internal.config.all, {});
+    // A spent day means no model call at all: judging costs money even when the answer is no, and a
+    // flood of asks after the cap would otherwise keep spending past it.
+    const day = await ctx.runQuery(api.budget.today, {});
+    if (day.availableCents <= 0) {
+      await ctx.runMutation(internal.requests.setVerdict, { id: requestId, approved: false, category: "budget_spent", hint: "Today's budget is spent. Patrons top it up, or it resets at midnight ET.", scope: "tiny", confidence: 1, plan: [], touchesBackend: false, redTeamed: false, model: "budget", capCents: 0, judgeCents: 0, needsHuman: false });
+      return;
+    }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey && process.env.MOCK_JUDGE === "1") {

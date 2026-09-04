@@ -134,8 +134,14 @@ export const tryMerge = internalAction({
     try {
       const pr = await kit.rest.pulls.get({ owner, repo, pull_number: r.run.prNumber });
       if (pr.data.mergeable === false) {
-        await ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category: "collided", hint: "The wall moved under you. Try again on the new version.", error: "merge conflict" });
         await closePullRequest(kit, r.run.prNumber, r.run.branch);
+        if (!r.run.collidedRetry) {
+          // main moved under this PR: rebuild once from the new base instead of making the person re-ask
+          await ctx.runMutation(internal.pipeline.state.requeue, { id: requestId, collidedRetry: true });
+          await ctx.runMutation(internal.pipeline.executor.release, { requestId });
+          return;
+        }
+        await ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category: "collided", hint: "The wall moved under you twice. Try again on the new version.", error: "merge conflict (after one rebuild)" });
         await ctx.runMutation(internal.pipeline.executor.release, { requestId });
         return;
       }

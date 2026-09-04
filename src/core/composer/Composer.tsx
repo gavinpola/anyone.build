@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUp, X } from "lucide-react";
 import { pickerStore, usePicker, type PickerTarget } from "@/core/picker/pickerStore";
-import { submitRequest, useRequest } from "@/core/lib/useRequests";
+import { submitRequest, useRequest, verifyTurnstile } from "@/core/lib/useRequests";
+import { turnstileOn, useTurnstile } from "@/core/lib/turnstile";
 import { useViewer } from "@/core/auth/useViewer";
 import { REJECTION_COPY, STAGE_COPY } from "@/core/lib/types";
 import { cn } from "@/core/lib/cn";
@@ -37,6 +38,7 @@ export function Composer() {
 
 function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const viewer = useViewer();
+  const turnstile = useTurnstile(turnstileOn && !viewer.signedIn);
   const [prompt, setPrompt] = useState(t.draft ?? "");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,8 +98,19 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
     setError(null);
     const { rect: _r, element: _e, point: _p, granularity: _g, ...target } = t;
     try {
+      // signed-out askers pass the bot check first (only when the site key is configured)
+      let turnstileTicket: string | undefined;
+      if (turnstileOn && !viewer.signedIn) {
+        const token = await turnstile.getToken();
+        if (!token) {
+          setError("Please complete the check and try again.");
+          return;
+        }
+        // a null ticket means the server has no secret (check off) or said no; submit() decides which
+        turnstileTicket = (await verifyTurnstile(token)) ?? undefined;
+      }
       track("ask_sent", { where: target.tag === "region" ? "space" : target.blockId === "__new__" || target.path.endsWith("/blocks/") ? "new" : "block", signedIn: viewer.signedIn });
-      const id = await submitRequest({ prompt: p, target, handle: viewer.handle, avatarUrl: viewer.avatarUrl });
+      const id = await submitRequest({ prompt: p, target, handle: viewer.handle, avatarUrl: viewer.avatarUrl, turnstileTicket });
       setSubmittedId(id);
     } catch (e) {
       setError(friendlyError(e));
@@ -160,6 +173,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
             placeholder={example}
             className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-ink outline-none placeholder:text-muted"
           />
+              {turnstileOn && !viewer.signedIn ? <div ref={turnstile.attach} className="mt-2" data-turnstile /> : null}
           {error ? <p role="alert" className="mt-2 rounded-md bg-bad-soft px-3 py-2 text-[13px] text-bad">{error}</p> : null}
           <div className="mt-2 flex items-center gap-2">
             <span className="placard">
