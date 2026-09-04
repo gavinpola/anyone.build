@@ -1,10 +1,11 @@
 name: timelapse
-# The wall, every hour: one screenshot of the live site, stored for 30 days and shown on the leaderboard.
-# GitHub's scheduler skips and delays runs on quiet repos, so this asks three times an hour and the
-# script only posts when the last frame is older than 50 minutes. workflow_dispatch always posts.
+# The wall, change by change: a screenshot of the live site after every production deploy (that is when
+# a change lands; the script posts only if the changes count grew), a heartbeat every six hours from the
+# schedule, and a forced frame on workflow_dispatch. Frames live 30 days and play on /timelapse.
 on:
+  deployment_status:
   schedule:
-    - cron: "11,31,51 * * * *"
+    - cron: "17 */2 * * *"
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   frame:
+    if: github.event_name != 'deployment_status' || (github.event.deployment_status.state == 'success' && contains(github.event.deployment.environment, 'roduction'))
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -24,6 +26,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Let the deploy settle at the edge
+        if: github.event_name == 'deployment_status'
+        run: sleep 90
       - name: Screenshot the wall and post the frame
         env:
           SITE_URL: https://everyones.lol

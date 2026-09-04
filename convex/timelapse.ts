@@ -3,9 +3,10 @@ import { httpAction, internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 /**
- * The wall, every hour. A scheduled job (.github/workflows/timelapse.yml) screenshots the live wall and
+ * The wall, change by change. A GitHub job (.github/workflows/timelapse.yml) screenshots the live wall
+ * after every production deploy (posting only when the changes count grew, plus a six-hour heartbeat) and
  * POSTs the frame here with a shared token; frames live in Convex file storage for 30 days and play as a
- * timelapse on the leaderboard page, which the wall itself can't change.
+ * ten-second timelapse on /timelapse, which the wall itself can't change.
  */
 const KEEP_DAYS = 30;
 

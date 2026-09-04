@@ -5,18 +5,34 @@ import { api } from "../../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
 import { timeAgo, useNow } from "@/core/lib/useNow";
 
-/** The wall, every hour: a scrubbable timelapse of what the screen looked like. This page can't be changed by the wall. */
+/** The wall, change by change: a timelapse of what the screen looked like after each change. The whole run plays in ten seconds, however many frames. This page can't be changed by the wall. */
 export function TimelapseSection() {
   const frames = useQuery(api.timelapse.list, hasConvex ? { limit: 96 } : "skip");
   const [i, setI] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const n = frames?.length ?? 0;
   const idx = i == null ? Math.max(0, n - 1) : Math.min(i, Math.max(0, n - 1));
+  // ten seconds for the whole run: more frames, faster; never faster than the eye follows, never a slideshow
+  const stepMs = Math.max(60, Math.min(800, Math.round(10_000 / Math.max(1, n))));
   useEffect(() => {
     if (!playing || n < 2) return;
-    const t = setInterval(() => setI((cur) => ((cur ?? n - 1) + 1) % n), 400);
+    const t = setInterval(() => {
+      setI((cur) => {
+        const next = (cur ?? n - 1) + 1;
+        if (next >= n) {
+          setPlaying(false); // play once, stop on the latest frame
+          return n - 1;
+        }
+        return next;
+      });
+    }, stepMs);
     return () => clearInterval(t);
-  }, [playing, n]);
+  }, [playing, n, stepMs]);
+  const play = () => {
+    if (playing) return setPlaying(false);
+    setI(idx >= n - 1 ? 0 : idx); // from the start when you're at the end
+    setPlaying(true);
+  };
   const f = frames?.[idx];
   const latest = frames?.[n - 1];
   const now = useNow(60_000);
@@ -24,14 +40,14 @@ export function TimelapseSection() {
   return (
     <section data-timelapse={n}>
       <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-2xl">The wall, every hour</h2>
+        <h2 className="font-display text-2xl">The wall, change by change</h2>
         <span className="placard" data-timelapse-latest={latest?.at ?? ""}>{n && latest ? `${n} ${n === 1 ? "frame" : "frames"} · latest ${timeAgo(latest.at, now)}` : ""}</span>
       </div>
       <div className="frame mt-3 overflow-hidden">
         {!frames ? (
           <p className="p-5 text-[14px] text-muted">Loading…</p>
         ) : n === 0 ? (
-          <p className="p-5 text-[14px] text-muted">The first frame lands within the hour.</p>
+          <p className="p-5 text-[14px] text-muted">The first frame lands with the next change.</p>
         ) : (
           <div>
             <div className="relative bg-paper-2">
@@ -44,7 +60,7 @@ export function TimelapseSection() {
               </div>
             </div>
             <div className="flex items-center gap-3 border-t border-line px-4 py-3">
-              <button type="button" onClick={() => setPlaying((p) => !p)} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line hover:border-line-2" aria-label={playing ? "Pause" : "Play"} disabled={n < 2}>
+              <button type="button" onClick={play} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line hover:border-line-2" aria-label={playing ? "Pause" : "Play"} disabled={n < 2}>
                 {playing ? <Pause size={14} /> : <Play size={14} />}
               </button>
               <input
@@ -57,7 +73,7 @@ export function TimelapseSection() {
                   setI(Number(e.target.value));
                 }}
                 className="flex-1 accent-[var(--accent)]"
-                aria-label="Scrub through the hours"
+                aria-label="Scrub through the changes"
               />
               <span className="placard w-16 text-right tabular-nums">
                 {idx + 1} / {n}

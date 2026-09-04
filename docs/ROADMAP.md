@@ -167,3 +167,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] GoDaddy: the A record points at Vercel (done 2026-09-04). ~~**Yours at GoDaddy (one of):** change the nameservers to `ns1.vercel-dns.com` and `ns2.vercel-dns.com` (simplest, Vercel then manages DNS and the www redirect), or add `A @ 76.76.21.21` and `A www 76.76.21.21` and delete the parking A record (76.223.105.230).
 - [x] Resolved 2026-09-04: `VITE_SITE_URL=https://everyones.lol` on Vercel production and `SITE_URL=https://everyones.lol` on the Convex production deployment (`npx convex env set --prod SITE_URL https://everyones.lol`), point the timelapse workflow's SITE_URL at it, redeploy, then verify sign-in, a share link, and a preview image on the new name. Resend: verify a sending domain on everyones.lol and update RESEND_FROM (emails silently skip until then).
 
+## The timelapse, change by change (Gavin, 2026-09-04: "only 6 screenshots… let's have that video take up to 10 seconds")
+- [x] Six frames in a day was GitHub's scheduler dropping runs (gaps of two to five hours even at three crons an hour). Frames are now taken on every production deploy, posted only when the changes count grew, with a six-hour heartbeat for quiet days; the schedule is just the heartbeat carrier.
+- [x] The player runs the whole set in ten seconds (60 ms to 800 ms a frame, more frames = faster), plays once, stops on the latest, and restarts from the first when you press play at the end.
+
