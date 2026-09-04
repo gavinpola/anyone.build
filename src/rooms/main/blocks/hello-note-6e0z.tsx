@@ -1,4 +1,3 @@
-import { Stack, Text } from "@/kit";
 import type { BlockMeta } from "@/kit";
 
 export const block: BlockMeta = {
@@ -10,9 +9,5 @@ export const block: BlockMeta = {
 };
 
 export default function HelloNote6e0z() {
-  return (
-    <Stack className="p-5 sm:p-6" gap={2}>
-      <Text className="max-w-2xl">hello note 6e0z</Text>
-    </Stack>
-  );
+  return null;
 }
