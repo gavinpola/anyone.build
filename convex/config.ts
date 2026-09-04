@@ -25,7 +25,11 @@ export const DEFAULTS = {
   redTeamModel: "google/gemini-3.1-flash-lite", // always answers, <2s; gpt-5-nano returned empty at low caps
   reviewModel: "qwen/qwen3-coder-next",
   securityModel: "google/gemini-3.1-flash-lite",
-  coderModel: "deepseek/deepseek-v4-flash-0731",
+  coderModel: "deepseek/deepseek-v4-flash-0731", // tiny + small (and the fast path)
+  // Bigger asks get better coders. Medium is every creative ask, so a mid-price coder; large only builds when a
+  // proposal wins the daily vote (≤1/day), so the best one is affordable. Each build is still capped by scopeCapsCents.
+  coderModelMedium: "qwen/qwen3-coder-plus",
+  coderModelLarge: "anthropic/claude-sonnet-5",
   // Tiny asks on one existing file: one model call, no sandbox (pipeline/fast.ts); the sandbox is the fallback.
   fastPathEnabled: true,
   fastModel: "", // empty = coderModel
@@ -66,6 +70,8 @@ export const publicConfig = query({
       patronTopUpPct: c.patronTopUpPct,
       judgeModel: c.judgeModel,
       coderModel: c.coderModel,
+      coderModelMedium: c.coderModelMedium,
+      coderModelLarge: c.coderModelLarge,
       fastPathEnabled: c.fastPathEnabled,
       fastModel: c.fastModel,
     };

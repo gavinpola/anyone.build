@@ -6,7 +6,9 @@ export const block: BlockMeta = {
   title: "Thanks for visiting",
   description: "A small note thanking anyone who stops by the wall.",
   order: 2,
-  size: "full",
+  size: "md",
+  shape: "round",
+  tilt: 0.8,
 };
 
 export default function ThanksForVisiting() {

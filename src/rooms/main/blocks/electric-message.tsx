@@ -8,7 +8,9 @@ export const block: BlockMeta = {
   title: "Electric",
   description: "A short spark of a message on the wall.",
   order: 3,
-  size: "full",
+  size: "md",
+  shape: "card",
+  tilt: -0.7,
 };
 
 export default function ElectricMessage() {

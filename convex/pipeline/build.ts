@@ -38,9 +38,11 @@ export const run = internalAction({
       ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category, hint, error, costCents: cost });
 
     const modelKey = env("OPENROUTER_API_KEY");
-    const coderModel = process.env.CODER_MODEL || config.coderModel;
-    const repoSlug = env("GITHUB_REPO");
     const scope = verdict.scope;
+    // Route by scope: the common small stuff stays on the cheap coder; a medium ask gets a real one; a large build
+    // (a proposal that won the vote, at most one a day) gets the best. The per-build cap still applies.
+    const coderModel = process.env.CODER_MODEL || (scope === "large" ? config.coderModelLarge : scope === "medium" ? config.coderModelMedium : config.coderModel) || config.coderModel;
+    const repoSlug = env("GITHUB_REPO");
     // Room functions (convex/rooms/**) only when the judge said so AND the backend tier is switched on.
     const allowBackend = Boolean(verdict.touchesBackend) && Boolean(config.backendEnabled);
     const startedAt = Date.now();

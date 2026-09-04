@@ -21,6 +21,7 @@ export function AdminPage() {
     <div className="mx-auto flex max-w-[1100px] flex-col gap-10 px-4 py-8 sm:px-6">
       <NeedsHuman />
       <Flagged />
+      <Spend />
       <Config />
     </div>
   );
@@ -113,13 +114,64 @@ const EDITABLE: Array<{ key: string; label: string; kind: "number" | "text" | "b
   { key: "judgeModel", label: "Judge model", kind: "text" },
   { key: "redTeamModel", label: "Red team model", kind: "text" },
   { key: "reviewModel", label: "Review model", kind: "text" },
-  { key: "coderModel", label: "Coder model", kind: "text" },
+  { key: "coderModel", label: "Coder model (tiny + small)", kind: "text" },
+  { key: "coderModelMedium", label: "Coder model (medium)", kind: "text" },
+  { key: "coderModelLarge", label: "Coder model (large: a proposal that won)", kind: "text" },
   { key: "maxTurns", label: "Max agent steps", kind: "number" },
   { key: "fastPathEnabled", label: "Fast path (tiny asks skip the sandbox)", kind: "bool" },
   { key: "fastModel", label: "Fast path model (empty = coder model)", kind: "text" },
   { key: "guestsEnabled", label: "Guests can ask (no account)", kind: "bool" },
   { key: "backendEnabled", label: "Room functions (agent-written backend)", kind: "bool" },
 ];
+
+function Spend() {
+  const c = useQuery(api.admin.costs, hasConvex ? {} : "skip");
+  const $ = (cents: number) => "$" + (cents / 100).toFixed(2);
+  return (
+    <section>
+      <h2 className="font-display text-2xl">Spend</h2>
+      <p className="placard mt-1">What the wall's builds cost. The daily cap is the money backstop; per-build caps by scope sit under it.</p>
+      {!c ? (
+        <p className="mt-3 text-[14px] text-muted">{c === null ? "Maintainers only." : "Loading…"}</p>
+      ) : (
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          <div className="frame p-4">
+            <p className="placard">by day</p>
+            <table className="mt-2 w-full text-[13px]">
+              <tbody>
+                {c.days.map((d) => (
+                  <tr key={d.day} className="border-t border-line">
+                    <td className="py-1.5 font-mono">{d.day}</td>
+                    <td className="py-1.5 text-right tabular-nums">{$(d.spentCents)} spent</td>
+                    <td className="py-1.5 text-right tabular-nums text-ink-2">{$(d.reservedCents)} held</td>
+                    <td className="py-1.5 text-right tabular-nums text-ink-2">of {$(d.capCents + d.topUpCents)}</td>
+                  </tr>
+                ))}
+                {c.days.length === 0 ? <tr><td className="py-1.5 text-muted">nothing yet</td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+          <div className="frame p-4">
+            <p className="placard">last {c.finished} finished builds · {$(c.totalCents)} total</p>
+            <table className="mt-2 w-full text-[13px]">
+              <tbody>
+                {c.byScope.map((s) => (
+                  <tr key={s.scope} className="border-t border-line">
+                    <td className="py-1.5">{s.scope}</td>
+                    <td className="py-1.5 text-right tabular-nums">{s.n} builds</td>
+                    <td className="py-1.5 text-right tabular-nums">{$(s.avgCents)} avg</td>
+                    <td className="py-1.5 text-right tabular-nums text-ink-2">{s.live} live · {s.failed} failed</td>
+                  </tr>
+                ))}
+                {c.byScope.length === 0 ? <tr><td className="py-1.5 text-muted">nothing finished yet</td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function Config() {
   const all = useQuery(api.config.all_public, hasConvex ? {} : "skip");

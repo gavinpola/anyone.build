@@ -15,8 +15,9 @@ const W = 640;
 const H = 240;
 const GROUND = 196;
 const DINO = { x: 56, w: 34, h: 38 };
+// dinoY is height above the ground (positive = up): a jump is a positive velocity, gravity pulls it down.
 const GRAVITY = 1500;
-const JUMP_V = -560;
+const JUMP_V = 560;
 
 type Phase = "ready" | "playing" | "over";
 type Cactus = { x: number; w: number; h: number };
@@ -123,8 +124,8 @@ export default function DinoGame() {
         g.distance += g.speed * dt;
         g.speed = Math.min(430, g.speed + 8 * dt);
 
-        // dino physics
-        g.vy += GRAVITY * dt;
+        // dino physics (up is positive)
+        g.vy -= GRAVITY * dt;
         g.dinoY += g.vy * dt;
         if (g.dinoY <= 0) {
           g.dinoY = 0;

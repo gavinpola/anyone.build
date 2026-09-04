@@ -39,3 +39,34 @@ export const ban = mutation({
     await ctx.db.patch(userId, { banned });
   },
 });
+
+/** Spend, for the admin page: the last 7 days' budgets and what the last 200 finished builds cost by scope. */
+export const costs = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireUser(ctx).catch(() => null);
+    if (!user || user.trust < 3) return null;
+    const days = await ctx.db.query("budgets").withIndex("by_day").order("desc").take(7);
+    const recent = await ctx.db.query("requests").order("desc").take(200);
+    const byScope: Record<string, { n: number; cents: number; live: number; failed: number }> = {};
+    let total = 0;
+    for (const r of recent) {
+      const c = r.run?.costCents ?? 0;
+      if (!r.verdict || (r.status !== "live" && r.status !== "failed")) continue;
+      const k = r.verdict.scope;
+      byScope[k] ??= { n: 0, cents: 0, live: 0, failed: 0 };
+      byScope[k].n++;
+      byScope[k].cents += c;
+      if (r.status === "live") byScope[k].live++;
+      else byScope[k].failed++;
+      total += c;
+    }
+    return {
+      days: days.map((d) => ({ day: d.day, capCents: d.capCents, spentCents: d.spentCents, reservedCents: d.reservedCents, topUpCents: d.topUpCents })),
+      byScope: Object.entries(byScope).map(([scope, v]) => ({ scope, ...v, avgCents: v.n ? v.cents / v.n : 0 })),
+      finished: Object.values(byScope).reduce((a, v) => a + v.n, 0),
+      totalCents: total,
+    };
+  },
+});
+

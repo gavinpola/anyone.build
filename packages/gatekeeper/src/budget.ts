@@ -21,6 +21,11 @@ export const PRICES: Record<string, { inPerM: number; outPerM: number }> = {
   "google/gemini-2.5-flash-lite": { inPerM: 0.1, outPerM: 0.4 },
   "google/gemini-3.1-flash-lite": { inPerM: 0.25, outPerM: 1.5 },
   "google/gemini-2.5-flash": { inPerM: 0.3, outPerM: 2.5 },
+  // stronger coders, routed by scope (OpenRouter list prices, 2026-09-03)
+  "qwen/qwen3-coder-plus": { inPerM: 0.65, outPerM: 3.25 },
+  "anthropic/claude-sonnet-5": { inPerM: 2, outPerM: 10 },
+  "openai/gpt-5.1-codex": { inPerM: 1.25, outPerM: 10 },
+  "moonshotai/kimi-k2.5": { inPerM: 0.45, outPerM: 2.25 },
 };
 export function priceFor(model: string) {
   return PRICES[model] ?? { inPerM: 2, outPerM: 8 };

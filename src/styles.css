@@ -206,3 +206,39 @@ body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--a
   border-radius: 12px;
   transition: outline-color 1.2s ease;
 }
+
+/* The wall is a canvas, not a spreadsheet. Everything here comes from src/rooms/<room>/canvas.ts (the
+   wall's own editable file) and each block's meta: shape, tilt, stagger, span, free placement. */
+.wall {
+  --wall-gap: 24px; --wall-radius: 28px; --wall-pad: 6px; --wall-cols: 12;
+  --wall-bg: radial-gradient(60% 40% at 15% 0%, color-mix(in oklab, var(--accent) 7%, transparent), transparent 70%);
+  gap: var(--wall-gap);
+  grid-template-columns: repeat(var(--wall-cols), minmax(0, 1fr));
+  background: var(--wall-bg);
+  border-radius: var(--wall-radius);
+  padding: var(--wall-pad);
+  min-height: var(--wall-min-h, auto);
+}
+.wall-full { grid-column: 1 / -1; }
+.hung {
+  --tilt: 0deg; --stagger: 0px; --span: 6;
+  grid-column: span var(--span) / span var(--span);
+  margin-top: var(--stagger);
+  transform: rotate(var(--tilt));
+  transform-origin: 50% 40%;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.hung:hover, .hung:focus-within, body[data-picking] .hung { transform: rotate(0deg); }
+.hung.placed { position: absolute; left: var(--place-x); top: var(--place-y); width: var(--place-w); margin-top: 0; z-index: 1; }
+@media (max-width: 767px) {
+  .wall { grid-template-columns: 1fr; }
+  .hung { grid-column: 1 / -1; transform: none; margin-top: 0; }
+  .hung.placed { position: static; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .hung { transform: none; transition: none; } }
+.frame-soft { border-radius: 26px; }
+.frame-round { border-radius: 999px; }
+.frame-round > .frame-body { padding-inline: 10px; }
+.frame-bare { background: transparent; border-color: transparent; box-shadow: none; }
+.frame-bare:hover, body[data-picking] .frame-bare { border-color: var(--line); }
+.frame-custom { overflow: hidden; }

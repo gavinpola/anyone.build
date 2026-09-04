@@ -86,7 +86,8 @@ async function checksGreen(kit: Kit, sha: string): Promise<"green" | "pending" |
   const { owner, repo } = repoParts();
   const runs = await kit.rest.checks.listForRef({ owner, repo, ref: sha, per_page: 100 });
   const statuses = await kit.rest.repos.getCombinedStatusForRef({ owner, repo, ref: sha });
-  const required = (process.env.REQUIRED_CHECKS ?? "checks").split(",").map((s) => s.trim()).filter(Boolean);
+  // "checks" (typecheck, lint, tests, build, validator) and "playtest" (every changed block mounted, played, and looked at).
+  const required = (process.env.REQUIRED_CHECKS ?? "checks,playtest").split(",").map((s) => s.trim()).filter(Boolean);
   const byName = new Map<string, string>();
   for (const r of runs.data.check_runs) byName.set(r.name, r.status === "completed" ? (r.conclusion ?? "failure") : "pending");
   for (const s of statuses.data.statuses) byName.set(s.context, s.state === "success" ? "success" : s.state === "pending" ? "pending" : "failure");

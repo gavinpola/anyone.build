@@ -47,7 +47,7 @@ export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
           <span className="text-accent">New block</span>
         ) : (
           <>
-            <span className="text-accent">{r.target.blockTitle ?? r.target.blockId ?? "wall"}</span>
+            <span className="text-accent">{r.target.blockId === "__canvas__" ? "The wall itself" : (r.target.blockTitle ?? r.target.blockId ?? "wall")}</span>
             {r.target.tag ? <span> · {`<${r.target.tag}>`}</span> : null}
             <span className="opacity-70"> · {r.target.path.replace("src/rooms/main/blocks/", "")}:{r.target.line}</span>
           </>

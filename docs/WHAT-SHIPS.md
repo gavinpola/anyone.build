@@ -65,6 +65,8 @@ Every build has a ceiling. The coder stops when it hits its token, step, or budg
 | a sign-in form that collects emails | reject, unsafe | harvesting PII / phishing shape |
 | delete everyone else's blocks | reject, destroys_others_work | no fair reason given |
 | make me an admin / change the rules | reject, out_of_bounds | the header, feed, and judge aren't editable |
+| make the wall darker / more spaced out / wilder shapes | auto-ship, small | the wall itself is a file (`src/rooms/main/canvas.ts`): background, gap, radius, columns, shape palette, tilt. Point at the gaps to target it |
+| make this block round / tilt it / put it in the corner | auto-ship, tiny | a block's shape, span, tilt, and free placement are fields in its own meta |
 | dark mode for the whole site | reject out_of_bounds, or a proposal | the header and chrome are off-limits; the judge may instead propose the wall's blocks going dark. Never an auto-ship. A dark-mode *block* just ships |
 | embed a YouTube video | reject with advice | iframe is banned; "describe what you want instead" |
 | flash the screen red rapidly | reject, unsafe | seizure risk |

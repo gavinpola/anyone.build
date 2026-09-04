@@ -1,12 +1,12 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-04T03:29:23.608Z",
+  "generatedAt": "2026-09-04T05:43:26.328Z",
   "blocks": [
     {
       "id": "hello-wall",
       "title": "Hello",
       "description": "The head of the wall is a game now — tap the brick as fast as you can.",
-      "size": "full",
+      "size": "lg",
       "order": 0,
       "path": "src/rooms/main/blocks/hello-wall.tsx"
     },
@@ -14,7 +14,7 @@
       "id": "welcome-message",
       "title": "Welcome",
       "description": "A small line inviting everyone to add something to the wall.",
-      "size": "full",
+      "size": "md",
       "order": 1,
       "path": "src/rooms/main/blocks/welcome-message.tsx"
     },
@@ -22,7 +22,7 @@
       "id": "hello-note-6e0z",
       "title": "Hello Note",
       "description": "A tiny hello note 6e0z at the bottom of the wall.",
-      "size": "full",
+      "size": "sm",
       "order": 2,
       "path": "src/rooms/main/blocks/hello-note-6e0z.tsx"
     },
@@ -30,7 +30,7 @@
       "id": "thanks-for-visiting",
       "title": "Thanks for visiting",
       "description": "A small note thanking anyone who stops by the wall.",
-      "size": "full",
+      "size": "md",
       "order": 2,
       "path": "src/rooms/main/blocks/thanks-for-visiting.tsx"
     },
@@ -38,9 +38,25 @@
       "id": "electric-message",
       "title": "Electric",
       "description": "A short spark of a message on the wall.",
-      "size": "full",
+      "size": "md",
       "order": 3,
       "path": "src/rooms/main/blocks/electric-message.tsx"
+    },
+    {
+      "id": "dino-game",
+      "title": "Dino dash",
+      "description": "A tiny side-scrolling dino game on the wall. Jump the cacti!",
+      "size": "full",
+      "order": 4,
+      "path": "src/rooms/main/blocks/dino-game.tsx"
+    },
+    {
+      "id": "collaborative-art",
+      "title": "Open canvas",
+      "description": "One glowing canvas for the whole wall — every stroke shows up for everyone, live.",
+      "size": "full",
+      "order": 5,
+      "path": "src/rooms/main/blocks/collaborative-art.tsx"
     }
   ],
   "pages": []

@@ -68,6 +68,10 @@ export function resolveTarget(el: Element | null): PickerTarget | null {
   }
   const frame = node.closest<HTMLElement>("[data-ab-block]");
   const isNew = frame?.dataset.abBlock === "__new__";
+  if (frame?.dataset.abBlock === "__canvas__" && node.closest("[data-ab-block]") === frame) {
+    // a click in the gaps between blocks: the wall itself (its background, spacing, shapes, flow)
+    return { path: frame.dataset.abPath ?? "src/rooms/main/canvas.ts", line: 1, blockId: "__canvas__", blockTitle: "The wall itself", tag: "canvas", text: undefined, rect: frame.getBoundingClientRect(), element: frame, granularity: "block" };
+  }
   const stamp = frameOnly || isNew ? `${frame?.dataset.abPath ?? ""}:${isNew ? 0 : 1}` : (node.dataset.ab ?? "");
   const i = stamp.lastIndexOf(":");
   const path = stamp.slice(0, i);

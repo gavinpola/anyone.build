@@ -23,7 +23,8 @@
     "smoke": "playwright test",
     "sync:manifest": "node scripts/gen-manifest.mjs",
     "e2e": "E2E_URL=http://127.0.0.1:5173 playwright test tests/e2e",
-    "sync:constitution": "node scripts/sync-constitution.mjs"
+    "sync:constitution": "node scripts/sync-constitution.mjs",
+    "playtest": "playwright test --config playwright.blocks.config.ts"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.12.5",

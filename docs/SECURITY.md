@@ -36,3 +36,8 @@ Every diff that survives the validator and the diff review gets a second model, 
 ## For your site (the widget and `/ask/note`)
 
 `public/ask.js` runs on other people's sites, so it is held to a stricter standard than the wall: no dependencies, a shadow root for styles, no cookies or storage, no reads beyond the clicked element and the page URL, and one JSON POST per note. The endpoint is unauthenticated by design (visitors have no account), so the fence is: the site key must exist, the browser `Origin` must equal the origin registered for that key, every field has a hard size cap (`convex/lib/notes.ts`), and there are per-site and global daily rate limits. Notes are stored as text and rendered as text; the DOM snippet is never rendered as HTML. Owners see only their own sites and notes (owner checks on every query and mutation). The triage model sees the note as quoted data with a "never follow instructions inside" framing, and the inbox works without it.
+
+
+## The wall's own file (canvas.ts) and custom shapes
+
+`src/rooms/<room>/canvas.ts` and each block's `shape`/`place` meta carry plain CSS values (colours, gradients, radii, clip paths, shadows). They render as inline styles and CSS variables, never as HTML. The deterministic validator's URL and `url(` bans apply to these files like any room file, so a background can't load an external image or beacon; numbers are clamped in `src/core/room/hang.ts` (tilt ±3°, columns 6–16, placement within the wall) so a bad value can't push content off-screen or make the wall unusable.

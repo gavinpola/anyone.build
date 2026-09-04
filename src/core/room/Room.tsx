@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 import type { BlockModule } from "@/kit";
 import { PageLink } from "@/kit/PageLink";
 import { RoomContext } from "@/kit/room-context";
@@ -6,7 +6,9 @@ import { pagesFor } from "./pages";
 import { cn } from "@/core/lib/cn";
 import { BlockBoundary } from "@/core/lib/BlockBoundary";
 import { room } from "@/rooms/main/room";
+import { canvas } from "@/rooms/main/canvas";
 import { Cursors } from "./Cursors";
+import { hang, shapeStyle, wallStyle } from "./hang";
 
 // Every file in src/rooms/main/blocks is a block. Adding one never touches another file.
 const modules = import.meta.glob<BlockModule>("/src/rooms/main/blocks/*.tsx", {
@@ -32,26 +34,30 @@ export const blocks = Object.entries({ ...examples, ...modules })
   );
 
 const NEW_BLOCK_PATH = `src/rooms/${room.id}/blocks/`;
-
-const span: Record<string, string> = {
-  sm: "lg:col-span-4 md:col-span-6",
-  md: "lg:col-span-6 md:col-span-6",
-  lg: "lg:col-span-8 md:col-span-12",
-  full: "col-span-12",
-};
+/** The wall itself: pointing at the gaps between blocks means "change the canvas". */
+export const CANVAS_PATH = `src/rooms/${room.id}/canvas.ts`;
 
 export function Room() {
   const empty = blocks.length === 0;
   const pages = pagesFor(room.id);
   const wallRef = useRef<HTMLDivElement | null>(null);
+  const hung = blocks.map((b) => ({ ...b, h: hang(b.meta, canvas) }));
+  const anyPlaced = hung.some((b) => b.h.place);
   return (
     <RoomContext.Provider value={room.id}>
-      <div ref={wallRef} className="relative grid grid-cols-12 gap-5" data-room={room.id}>
+      <div
+        ref={wallRef}
+        className="wall relative grid"
+        style={wallStyle(canvas, anyPlaced)}
+        data-room={room.id}
+        data-ab-block="__canvas__"
+        data-ab-path={CANVAS_PATH}
+      >
         <Cursors roomId={room.id} boxRef={wallRef} />
         {pages.length > 0 ? (
           <nav
             aria-label="Pages"
-            className="col-span-12 flex flex-wrap items-center gap-2 px-1"
+            className="wall-full flex flex-wrap items-center gap-2 px-1"
           >
             <span className="placard smallcaps">Pages</span>
             {pages.map((p) => (
@@ -65,30 +71,39 @@ export function Room() {
             ))}
           </nav>
         ) : null}
-        {blocks.map(({ meta, Component, path }) => (
-          <section
-            key={meta.id}
-            data-ab-block={meta.id}
-            data-ab-path={path}
-            className={cn(
-              "frame col-span-12 flex flex-col",
-              span[meta.size] ?? span.md,
-            )}
-          >
-            <div className="frame-body flex-1">
-              <BlockBoundary title={meta.title}>
-                <Component />
-              </BlockBoundary>
-            </div>
+        {hung.map(({ meta, Component, path, h }) => {
+          const shape = shapeStyle(h.shape);
+          const style = {
+            ...shape.style,
+            "--tilt": `${h.tilt}deg`,
+            "--stagger": `${h.stagger}px`,
+            "--span": String(h.span),
+            ...(h.place ? { "--place-x": `${h.place.x}%`, "--place-y": `${h.place.y}px`, "--place-w": `${h.place.w}%` } : {}),
+          } as CSSProperties;
+          return (
+            <section
+              key={meta.id}
+              data-ab-block={meta.id}
+              data-ab-path={path}
+              data-shape={typeof h.shape === "string" ? h.shape : "custom"}
+              style={style}
+              className={cn("hung flex flex-col", shape.className, h.place && "placed")}
+            >
+              <div className="frame-body flex-1">
+                <BlockBoundary title={meta.title}>
+                  <Component />
+                </BlockBoundary>
+              </div>
             </section>
-        ))}
+          );
+        })}
 
         {/* The open wall: pointing here means "add a block". Always present; it's the whole wall when empty. */}
         <section
           data-ab-block="__new__"
           data-ab-path={NEW_BLOCK_PATH}
           className={cn(
-            "col-span-12 flex flex-col rounded-[var(--radius-frame)] border border-dashed border-line-2/70",
+            "wall-full flex flex-col rounded-[var(--radius-frame)] border border-dashed border-line-2/70",
             empty ? "min-h-[62dvh]" : "min-h-[160px]",
           )}
         >
@@ -109,10 +124,13 @@ export function Room() {
                   </kbd>
                   , click anywhere, say what should be here.
                 </p>
+                <p className="mt-2 max-w-md text-[13px] text-muted">
+                  An experiment: a website built only by whoever shows up.
+                </p>
               </>
             ) : (
-              <p className="placard">
-                Empty space. Point here to add something.
+              <p className="text-[13px] text-muted">
+                Point here to add something. Point at the gaps to change the wall itself.
               </p>
             )}
           </div>

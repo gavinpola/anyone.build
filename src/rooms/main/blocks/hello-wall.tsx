@@ -7,7 +7,9 @@ export const block: BlockMeta = {
   title: "Hello",
   description: "The head of the wall is a game now — tap the brick as fast as you can.",
   order: 0,
-  size: "full",
+  size: "lg",
+  shape: "soft",
+  tilt: 0.4,
 };
 
 const GAME_SECONDS = 15;
