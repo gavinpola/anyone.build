@@ -7,7 +7,7 @@ export const block: BlockMeta = {
   description: "A small note thanking anyone who stops by the wall.",
   order: 2,
   size: "md",
-  shape: "round",
+  shape: "square",
   tilt: 0.8,
 };
 
