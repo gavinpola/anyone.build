@@ -14,10 +14,12 @@ export const block: BlockMeta = {
 
 const W = 960;
 const H = 420;
-const BRUSH = 4;
-const ERASER_R = 14; // world px around the pointer that the eraser rubs out
+const SIZE_MIN = 2; // world px — smallest brush/eraser radius
+const SIZE_MAX = 40; // world px — largest brush/eraser radius
 const MAX_STROKES = 200;
 const MAX_POINTS = 90;
+
+const clampSize = (n: number) => Math.max(SIZE_MIN, Math.min(SIZE_MAX, Math.round(n)));
 
 const COLORS = ["#ff4d6d", "#ffd84d", "#4dff88", "#4dd8ff", "#b44dff", "#ffffff"];
 
@@ -32,19 +34,38 @@ export default function CollaborativeArt() {
   const { signedIn } = useViewer();
   const [color, setColor] = useState<string>(COLORS[0] ?? "#ff4d6d");
   const [tool, setTool] = useState<"brush" | "eraser">("brush");
+  const [brushSize, setBrushSize] = useState(4); // world px radius of the brush
+  const [eraserSize, setEraserSize] = useState(14); // world px radius of the eraser
+  const [pointer, setPointer] = useState<{ fx: number; fy: number } | null>(null);
+  const size = tool === "eraser" ? eraserSize : brushSize;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const toolRef = useRef(tool);
   const drawingRef = useRef(false);
   const lastRef = useRef<Pt | null>(null);
   const localRef = useRef<Stroke | null>(null);
   const docsRef = useRef(docs);
-  const erasedRef = useRef(new Set<string>()); // strokes rubbed out locally, ahead of the server
-  const eraseBatchRef = useRef(new Set<string>()); // keys to send when the drag ends
+  const modRef = useRef(new Map<string, Stroke[]>()); // key -> replacement segments ([] = fully erased), previewed locally
   useEffect(() => {
     docsRef.current = docs;
     const live = new Set(docs.map((d) => d.key));
-    for (const k of erasedRef.current) if (!live.has(k)) erasedRef.current.delete(k);
+    for (const k of modRef.current.keys()) if (!live.has(k)) modRef.current.delete(k);
   }, [docs]);
+
+  // scroll wheel resizes the active tool while hovering the canvas (non-passive, so the page doesn't scroll)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const dir = e.deltaY < 0 ? 1 : -1;
+      const step = e.shiftKey ? 4 : 1;
+      if (toolRef.current === "eraser") setEraserSize((s) => clampSize(s + dir * step));
+      else setBrushSize((s) => clampSize(s + dir * step));
+    };
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+  }, []);
 
   const drawStroke = useCallback((ctx: CanvasRenderingContext2D, s: Stroke) => {
     ctx.shadowColor = s.color;
@@ -89,7 +110,11 @@ export default function CollaborativeArt() {
       ctx.lineTo(W, y);
     }
     ctx.stroke();
-    for (const d of docs) if (!erasedRef.current.has(d.key)) drawStroke(ctx, d.value);
+    for (const d of docs) {
+      const segs = modRef.current.get(d.key);
+      if (segs) for (const s of segs) drawStroke(ctx, s);
+      else drawStroke(ctx, d.value);
+    }
     if (localRef.current) drawStroke(ctx, localRef.current);
   }, [docs, drawStroke]);
 
@@ -121,27 +146,29 @@ export default function CollaborativeArt() {
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const p = getPos(e);
+    setPointer({ fx: p.x / W, fy: p.y / H });
     drawingRef.current = true;
     if (tool === "eraser") {
       eraseAt(p);
       return;
     }
     lastRef.current = p;
-    localRef.current = { color, width: BRUSH, points: [p] };
+    localRef.current = { color, width: brushSize, points: [p] };
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) {
       ctx.fillStyle = color;
       ctx.shadowColor = color;
       ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, BRUSH / 2, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, brushSize / 2, 0, Math.PI * 2);
       ctx.fill();
     }
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawingRef.current) return;
     const p = getPos(e);
+    setPointer({ fx: p.x / W, fy: p.y / H });
+    if (!drawingRef.current) return;
     if (tool === "eraser") {
       eraseAt(p);
       return;
@@ -188,44 +215,56 @@ export default function CollaborativeArt() {
     if (s && s.points.length > 0) commit(s);
   };
 
-  /** Distance from p to the stroke's polyline (a single point is a dot). */
-  const distanceTo = (s: Stroke, p: Pt): number => {
-    const pts = s.points;
-    if (pts.length === 0) return Infinity;
-    const first = pts[0]!;
-    if (pts.length === 1) return Math.hypot(p.x - first.x, p.y - first.y);
-    let best = Infinity;
-    let a = first;
-    for (const b of pts.slice(1)) {
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const len2 = dx * dx + dy * dy || 1;
-      const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
-      const d = Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
-      if (d < best) best = d;
-      a = b;
+  /** Split a stroke into the segments that survive an eraser centred at p ([] = nothing survives). */
+  const cutStroke = (s: Stroke, p: Pt, r: number): Stroke[] => {
+    const segs: Stroke[] = [];
+    let run: Pt[] = [];
+    for (const pt of s.points) {
+      if (Math.hypot(pt.x - p.x, pt.y - p.y) <= r) {
+        if (run.length > 0) {
+          segs.push({ color: s.color, width: s.width, points: run });
+          run = [];
+        }
+      } else {
+        run.push(pt);
+      }
     }
-    return best;
+    if (run.length > 0) segs.push({ color: s.color, width: s.width, points: run });
+    return segs;
   };
 
-  /** Rub out every stroke under the eraser at p: gone from the canvas at once, sent when the drag ends. */
+  /** Rub out the part of every stroke under the circular eraser at p — previewed instantly, sent when the drag ends. */
   const eraseAt = (p: Pt) => {
     let hit = false;
     for (const d of docsRef.current) {
-      if (erasedRef.current.has(d.key)) continue;
-      if (distanceTo(d.value, p) <= d.value.width / 2 + ERASER_R) {
-        erasedRef.current.add(d.key);
-        eraseBatchRef.current.add(d.key);
-        hit = true;
-      }
+      if (modRef.current.has(d.key)) continue;
+      const segs = cutStroke(d.value, p, eraserSize + d.value.width / 2);
+      const intact = segs.length === 1 && segs[0]!.points.length === d.value.points.length;
+      if (intact) continue;
+      modRef.current.set(d.key, segs);
+      hit = true;
     }
     if (hit) redraw();
   };
 
   const flushErase = () => {
-    if (eraseBatchRef.current.size === 0) return;
-    removeMany(Array.from(eraseBatchRef.current));
-    eraseBatchRef.current.clear();
+    if (modRef.current.size === 0) return;
+    const entries = Array.from(modRef.current);
+    modRef.current = new Map();
+    const toRemove: string[] = [];
+    const toPut: [string, Stroke][] = [];
+    for (const [key, segs] of entries) {
+      toRemove.push(key);
+      for (const s of segs) toPut.push([makeKey(), s]);
+    }
+    removeMany(toRemove);
+    for (const [k, s] of toPut) put(k, s);
+    // splitting a stroke adds strokes, so keep only the newest ~MAX_STROKES
+    const excess = docsRef.current.length - toRemove.length + toPut.length - MAX_STROKES;
+    if (excess > 0) {
+      const sorted = [...docsRef.current].sort((a, b) => a.at - b.at);
+      for (const d of sorted.slice(0, excess)) remove(d.key);
+    }
   };
 
   return (
@@ -233,7 +272,7 @@ export default function CollaborativeArt() {
       <Stack gap={1}>
         <Text className="placard smallcaps text-muted">open canvas — everyone draws here</Text>
         <Text className="max-w-2xl">
-          One canvas for the whole wall. Pick a color, draw a stroke, and it appears for everyone in real time. Anyone can erase, too.
+          One canvas for the whole wall. Pick a color and paint — every stroke appears for everyone in real time. A circular eraser rubs out only the part you touch.
         </Text>
       </Stack>
 
@@ -243,12 +282,29 @@ export default function CollaborativeArt() {
           width={W}
           height={H}
           className={cn("block h-auto w-full touch-none", tool === "eraser" ? "cursor-cell" : "cursor-crosshair")}
-          aria-label="Collaborative drawing canvas. Draw with your mouse or finger."
+          aria-label="Collaborative drawing canvas. Draw or erase with your mouse or finger; scroll to resize your tool."
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          onPointerLeave={() => setPointer(null)}
         />
+        {pointer && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute rounded-full border"
+            style={{
+              left: `${pointer.fx * 100}%`,
+              top: `${pointer.fy * 100}%`,
+              width: `${(size * 2 * 100) / W}%`,
+              paddingTop: `${(size * 2 * 100) / W}%`,
+              transform: "translate(-50%, -50%)",
+              borderColor: tool === "eraser" ? "rgba(255,255,255,0.7)" : color,
+              backgroundColor: tool === "eraser" ? "rgba(255,255,255,0.15)" : `${color}22`,
+              boxShadow: "0 0 0 1px rgba(0,0,0,0.3)",
+            }}
+          />
+        )}
         {!signedIn && (
           <div className="pointer-events-none absolute inset-x-0 flex justify-center pt-3">
             <span className="rounded-full border border-line bg-[#0d0b09]/80 px-3 py-1 text-[12px] text-[#f4efe3]/80">
@@ -258,32 +314,52 @@ export default function CollaborativeArt() {
         )}
       </div>
 
-      <Row gap={2} className="justify-between">
-        <Row gap={2}>
-          {COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-label={`draw in ${c}`}
-              onClick={() => {
-                setColor(c);
-                setTool("brush");
+      <Row gap={3} className="flex-wrap items-center justify-between">
+        <Row gap={3} className="flex-wrap items-center">
+          <Row gap={2}>
+            {COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`draw in ${c}`}
+                onClick={() => {
+                  setColor(c);
+                  setTool("brush");
+                }}
+                aria-pressed={tool === "brush" && color === c}
+                className={cn(
+                  "h-7 w-7 rounded-full border transition",
+                  tool === "brush" && color === c ? "scale-110 border-white/80" : "border-white/20 hover:scale-105",
+                )}
+                style={{ backgroundColor: c, boxShadow: tool === "brush" && color === c ? `0 0 12px ${c}` : undefined }}
+              />
+            ))}
+          </Row>
+          <label className="flex items-center gap-2 text-[12px] text-muted">
+            <span className="whitespace-nowrap">{tool === "eraser" ? "eraser" : "brush"} size</span>
+            <input
+              type="range"
+              min={SIZE_MIN}
+              max={SIZE_MAX}
+              value={size}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (tool === "eraser") setEraserSize(v);
+                else setBrushSize(v);
               }}
-              aria-pressed={tool === "brush" && color === c}
-              className={cn(
-                "h-7 w-7 rounded-full border transition",
-                tool === "brush" && color === c ? "scale-110 border-white/80" : "border-white/20 hover:scale-105",
-              )}
-              style={{ backgroundColor: c, boxShadow: tool === "brush" && color === c ? `0 0 12px ${c}` : undefined }}
+              aria-label={`${tool} radius, ${SIZE_MIN} to ${SIZE_MAX} pixels`}
+              className="w-24 sm:w-32"
+              style={{ accentColor: "#f4efe3" }}
             />
-          ))}
+            <span className="w-8 text-right text-[12px] tabular-nums text-ink">{size}px</span>
+          </label>
         </Row>
         <button
           type="button"
           aria-label="eraser"
           aria-pressed={tool === "eraser"}
           onClick={() => setTool("eraser")}
-          title="Eraser: rub out any stroke, anyone's"
+          title="Eraser: rub out parts of any stroke, anyone's"
           className={cn(
             "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[12px] transition",
             tool === "eraser" ? "border-ink bg-ink text-paper" : "border-line text-ink-2 hover:border-line-2",
@@ -295,7 +371,7 @@ export default function CollaborativeArt() {
       </Row>
 
       <Text muted className="text-sm text-muted">
-        {"brush or eraser, it's everyone's canvas"}
+        {"brush or eraser, it's everyone's canvas — scroll the canvas or drag the slider to resize your tool"}
       </Text>
 
       <Row gap={2} className="text-[13px]">
