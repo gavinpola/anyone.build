@@ -169,6 +169,12 @@ test("a signed-out visitor's stroke on the open canvas survives a reload", async
   await expect
     .poll(async () => Number((await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? NaN), { timeout: 15_000 })
     .not.toBe(Number(before) + 1);
+  // and undo puts it back exactly as it was
+  await block.getByRole("button", { name: "undo erase" }).click();
+  await expect
+    .poll(async () => Number((await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? NaN), { timeout: 15_000 })
+    .toBe(Number(before) + 1);
+  await expect(block.getByRole("button", { name: "undo erase" })).toHaveCount(0);
 });
 
 test("anyone can erase anyone's stroke: a second visitor rubs out the first one's", async ({ browser }) => {

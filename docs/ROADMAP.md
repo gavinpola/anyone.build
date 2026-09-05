@@ -124,7 +124,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] A "?" bottom-right: "Hold ⇧⌘ and point at anything, then say what should change…" with "The full story" opening the help panel (`helpStore`).
 - [x] While pointing (chord or Change), the map, the pages strip and the "?" fade and let pointer events through; the bar keeps the cancel. e2e: a marquee started over the map reaches the canvas.
 - [x] The open canvas has an eraser instead of Clear: `open:` store namespaces are whiteboards (anyone erases anything), `store.removeMany` batches a drag's deletes under a `storeErase` bucket, the legacy strokes are adopted (never deleted) by an hourly one-off cron.
-- [ ] NEXT: undo the last erase (keep a short local tombstone list and re-put). (The adopt cron is deleted: the legacy namespace emptied; the facts-in-placard half shipped 2026-09-05.)
+- [x] Undo the last erase (2026-09-05: the tab that erased keeps one tombstone, the strokes removed and the pieces added; an "undo" button beside the eraser puts the strokes back under their old keys and removes the pieces, once). (The adopt cron is deleted: the legacy namespace emptied; the facts-in-placard half shipped the same day.)
 
 ## Rounds and the hourly frame (Gavin, 2026-09-04: "maybe it's every 3 hours… and the wall every hour isn't working")
 - [x] Proposals run in three-hour rounds (UTC 00:37, 03:37, …): the most-wanted one is built, every other proposal expires and the board starts over. The board shows "round ends in 1h 12m" (`convex/lib/rounds.ts`, shared by the cron and the client; unit-tested).

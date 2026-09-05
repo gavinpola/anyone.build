@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Row, Stack, Text, cn, useArtPreview, useNow, useStore, useViewer } from "@/kit";
 import type { BlockMeta } from "@/kit";
 import { motion } from "motion/react";
-import { Eraser } from "lucide-react";
+import { Eraser, Undo2 } from "lucide-react";
 
 export const block: BlockMeta = {
   id: "collaborative-art",
@@ -57,6 +57,9 @@ export default function CollaborativeArt() {
   const [brushSize, setBrushSize] = useState(4); // world px radius of the brush
   const [eraserSize, setEraserSize] = useState(14); // world px radius of the eraser
   const [pointer, setPointer] = useState<{ fx: number; fy: number } | null>(null);
+  // one level of undo for the last erase made in this tab: the strokes it removed and the pieces it added
+  const lastEraseRef = useRef<{ removed: [string, Stroke][]; added: string[] } | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
   const size = tool === "eraser" ? eraserSize : brushSize;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -295,6 +298,15 @@ export default function CollaborativeArt() {
       toRemove.push(key);
       for (const s of segs) toPut.push([makeKey(), s]);
     }
+    // remember what this erase did, so it can be undone once
+    const originals = new Map(docsRef.current.map((d) => [d.key, d.value] as [string, Stroke]));
+    const removed: [string, Stroke][] = [];
+    for (const key of toRemove) {
+      const v = originals.get(key);
+      if (v) removed.push([key, v]);
+    }
+    lastEraseRef.current = { removed, added: toPut.map(([k]) => k) };
+    setCanUndo(true);
     removeMany(toRemove);
     for (const [k, s] of toPut) put(k, s);
     // splitting a stroke adds strokes, so keep only the newest ~MAX_STROKES
@@ -303,6 +315,17 @@ export default function CollaborativeArt() {
       const sorted = [...docsRef.current].sort((a, b) => a.at - b.at);
       for (const d of sorted.slice(0, excess)) remove(d.key);
     }
+  };
+
+  /** Put back what the last erase took (the pieces it left behind go), once. */
+  const undoErase = () => {
+    const u = lastEraseRef.current;
+    if (!u) return;
+    lastEraseRef.current = null;
+    setCanUndo(false);
+    markTouched();
+    if (u.added.length > 0) removeMany(u.added);
+    for (const [k, stroke] of u.removed) put(k, stroke);
   };
 
   return (
@@ -406,6 +429,18 @@ export default function CollaborativeArt() {
           <Eraser size={13} />
           erase
         </button>
+        {canUndo ? (
+          <button
+            type="button"
+            aria-label="undo erase"
+            onClick={undoErase}
+            title="Put back what the last erase took"
+            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-line px-2.5 text-[12px] text-ink-2 transition hover:border-line-2"
+          >
+            <Undo2 size={13} />
+            undo
+          </button>
+        ) : null}
       </Row>
 
       <Text muted className="text-sm text-muted">
