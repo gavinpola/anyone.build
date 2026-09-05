@@ -347,7 +347,7 @@ body[data-picking] .canvas-add { border-color: var(--accent); background: color-
 }
 .canvas-world[data-grid="dots"] { background-color: var(--paper-2); background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px); background-size: 22px 22px; }
 .canvas-world[data-grid="lines"] { background-color: var(--paper-2); background-image: linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; }
-[data-skin="instrument"] .canvas-world { background: transparent !important; border-radius: 0; }
+[data-skin="instrument"] .canvas-world { border-radius: 0; } /* the ground (dots) is painted on the world itself now; the viewport beyond it is the dark letterbox */
 [data-skin="instrument"] .canvas-world::after { display: none; }
 .heat { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; transition: background-image 600ms ease; }
 .minimap {
