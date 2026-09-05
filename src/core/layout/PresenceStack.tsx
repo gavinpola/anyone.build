@@ -1,6 +1,6 @@
-import { useQuery } from "convex/react";
+
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { tabSessionId } from "@/core/lib/session";
 import { useLiveStats } from "@/core/lib/useLiveStats";
 
@@ -9,7 +9,7 @@ const initials = (s: string | null) => (s ? s.replace(/^guest[- ·]*/i, "g").sli
 /** Who's here, as an avatar stack: only the people whose cursors are on the wall right now. The count beside it says how many in all. */
 export function PresenceStack() {
   const stats = useLiveStats();
-  const peers = useQuery(api.cursors.active, hasConvex ? { roomId: "main", sessionId: tabSessionId() } : "skip") ?? [];
+  const peers = useQuerySafe(api.cursors.active, hasConvex ? { roomId: "main", sessionId: tabSessionId() } : "skip") ?? [];
   const others = Math.max(0, stats.online - 1);
   const shown = peers.slice(0, Math.min(3, others));
   if (shown.length === 0) return null;

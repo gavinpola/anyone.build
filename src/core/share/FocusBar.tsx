@@ -1,8 +1,8 @@
 import { Component, useEffect, type ReactNode } from "react";
-import { useQuery } from "convex/react";
+
 import { Link } from "@tanstack/react-router";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { Avatar } from "@/core/feed/RequestCard";
 import { ShareButton, shareUrl } from "./ShareButton";
 
@@ -19,7 +19,7 @@ export function FocusBar({ id, kind }: { id: string; kind: "c" | "p" }) {
 }
 
 function Inner({ id, kind }: { id: string; kind: "c" | "p" }) {
-  const d = useQuery(api.share.request, hasConvex ? { id } : "skip");
+  const d = useQuerySafe(api.share.request, hasConvex ? { id } : "skip");
   const blockId = d?.primaryBlockId ?? null;
   useEffect(() => {
     if (!d) return;

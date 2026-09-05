@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "convex/react";
+
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { Avatar } from "@/core/feed/RequestCard";
 import { cn } from "@/core/lib/cn";
 
@@ -31,7 +31,7 @@ export function BuildersSection() {
 }
 
 function Board({ period, metric, title }: { period: Period; metric: "changes" | "lines"; title: string }) {
-  const rows = useQuery(api.leaderboard.top, hasConvex ? { period, metric, limit: 10 } : "skip");
+  const rows = useQuerySafe(api.leaderboard.top, hasConvex ? { period, metric, limit: 10 } : "skip");
   const value = (r: NonNullable<typeof rows>[number]) =>
     metric === "changes" ? (period === "week" ? (r.weekChanges ?? 0) : r.liveChanges) : period === "week" ? (r.weekLines ?? 0) : r.linesChanged;
   const max = Math.max(1, ...(rows ?? []).map(value));

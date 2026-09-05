@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { useViewer } from "@/core/auth/useViewer";
 import { timeAgo } from "@/core/lib/useNow";
 import { Avatar } from "@/core/feed/RequestCard";
@@ -31,7 +31,7 @@ export function AdminPage() {
 
 /** The numbers, without anyone's words: outcomes over the last 7 days from stats.outcomes. */
 function HowItsGoing() {
-  const o = useQuery(api.stats.outcomes, hasConvex ? { days: 7 } : "skip");
+  const o = useQuerySafe(api.stats.outcomes, hasConvex ? { days: 7 } : "skip");
   const rows = (rec: Record<string, number>) => Object.entries(rec).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
   return (
     <section data-how-its-going>
@@ -82,7 +82,7 @@ function HowItsGoing() {
 
 /** Failed builds, with one click to rebuild under the same requester and verdict. */
 function FailedBuilds() {
-  const rows = useQuery(api.admin.failedRecent, hasConvex ? {} : "skip");
+  const rows = useQuerySafe(api.admin.failedRecent, hasConvex ? {} : "skip");
   const rebuild = useMutation(api.admin.rebuild);
   const [busy, setBusy] = useState<string | null>(null);
   return (
@@ -125,7 +125,7 @@ function FailedBuilds() {
 }
 
 function NeedsHuman() {
-  const rows = useQuery(api.admin.needsHuman, hasConvex ? {} : "skip");
+  const rows = useQuerySafe(api.admin.needsHuman, hasConvex ? {} : "skip");
   const decide = useMutation(api.requests.decide);
   return (
     <section>
@@ -172,7 +172,7 @@ function NeedsHuman() {
 }
 
 function Flagged() {
-  const rows = useQuery(api.flags.flagged, hasConvex ? {} : "skip");
+  const rows = useQuerySafe(api.flags.flagged, hasConvex ? {} : "skip");
   const revert = useMutation(api.admin.revert);
   return (
     <section>
@@ -222,7 +222,7 @@ const EDITABLE: Array<{ key: string; label: string; kind: "number" | "text" | "b
 ];
 
 function Spend() {
-  const c = useQuery(api.admin.costs, hasConvex ? {} : "skip");
+  const c = useQuerySafe(api.admin.costs, hasConvex ? {} : "skip");
   const $ = (cents: number) => "$" + (cents / 100).toFixed(2);
   return (
     <section>
@@ -271,7 +271,7 @@ function Spend() {
 }
 
 function Config() {
-  const all = useQuery(api.config.all_public, hasConvex ? {} : "skip");
+  const all = useQuerySafe(api.config.all_public, hasConvex ? {} : "skip");
   const set = useMutation(api.config.set);
   const [draft, setDraft] = useState<Record<string, string>>({});
   return (

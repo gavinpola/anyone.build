@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { useViewer } from "./useViewer";
 import { friendlyError } from "@/core/lib/errors";
 
 /** After signing in: credit what this browser did as a guest. One line, one button, then gone. */
 export function ClaimPrompt() {
   const viewer = useViewer();
-  const claimable = useQuery(api.users.claimable, hasConvex && viewer.signedIn ? { guestId: viewer.guestId } : "skip");
+  const claimable = useQuerySafe(api.users.claimable, hasConvex && viewer.signedIn ? { guestId: viewer.guestId } : "skip");
   const claim = useMutation(api.users.claim);
   const [done, setDone] = useState<{ requests: number; changes: number } | null>(null);
   const [error, setError] = useState<string | null>(null);

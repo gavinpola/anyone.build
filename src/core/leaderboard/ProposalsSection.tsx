@@ -1,8 +1,8 @@
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { ArrowBigUp } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { timeAgo } from "@/core/lib/useNow";
 import { useViewer } from "@/core/auth/useViewer";
 import { cn } from "@/core/lib/cn";
@@ -13,7 +13,7 @@ import { untilRoundEnd } from "../../../convex/lib/rounds";
 
 /** "Up for a vote": safe-but-big asks the crowd decides on, in three-hour rounds: the top one is built, the rest start over. */
 export function ProposalsSection() {
-  const rows = useQuery(api.proposals.list, hasConvex ? { limit: 100 } : "skip");
+  const rows = useQuerySafe(api.proposals.list, hasConvex ? { limit: 100 } : "skip");
   const vote = useMutation(api.proposals.vote);
   const viewer = useViewer();
   const now = useNow(30_000);

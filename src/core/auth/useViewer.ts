@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { authClient, devAnonAuth } from "./auth-client";
 import { guestId } from "@/core/lib/session";
 
@@ -36,7 +36,7 @@ function useViewerMock(): ViewerState {
 
 // --- convex + better auth ---
 function useViewerConvex(): ViewerState {
-  const me = useQuery(api.users.viewer, {});
+  const me = useQuerySafe(api.users.viewer, {});
   const touch = useMutation(api.users.touch);
   const signedIn = Boolean(me);
   return {

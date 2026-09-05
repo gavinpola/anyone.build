@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "convex/react";
+
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { useNow } from "@/core/lib/useNow";
 import { useLiveStats } from "@/core/lib/useLiveStats";
 import { BidDialog } from "./BidDialog";
@@ -19,8 +19,8 @@ function countdown(to: number, now: number) {
 
 /** The right-hand column of the leaderboard: today's patron, tomorrow's auction, three answers. */
 export function PatronColumn() {
-  const board = useQuery(api.patrons.board, hasConvex ? {} : "skip");
-  const history = useQuery(api.patrons.history, hasConvex ? { limit: 7 } : "skip");
+  const board = useQuerySafe(api.patrons.board, hasConvex ? {} : "skip");
+  const history = useQuerySafe(api.patrons.history, hasConvex ? { limit: 7 } : "skip");
   // only days someone actually won; an empty slate says nothing rather than "nobody"
   const won = (history ?? []).filter((d) => d.winner);
   const stats = useLiveStats();

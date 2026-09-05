@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { makeFunctionReference } from "convex/server";
-import { useMutation, useQuery } from "convex/react";
-import { hasConvex } from "@/core/lib/providers";
+import { useMutation } from "convex/react";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { useRoomId } from "./room-context";
 
 /**
@@ -21,7 +21,7 @@ function refFor<T extends "query" | "mutation">(room: string, fn: string) {
 function useRoomQueryConvex<T>(fn: string, args: Args | "skip"): T | undefined {
   const room = useRoomId();
   const ref = refFor<"query">(room, fn);
-  return useQuery(ref, args === "skip" ? "skip" : args) as T | undefined;
+  return useQuerySafe(ref, args === "skip" ? "skip" : args) as T | undefined;
 }
 function useRoomQueryMock<T>(): T | undefined {
   return undefined;

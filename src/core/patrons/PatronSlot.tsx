@@ -1,14 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 
 const siteUrl = (import.meta.env.VITE_CONVEX_SITE_URL as string | undefined) ?? "";
 const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 /** Today's patron in the header; when there is none, who's leading tomorrow's auction. */
 export function PatronSlot() {
-  const t = useQuery(api.patrons.today, hasConvex ? {} : "skip");
+  const t = useQuerySafe(api.patrons.today, hasConvex ? {} : "skip");
   const p = t?.patron ?? null;
   const leader = t?.leader ?? null;
   if (!p) {

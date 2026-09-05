@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
+
 import { Pause, Play } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { timeAgo, useNow } from "@/core/lib/useNow";
 
 /** The wall, change by change: a timelapse of what the screen looked like after each change. The whole run plays in ten seconds, however many frames. This page can't be changed by the wall. */
 export function TimelapseSection() {
-  const frames = useQuery(api.timelapse.list, hasConvex ? { limit: 96 } : "skip");
+  const frames = useQuerySafe(api.timelapse.list, hasConvex ? { limit: 96 } : "skip");
   const [i, setI] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const n = frames?.length ?? 0;

@@ -36,6 +36,17 @@ jobs:
           set +e
           pnpm exec playwright test --config playwright.blocks.config.ts 2>&1 | tee /tmp/sweep.log
           echo "exit=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Keep what the playtester saw
+        if: steps.play.outputs.exit != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-results
+          path: |
+            test-results/
+            /tmp/sweep.log
+            /tmp/preview.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Open or update the issue
         if: steps.play.outputs.exit != '0'
         env:

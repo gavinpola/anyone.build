@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { useQuery } from "convex/react";
+
 import type { BlockModule } from "@/kit";
 import { PageLink } from "@/kit/PageLink";
 import { RoomContext } from "@/kit/room-context";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { tabSessionId } from "@/core/lib/session";
 import { useNow } from "@/core/lib/useNow";
 import { useRequests } from "@/core/lib/useRequests";
@@ -99,8 +99,8 @@ function useHeights(wallRef: React.RefObject<HTMLDivElement | null>, ids: string
 
 /** Who made each block and when it last changed, plus its decay clock. */
 function useBlockFacts() {
-  const provenance = useQuery(api.leaderboard.blockProvenance, hasConvex ? { roomId: room.id } : "skip") ?? {};
-  const life = useQuery(api.life.list, hasConvex ? { roomId: room.id } : "skip");
+  const provenance = useQuerySafe(api.leaderboard.blockProvenance, hasConvex ? { roomId: room.id } : "skip") ?? {};
+  const life = useQuerySafe(api.life.list, hasConvex ? { roomId: room.id } : "skip");
   const lifeBy = useMemo(() => new Map((life ?? []).map((l) => [l.blockId, l])), [life]);
   return { provenance, lifeBy };
 }
@@ -120,7 +120,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
   const now = useNow(30_000);
   const { provenance, lifeBy } = useBlockFacts();
   const requests = useRequests();
-  const peersQ = useQuery(api.cursors.active, hasConvex ? { roomId: room.id, sessionId: tabSessionId() } : "skip");
+  const peersQ = useQuerySafe(api.cursors.active, hasConvex ? { roomId: room.id, sessionId: tabSessionId() } : "skip");
   const decayOn = Boolean(canvas.decay) && (canvas.decay as number) > 0;
   const skin = canvas.skin ?? "instrument";
   const showAll = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("all");

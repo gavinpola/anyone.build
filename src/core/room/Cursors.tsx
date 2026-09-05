@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { tabSessionId } from "@/core/lib/session";
 import { useLiveStats } from "@/core/lib/useLiveStats";
 import { useViewer } from "@/core/auth/useViewer";
@@ -30,7 +30,7 @@ function CursorsLive({ roomId, boxRef, scale }: { roomId: string; boxRef: RefObj
   const hue = hueFrom(session);
   const viewer = useViewer();
   const name = viewer.signedIn ? viewer.handle : viewer.handle.replace("guest-", "guest · ");
-  const peers = useQuery(api.cursors.active, { roomId, sessionId: session }) ?? [];
+  const peers = useQuerySafe(api.cursors.active, { roomId, sessionId: session }) ?? [];
   const move = useMutation(api.cursors.move);
   const leave = useMutation(api.cursors.leave);
   const last = useRef(0);

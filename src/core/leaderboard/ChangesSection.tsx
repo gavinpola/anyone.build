@@ -1,15 +1,15 @@
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { ArrowBigUp, GitPullRequest } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { timeAgo } from "@/core/lib/useNow";
 import { useViewer } from "@/core/auth/useViewer";
 import { cn } from "@/core/lib/cn";
 import { LEDGER_ROWS, ScrollHint, WhoAsked } from "./Ledger";
 
 export function ChangesSection() {
-  const rows = useQuery(api.votes.recentChanges, hasConvex ? { limit: 50 } : "skip");
+  const rows = useQuerySafe(api.votes.recentChanges, hasConvex ? { limit: 50 } : "skip");
   const toggle = useMutation(api.votes.toggle);
   const viewer = useViewer();
   return (

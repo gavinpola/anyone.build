@@ -1,12 +1,12 @@
-import { useQuery } from "convex/react";
+
 import { Link } from "@tanstack/react-router";
 import { api } from "../../../convex/_generated/api";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { timeAgo, useNow } from "@/core/lib/useNow";
 
 /** A small door to the timelapse page: the latest frame and how many there are. */
 export function TimelapseLink() {
-  const frames = useQuery(api.timelapse.list, hasConvex ? { limit: 1 } : "skip");
+  const frames = useQuerySafe(api.timelapse.list, hasConvex ? { limit: 1 } : "skip");
   const latest = frames?.[frames.length - 1];
   const now = useNow(60_000);
   return (

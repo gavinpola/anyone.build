@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { hasConvex } from "@/core/lib/providers";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 import { useViewer } from "@/core/auth/useViewer";
 import { friendlyError } from "@/core/lib/errors";
 import { cn } from "@/core/lib/cn";
@@ -73,7 +73,7 @@ export function SitesPage() {
 }
 
 function Dashboard() {
-  const sites = useQuery(api.sites.mine, {});
+  const sites = useQuerySafe(api.sites.mine, {});
   const [selected, setSelected] = useState<Id<"sites"> | null>(null);
   const current = sites?.find((s) => s.id === selected) ?? sites?.[0] ?? null;
   return (
@@ -170,14 +170,14 @@ function NewSite({ onCreated }: { onCreated: (id: Id<"sites">) => void }) {
   );
 }
 
-type Site = NonNullable<ReturnType<typeof useQuery<typeof api.sites.mine>>>[number];
+type Site = NonNullable<ReturnType<typeof useQuerySafe<typeof api.sites.mine>>>[number];
 
 function SiteDetail({ site, onRemoved }: { site: Site; onRemoved: () => void }) {
   const remove = useMutation(api.sites.remove);
   const [filter, setFilter] = useState<Status | "all">("new");
   const [copied, setCopied] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const notes = useQuery(api.sites.notes, { siteId: site.id, status: filter === "all" ? undefined : filter });
+  const notes = useQuerySafe(api.sites.notes, { siteId: site.id, status: filter === "all" ? undefined : filter });
   const snippet = snippetFor(site.key);
   const demo = `/ask-demo.html?site=${site.key}${apiUrl ? `&api=${encodeURIComponent(apiUrl)}` : ""}`;
 
@@ -270,7 +270,7 @@ function SiteDetail({ site, onRemoved }: { site: Site; onRemoved: () => void }) 
   );
 }
 
-type Note = NonNullable<ReturnType<typeof useQuery<typeof api.sites.notes>>>[number];
+type Note = NonNullable<ReturnType<typeof useQuerySafe<typeof api.sites.notes>>>[number];
 
 function NoteRow({ n }: { n: Note }) {
   const setStatus = useMutation(api.sites.setNoteStatus);
