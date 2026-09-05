@@ -472,7 +472,9 @@ function CanvasRoom({ compact }: { compact: boolean }) {
                   data-life={f.left == null ? "pinned" : f.faded ? "faded" : f.left < DAY ? "dying" : "alive"}
                   style={style}
                   className={cn("hung flex flex-col", skin === "instrument" ? (explicitShape ? cn("object", shape.className) : "object") : shape.className, skin === "paper" && h.body.merge && "liquid-body", drag && "dragging", f.faded && "faded", f.editing && "editing")}
-                  title={`${meta.title}${f.by ? ` · @${f.by}` : ""}${f.left == null ? " · pinned" : f.faded ? " · faded, touch to revive" : ""}`}
+                  data-ab-by={f.by ?? undefined}
+                  data-ab-left={f.left == null ? "pinned" : f.faded ? "faded" : String(Math.max(0, Math.ceil(f.left / 86_400_000)))}
+                  data-ab-when={f.lastAt ?? undefined}
                 >
                   <div className="frame-body flex-1">
                     <BlockBoundary title={meta.title}>

@@ -96,7 +96,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
     if (!p || sending) return;
     setSending(true);
     setError(null);
-    const { rect: _r, element: _e, point: _p, granularity: _g, ...target } = t;
+    const { rect: _r, element: _e, point: _p, granularity: _g, facts: _f, draft: _d, ...target } = t;
     try {
       // signed-out askers pass the bot check first (only when the site key is configured)
       let turnstileTicket: string | undefined;
@@ -155,6 +155,12 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
       {t.text ? (
         <div className="border-b border-line bg-paper-2/60 px-3 py-1.5 text-[12px] text-ink-2">
           <span className="placard">{t.granularity === "word" ? "the word" : "says"}</span> “{t.text}”
+        </div>
+      ) : null}
+      {t.facts ? (
+        <div className="border-b border-line px-3 py-1.5 text-[12px] text-ink-2" data-composer-facts>
+          {t.facts.by ? `@${t.facts.by}` : "someone"} made this
+          {t.facts.left === "pinned" ? " · it stays" : t.facts.left === "faded" ? " · it faded; a change revives it" : t.facts.left != null ? ` · ${t.facts.left} day${t.facts.left === "1" ? "" : "s"} left unless someone touches it` : ""}
         </div>
       ) : null}
 

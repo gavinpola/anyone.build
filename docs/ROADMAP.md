@@ -114,7 +114,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] The map jumps to an object (each block is a clickable rect, `data-map-block`).
 - [x] Phones: the bar is zoom + Change + Live across the bottom; the map is a chip that opens on request.
 - [x] The vote board: five rows, scroll for the rest; proposals run in three-hour rounds: the top one is built and the rest expire (`crons.cron "37 */3 * * *" promoteTop`, `convex/lib/rounds.ts`); who asked, linked to their GitHub when they signed in with it. Same five-row ledger on Changes.
-- [ ] NEXT: an object's facts (who, when, days left) belong in the pick placard and the composer header, not a native tooltip; a "faded" object needs a visible way to revive from the map.
+- [x] NEXT: an object's facts (who, when, days left) belong in the pick placard and the composer header, not a native tooltip; a "faded" object needs a visible way to revive from the map. (2026-09-05: the block carries `data-ab-by/left/when`; the placard reads "@who · Nd left / pinned / faded"; the composer says "@who made this · N days left unless someone touches it"; the native tooltip is gone)
 
 ## Floating UI never blocks the canvas (Gavin, 2026-09-04: "I can't build stuff over the map / live")
 - [x] The map folds to a chip and opens again (`ab:map` remembered per browser; chip by default on phones); every object in it is clickable.

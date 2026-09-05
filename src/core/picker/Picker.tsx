@@ -150,6 +150,12 @@ export function Picker() {
               <span className="opacity-80">{t.path.replace("src/rooms/main/", "")}:{t.line}</span>
             </>
           ) : null}
+          {t.facts ? (
+            <span className="block opacity-80" data-placard-facts>
+              {t.facts.by ? `@${t.facts.by.replace(/^guest[- ·]*/, "guest · ")}` : "someone"}
+              {t.facts.left === "pinned" ? " · pinned" : t.facts.left === "faded" ? " · faded, touch to revive" : t.facts.left != null ? ` · ${t.facts.left}d left` : ""}
+            </span>
+          ) : null}
         </div>
       ) : null}
     </>,

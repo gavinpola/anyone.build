@@ -9,7 +9,19 @@ export type PickerTarget = Target & {
   granularity?: "element" | "word" | "block";
   /** a prefilled ask (e.g. from dragging a block): the person can edit it before sending */
   draft?: string;
+  /** who last touched the block and how long it has left ("pinned", "faded", or days) */
+  facts?: { by: string | null; left: string | null; when: number | null };
 };
+
+/** The facts a block section carries as data attributes (Room.tsx writes them). */
+export function factsOf(frame: HTMLElement | null | undefined): PickerTarget["facts"] | undefined {
+  if (!frame?.dataset.abBlock || frame.dataset.abBlock === "__new__" || frame.dataset.abBlock === "__canvas__") return undefined;
+  const by = frame.dataset.abBy ?? null;
+  const left = frame.dataset.abLeft ?? null;
+  const when = frame.dataset.abWhen ? Number(frame.dataset.abWhen) : null;
+  if (by == null && left == null && when == null) return undefined;
+  return { by, left, when: Number.isFinite(when as number) ? when : null };
+}
 
 type State = {
   /** true while the modifier chord is held or "pick mode" was toggled on */
@@ -102,6 +114,7 @@ export function resolveTarget(el: Element | null): PickerTarget | null {
     rect: node.getBoundingClientRect(),
     element: node,
     granularity: frameOnly ? "block" : "element",
+    facts: factsOf(frame),
   };
 }
 

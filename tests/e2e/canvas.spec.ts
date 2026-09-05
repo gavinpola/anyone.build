@@ -326,6 +326,27 @@ test("the map shows what you point at: a hovered block, a dragged-out space, a p
   await page.keyboard.press("Escape");
 });
 
+test("the placard and the composer say who made an object and how long it has left", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const first = page.locator("[data-world] [data-ab-block]:not([data-ab-block='__new__'])").first();
+  const id = (await first.getAttribute("data-ab-block"))!;
+  await expect(first).toHaveAttribute("data-ab-left", /pinned|faded|^\d+$/);
+  await page.locator(`[data-map-block="${id}"]`).dispatchEvent("pointerdown");
+  await page.waitForTimeout(450);
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  const box = (await first.boundingBox())!;
+  await page.mouse.move(box.x + 30, box.y + 30);
+  const facts = page.locator("[data-placard-facts]");
+  await expect(facts).toBeVisible();
+  await expect(facts).toHaveText(/(@[\w·\- ]+|someone).*(pinned|faded|\d+d left)/);
+  await page.mouse.click(box.x + 30, box.y + 30);
+  const dialog = page.getByRole("dialog", { name: /ask for a change/i });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator("[data-composer-facts]")).toHaveText(/made this.*(stays|faded|days? left)/);
+  await page.keyboard.press("Escape");
+});
+
 test("the ? says how, and opens the full story", async ({ page }) => {
   await page.goto(url);
   await ready(page);
