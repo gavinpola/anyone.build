@@ -114,7 +114,8 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] The map jumps to an object (each block is a clickable rect, `data-map-block`).
 - [x] Phones: the bar is zoom + Change + Live across the bottom; the map is a chip that opens on request.
 - [x] The vote board: five rows, scroll for the rest; proposals run in three-hour rounds: the top one is built and the rest expire (`crons.cron "37 */3 * * *" promoteTop`, `convex/lib/rounds.ts`); who asked, linked to their GitHub when they signed in with it. Same five-row ledger on Changes.
-- [x] NEXT: an object's facts (who, when, days left) belong in the pick placard and the composer header, not a native tooltip; a "faded" object needs a visible way to revive from the map. (2026-09-05: the block carries `data-ab-by/left/when`; the placard reads "@who · Nd left / pinned / faded"; the composer says "@who made this · N days left unless someone touches it"; the native tooltip is gone)
+- [x] An object's facts (who, when, days left) in the pick placard and the composer header instead of a native tooltip (2026-09-05: the block carries `data-ab-by/left/when`; the placard reads "@who · Nd left / pinned / faded"; the composer says "@who made this · N days left unless someone touches it").
+- [ ] NEXT: a "faded" object needs a visible way to revive from the map.
 
 ## Floating UI never blocks the canvas (Gavin, 2026-09-04: "I can't build stuff over the map / live")
 - [x] The map folds to a chip and opens again (`ab:map` remembered per browser; chip by default on phones); every object in it is clickable.
@@ -123,7 +124,7 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [x] A "?" bottom-right: "Hold ⇧⌘ and point at anything, then say what should change…" with "The full story" opening the help panel (`helpStore`).
 - [x] While pointing (chord or Change), the map, the pages strip and the "?" fade and let pointer events through; the bar keeps the cancel. e2e: a marquee started over the map reaches the canvas.
 - [x] The open canvas has an eraser instead of Clear: `open:` store namespaces are whiteboards (anyone erases anything), `store.removeMany` batches a drag's deletes under a `storeErase` bucket, the legacy strokes are adopted (never deleted) by an hourly one-off cron.
-- [ ] NEXT: undo the last erase (keep a short local tombstone list and re-put); an object's facts (who, when, days left) in the pick placard instead of a tooltip. (The adopt cron is deleted: the legacy namespace emptied.)
+- [ ] NEXT: undo the last erase (keep a short local tombstone list and re-put). (The adopt cron is deleted: the legacy namespace emptied; the facts-in-placard half shipped 2026-09-05.)
 
 ## Rounds and the hourly frame (Gavin, 2026-09-04: "maybe it's every 3 hours… and the wall every hour isn't working")
 - [x] Proposals run in three-hour rounds (UTC 00:37, 03:37, …): the most-wanted one is built, every other proposal expires and the board starts over. The board shows "round ends in 1h 12m" (`convex/lib/rounds.ts`, shared by the cron and the client; unit-tested).
