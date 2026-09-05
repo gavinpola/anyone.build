@@ -113,6 +113,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
       const id = await submitRequest({ prompt: p, target, handle: viewer.handle, avatarUrl: viewer.avatarUrl, turnstileTicket });
       setSubmittedId(id);
     } catch (e) {
+      console.error("ask failed", e); // the full thing, for a screenshot or the console
       setError(friendlyError(e));
     } finally {
       setSending(false);
