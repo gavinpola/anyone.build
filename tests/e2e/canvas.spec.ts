@@ -129,6 +129,8 @@ test("a signed-out visitor's stroke on the open canvas survives a reload", async
   await page.waitForTimeout(500);
   const art = page.locator('[data-ab-block="collaborative-art"] canvas');
   await expect(art).toBeVisible();
+  await expect(page.locator('[data-ab-block="collaborative-art"] [data-art-live]')).toHaveAttribute("data-art-live", "1", { timeout: 5_000 });
+  await expect(page.locator('[data-ab-block="collaborative-art"]')).not.toContainText(/zoom in to draw|loading strokes/, { timeout: 15_000 });
   const box = (await art.boundingBox())!;
   const before = (await page.locator('[data-ab-block="collaborative-art"]').innerText()).match(/(\d+) strokes?/)?.[1] ?? "0";
   await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.5);
@@ -167,6 +169,9 @@ test("anyone can erase anyone's stroke: a second visitor rubs out the first one'
   const jump = async (page: Page) => {
     await page.locator('[data-map-block="collaborative-art"]').dispatchEvent("pointerdown");
     await page.waitForTimeout(500);
+    // the live strokes, not the baked picture's count from a minute ago
+    await expect(page.locator('[data-ab-block="collaborative-art"] [data-art-live]')).toHaveAttribute("data-art-live", "1", { timeout: 5_000 });
+    await expect(page.locator('[data-ab-block="collaborative-art"]')).not.toContainText(/zoom in to draw|loading strokes/, { timeout: 15_000 });
     return (await page.locator('[data-ab-block="collaborative-art"] canvas').boundingBox())!;
   };
   const boxA = await jump(a);
@@ -241,6 +246,16 @@ test("while a change is being proposed the wall holds still under the composer",
   const dbox2 = (await dialog.boundingBox())!;
   expect(Math.abs(dbox2.y - dbox.y)).toBeLessThan(6); // the composer stayed put (a few px is the spring's tail, not a pan)
   await page.keyboard.press("Escape");
+});
+
+test("the open canvas is a picture at the overview and live when you're close", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const wrap = page.locator('[data-ab-block="collaborative-art"] [data-art-live]');
+  test.skip((await wrap.count()) === 0, "no open canvas on this wall");
+  await expect(wrap).toHaveAttribute("data-art-live", "0"); // small on screen: no live subscription
+  await page.locator('[data-map-block="collaborative-art"]').dispatchEvent("pointerdown");
+  await expect(wrap).toHaveAttribute("data-art-live", "1", { timeout: 5_000 }); // zoomed in: live strokes
 });
 
 test("the map folds to a chip, remembers it, and opens again", async ({ page }) => {

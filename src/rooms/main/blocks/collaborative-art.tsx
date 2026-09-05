@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Row, Stack, Text, cn, useStore, useViewer } from "@/kit";
+import { Row, Stack, Text, cn, useArtPreview, useNow, useStore, useViewer } from "@/kit";
 import type { BlockMeta } from "@/kit";
 import { motion } from "motion/react";
 import { Eraser } from "lucide-react";
@@ -29,8 +29,28 @@ type Stroke = { color: string; width: number; points: Pt[] };
 const makeKey = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 export default function CollaborativeArt() {
+  // Live only when you're close: at the overview every viewer would otherwise re-receive the whole stroke
+  // list on every stroke anyone draws. Small on screen = the baked picture (refreshed about once a
+  // minute); big on screen, or touched = the live strokes.
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [near, setNear] = useState(false);
+  const [touchedAt, setTouchedAt] = useState(0);
+  const tick = useNow(1000);
+  // once a second: on screen and big enough (a zoom changes the wall's scale without any observer firing)
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const root = el.ownerDocument.documentElement;
+    const onScreen = r.bottom > 0 && r.right > 0 && r.top < (root?.clientHeight ?? 0) && r.left < (root?.clientWidth ?? 0);
+    setNear(onScreen && r.width >= 480);
+  }, [tick]);
+  const markTouched = () => setTouchedAt(Date.now());
+  const live = near || tick - touchedAt < 20_000; // drawing or erasing keeps it live for a while
   // an open: namespace is a whiteboard: anyone can erase anyone's strokes
-  const { docs, put, remove, removeMany, ready } = useStore<Stroke>("open:collab-art");
+  const { docs, put, remove, removeMany, ready } = useStore<Stroke>("open:collab-art", { live, limit: 150 });
+  const preview = useArtPreview("open:collab-art");
+  const bakedRef = useRef<HTMLImageElement | null>(null);
   const { signedIn } = useViewer();
   const [color, setColor] = useState<string>(COLORS[0] ?? "#ff4d6d");
   const [tool, setTool] = useState<"brush" | "eraser">("brush");
@@ -97,6 +117,14 @@ export default function CollaborativeArt() {
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = "#0d0b09";
     ctx.fillRect(0, 0, W, H);
+    // the baked picture stands in while we are not live (or not yet loaded); then the strokes take over
+    if (bakedRef.current && (!live || !ready)) {
+      ctx.drawImage(bakedRef.current, 0, 0, W, H);
+      if (!live) {
+        if (localRef.current) drawStroke(ctx, localRef.current);
+        return;
+      }
+    }
     // faint grid so the canvas feels like an instrument panel
     ctx.strokeStyle = "rgba(255,255,255,0.035)";
     ctx.lineWidth = 1;
@@ -116,7 +144,16 @@ export default function CollaborativeArt() {
       else drawStroke(ctx, d.value);
     }
     if (localRef.current) drawStroke(ctx, localRef.current);
-  }, [docs, drawStroke]);
+  }, [docs, drawStroke, live, ready]);
+  useEffect(() => {
+    if (!preview?.url) return;
+    const img = new Image();
+    img.onload = () => {
+      bakedRef.current = img;
+      redraw();
+    };
+    img.src = preview.url;
+  }, [preview?.url, redraw]);
 
   useEffect(() => {
     redraw();
@@ -144,6 +181,7 @@ export default function CollaborativeArt() {
 
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.preventDefault();
+    markTouched(); // drawing or erasing wants the live strokes
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const p = getPos(e);
     setPointer({ fx: p.x / W, fy: p.y / H });
@@ -276,7 +314,7 @@ export default function CollaborativeArt() {
         </Text>
       </Stack>
 
-      <div className="relative overflow-hidden rounded-lg border border-line bg-[#0d0b09]">
+      <div ref={wrapRef} className="relative overflow-hidden rounded-lg border border-line bg-[#0d0b09]" data-art-live={live ? "1" : "0"}>
         <canvas
           ref={canvasRef}
           width={W}
@@ -382,7 +420,7 @@ export default function CollaborativeArt() {
           aria-hidden
         />
         <Text muted>
-          {ready ? `${docs.length} stroke${docs.length === 1 ? "" : "s"} on the canvas` : "loading strokes…"}
+          {live ? (ready ? `${docs.length} stroke${docs.length === 1 ? "" : "s"} on the canvas` : "loading strokes…") : preview ? `${preview.count} stroke${preview.count === 1 ? "" : "s"} on the canvas · zoom in to draw` : "the canvas, as of a minute ago"}
         </Text>
       </Row>
     </Stack>

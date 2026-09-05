@@ -404,6 +404,17 @@ export default defineSchema({
   }).index("by_room_block", ["roomId", "blockId"]),
 
   /** The wall, every hour: a frame per hour from a scheduled screenshot, kept 30 days. */
+  // The open canvas, baked to a PNG once a minute so viewers at the overview see the picture without
+  // holding the live stroke subscription (which re-sends every stroke to every viewer).
+  artBakes: defineTable({
+    namespace: v.string(),
+    storageId: v.id("_storage"),
+    at: v.number(),
+    count: v.number(),
+    bytes: v.number(),
+    newestDocAt: v.number(),
+  }).index("by_namespace", ["namespace"]),
+
   timelapse: defineTable({
     at: v.number(),
     storageId: v.id("_storage"),

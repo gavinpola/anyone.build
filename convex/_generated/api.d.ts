@@ -10,6 +10,8 @@
 
 import type * as admin from "../admin.js";
 import type * as analytics from "../analytics.js";
+import type * as art from "../art.js";
+import type * as artBake from "../artBake.js";
 import type * as ask from "../ask.js";
 import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
@@ -69,6 +71,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   analytics: typeof analytics;
+  art: typeof art;
+  artBake: typeof artBake;
   ask: typeof ask;
   auth: typeof auth;
   budget: typeof budget;

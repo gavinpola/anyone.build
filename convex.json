@@ -1,3 +1,8 @@
 {
-  "node": { "externalPackages": ["@vercel/sandbox"] }
+  "node": {
+    "externalPackages": [
+      "@vercel/sandbox",
+      "@resvg/resvg-js"
+    ]
+  }
 }

@@ -25,7 +25,8 @@ const listeners = new Map<string, Set<() => void>>();
 function emit(ns: string) {
   for (const l of listeners.get(ns) ?? []) l();
 }
-function useStoreMock<T>(namespace: string) {
+type StoreOpts = { live?: boolean; limit?: number };
+function useStoreMock<T>(namespace: string, _opts: StoreOpts = {}) {
   const [docs, setDocs] = useState<StoreDoc<T>[]>(() => (memory.get(namespace) ?? []) as StoreDoc<T>[]);
   useEffect(() => {
     const set = listeners.get(namespace) ?? new Set();
@@ -64,8 +65,9 @@ function useStoreMock<T>(namespace: string) {
 }
 
 // ---- convex ----
-function useStoreConvex<T>(namespace: string) {
-  const rows = useQuery(api.store.list, { namespace });
+function useStoreConvex<T>(namespace: string, opts: StoreOpts = {}) {
+  // live: false holds off the subscription entirely (a block that is showing a baked picture instead)
+  const rows = useQuery(api.store.list, opts.live === false ? "skip" : { namespace, limit: opts.limit });
   const putM = useMutation(api.store.put);
   const removeM = useMutation(api.store.remove);
   const removeManyM = useMutation(api.store.removeMany);
@@ -77,7 +79,7 @@ function useStoreConvex<T>(namespace: string) {
     },
     [removeManyM, namespace],
   );
-  return { docs: (rows ?? []) as StoreDoc<T>[], put, remove, removeMany, ready: rows !== undefined };
+  return { docs: (rows ?? []) as StoreDoc<T>[], put, remove, removeMany, ready: opts.live === false ? true : rows !== undefined };
 }
 
 /**
@@ -85,9 +87,21 @@ function useStoreConvex<T>(namespace: string) {
  * when signed in, by browser tab when not). A namespace that starts with "open:" is a whiteboard:
  * anyone can remove any doc in it; removeMany(keys) batches those deletes.
  * Limits: 5,000 docs and 1 MB per namespace, 4 KB per doc, rate-limited writes and erases.
+ * Options: { live: false } holds off the subscription (pair it with useArtPreview for a baked picture
+ * when the block is small on screen); { limit } caps how many docs come back (default 200).
  */
-export const useStore: <T = unknown>(namespace: string) => { docs: StoreDoc<T>[]; put: (key: string, value: T) => void; remove: (key: string) => void; removeMany: (keys: string[]) => void; ready: boolean } =
+export const useStore: <T = unknown>(namespace: string, opts?: { live?: boolean; limit?: number }) => { docs: StoreDoc<T>[]; put: (key: string, value: T) => void; remove: (key: string) => void; removeMany: (keys: string[]) => void; ready: boolean } =
   hasConvex ? useStoreConvex : useStoreMock;
+
+/** The baked picture of a whiteboard namespace (a PNG url, refreshed about once a minute): what viewers at the overview see instead of the live stroke list. */
+export type ArtPreview = { url: string; at: number; count: number };
+function useArtPreviewMock(_namespace: string): ArtPreview | null | undefined {
+  return null;
+}
+function useArtPreviewConvex(namespace: string): ArtPreview | null | undefined {
+  return useQuery(api.art.latest, { namespace }) as ArtPreview | null | undefined;
+}
+export const useArtPreview: (namespace: string) => ArtPreview | null | undefined = hasConvex ? useArtPreviewConvex : useArtPreviewMock;
 
 function useCounterMock(name: string) {
   const { docs, put } = useStoreMock<number>("counter:" + name);

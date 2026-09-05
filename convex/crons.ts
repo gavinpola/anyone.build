@@ -15,6 +15,9 @@ crons.cron("proposal round: build the top one, the rest start over", "37 */3 * *
 crons.interval("sweep presence", { minutes: 10 }, internal.presence.sweep, {});
 // Nothing stays stuck: re-try merges that missed a webhook, settle deploys that never reported, fail dead builds.
 crons.interval("reconcile stuck requests", { minutes: 10 }, internal.maintenance.reconcile, {});
+// The open canvas, baked to a picture once a minute (skips when nothing changed): viewers at the overview
+// look at the picture; only people zoomed in hold the live stroke subscription.
+crons.interval("bake the open canvas", { minutes: 1 }, internal.artBake.bake, { namespace: "open:collab-art" });
 crons.daily("prune timelapse frames older than 30 days", { hourUTC: 5, minuteUTC: 20 }, internal.timelapse.prune, {});
 // GitHub drops scheduled runs on quiet repos: once an hour, if the latest frame is stale, ask it to run
 // the timelapse workflow (works once the GitHub App has the Actions permission; harmless until then).

@@ -8,6 +8,6 @@ export { SafeLink, resolveSafeHref, LINK_ALLOWLIST } from "./SafeLink";
 export { PageLink } from "./PageLink";
 export { useRoomId } from "./room-context";
 export { useRoomQuery, useRoomMutation } from "./room";
-export { useViewer, useStore, useCounter, useRoomPresence, useNow, useTick, useHighScores, type HighScore } from "./hooks";
+export { useViewer, useStore, useCounter, useRoomPresence, useNow, useTick, useHighScores, useArtPreview, type HighScore, type ArtPreview } from "./hooks";
 export { HighScores } from "./HighScores";
 export { cn } from "@/core/lib/cn";
