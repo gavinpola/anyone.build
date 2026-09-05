@@ -23,7 +23,7 @@ test("a fixed world, fitted on load; the bar zooms in and out and fits again", a
   await ready(page);
   const world = page.locator("[data-world]");
   const size = await world.getAttribute("data-world");
-  expect(size).toMatch(/^2400x\d+$/);
+  expect(size).toBe("3200x2000"); // a screen's proportions, and never any other size
   const z0 = zoomOf(await world.getAttribute("style"));
   expect(z0).toBeLessThan(1);
   await page.getByRole("button", { name: "Zoom in" }).click();
@@ -43,7 +43,7 @@ test("drag out a space and the composer opens for that space; click a point and 
   const world = page.locator("[data-world]");
   const box = (await world.boundingBox())!;
   const [, hStr] = (await world.getAttribute("data-world"))!.split("x");
-  const zoom = box.width / 2400;
+  const zoom = box.width / 3200;
   const contentBottom = Number(await world.getAttribute("data-content-bottom"));
   // the band between the packed content and the add zone is always empty
   const yWorld = contentBottom + 50;
@@ -68,12 +68,25 @@ test("drag out a space and the composer opens for that space; click a point and 
   await page.keyboard.press("Escape");
 });
 
+test("the dark beyond the world is not the wall: no point, no space out there", async ({ page }) => {
+  await page.goto(url);
+  await ready(page);
+  const vp = (await page.locator(".canvas-viewport").boundingBox())!;
+  const world = (await page.locator("[data-world]").boundingBox())!;
+  test.skip(world.x - vp.x < 40, "no letterbox at this size");
+  await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
+  await page.mouse.click(vp.x + 15, world.y + world.height / 2); // on the dark, left of the world
+  await page.waitForTimeout(500);
+  await expect(page.getByRole("dialog", { name: /ask for a change/i })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+});
+
 test("a skinny drag is still a space", async ({ page }) => {
   await page.goto(url);
   await ready(page);
   const world = page.locator("[data-world]");
   const box = (await world.boundingBox())!;
-  const zoom = box.width / 2400;
+  const zoom = box.width / 3200;
   const contentBottom = Number(await world.getAttribute("data-content-bottom"));
   const y = box.y + (contentBottom + 50) * zoom;
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
@@ -231,7 +244,7 @@ test("while a change is being proposed the wall holds still under the composer",
   await ready(page);
   const world = page.locator("[data-world]");
   const box = (await world.boundingBox())!;
-  const zoom = box.width / 2400;
+  const zoom = box.width / 3200;
   const contentBottom = Number(await world.getAttribute("data-content-bottom"));
   const y = box.y + (contentBottom + 50) * zoom;
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
@@ -294,7 +307,7 @@ test("the map shows what you point at: a hovered block, a dragged-out space, a p
   await page.waitForTimeout(300);
   const world = page.locator("[data-world]");
   const wb = (await world.boundingBox())!;
-  const zoom = wb.width / 2400;
+  const zoom = wb.width / 3200;
   const contentBottom = Number(await world.getAttribute("data-content-bottom"));
   const y = wb.y + (contentBottom + 50) * zoom;
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
@@ -344,21 +357,26 @@ test("Live lives in the bar and opens the feed", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: /live feed/i })).toBeHidden();
 });
 
-test("while pointing, a marquee started over the map still reaches the canvas", async ({ page }) => {
+test("while pointing, a marquee dragged under the map still reaches the canvas", async ({ page }) => {
   await page.goto(url);
   await ready(page);
   const map = page.locator("[data-minimap]");
   const m = (await map.boundingBox())!;
-  const w = (await page.locator("[data-world]").boundingBox())!;
+  const world = page.locator("[data-world]");
+  const w = (await world.boundingBox())!;
+  const zoom = w.width / 3200;
+  const contentBottom = Number(await world.getAttribute("data-content-bottom"));
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
   await expect(map).toHaveCSS("pointer-events", "none");
-  // inside the map's box, over empty ground to the right of the centred world
-  const x = Math.max(m.x + 12, w.x + w.width + 12);
-  expect(x).toBeLessThan(m.x + m.width - 8);
-  const y = m.y + 16;
-  await page.mouse.move(x, y);
+  // start on the empty band below the content, end inside the map's box (over the world): the map lets it through
+  const sx = w.x + 200 * zoom;
+  const sy = w.y + (contentBottom + 40) * zoom;
+  const ex = Math.min(m.x + 40, w.x + w.width - 20);
+  const ey = Math.min(m.y + 40, w.y + w.height - 20);
+  test.skip(ex <= sx + 40 || ey <= sy + 5, "the map does not overlap the world below the content at this size");
+  await page.mouse.move(sx, sy);
   await page.mouse.down();
-  await page.mouse.move(x - 420, y - 220, { steps: 10 });
+  await page.mouse.move(ex, ey, { steps: 10 });
   await page.mouse.up();
   const dialog = page.getByRole("dialog", { name: /ask for a change/i });
   await expect(dialog).toBeVisible();

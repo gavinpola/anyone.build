@@ -6,8 +6,9 @@ import type { CanvasMeta } from "@/kit";
  * leaderboard) is not.
  */
 export const canvas: CanvasMeta = {
-  // The world is exactly this big, always; the map is this rectangle. To make the wall taller, ask for it (this file).
-  size: { w: 2400, h: 3000 },
+  // The world is exactly this big, always, in a screen's proportions (16:10); the map is this rectangle and the
+  // dark around it is not the wall. To make the wall bigger, ask for it (this file).
+  size: { w: 3200, h: 2000 },
   skin: "instrument",
   grid: "dots",
   decay: 7,

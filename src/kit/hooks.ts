@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
-import { tabSessionId } from "@/core/lib/session";
+import { guestId, tabSessionId } from "@/core/lib/session";
 import { useViewer as useCoreViewer } from "@/core/auth/useViewer";
 import { useRoomPresenceCount } from "@/core/lib/usePresence";
 
@@ -103,20 +103,26 @@ function useArtPreviewConvex(namespace: string): ArtPreview | null | undefined {
 }
 export const useArtPreview: (namespace: string) => ArtPreview | null | undefined = hasConvex ? useArtPreviewConvex : useArtPreviewMock;
 
-function useCounterMock(name: string) {
+function useCounterMock(name: string, _opts: CounterOpts = {}) {
   const { docs, put } = useStoreMock<number>("counter:" + name);
   const value = docs.find((d) => d.key === "value")?.value ?? 0;
   const bump = useCallback((by = 1) => put("value", value + by), [put, value]);
-  return { value, bump };
+  return { value, bump, counted: false };
 }
-function useCounterConvex(name: string) {
+type CounterOpts = { once?: boolean };
+function useCounterConvex(name: string, opts: CounterOpts = {}) {
   const value = useQuery(api.store.counter, { name }) ?? 0;
+  const counted = useQuery(api.store.counted, opts.once ? { name, guestId: guestId() } : "skip") ?? false;
   const bumpM = useMutation(api.store.bump);
-  const bump = useCallback((by = 1) => void bumpM({ name, by, anonId: tabSessionId() }).catch(() => {}), [bumpM, name]);
-  return { value, bump };
+  const bump = useCallback((by = 1) => void bumpM({ name, by, anonId: tabSessionId(), once: opts.once, guestId: opts.once ? guestId() : undefined }).catch(() => {}), [bumpM, name, opts.once]);
+  return { value, bump, counted };
 }
-/** A shared counter. `bump()` increments for everyone; anonymous visitors may press too. */
-export const useCounter: (name: string) => { value: number; bump: (by?: number) => void } = hasConvex ? useCounterConvex : useCounterMock;
+/**
+ * A shared counter. `bump()` increments for everyone; anonymous visitors may press too. With { once: true }
+ * each person counts once, ever (by account, or by this browser's guest id), and `counted` says whether
+ * this person already has.
+ */
+export const useCounter: (name: string, opts?: { once?: boolean }) => { value: number; bump: (by?: number) => void; counted: boolean } = hasConvex ? useCounterConvex : useCounterMock;
 
 /** How many people are in the room right now. */
 export function useRoomPresence(): { count: number } {

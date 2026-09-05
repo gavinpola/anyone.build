@@ -50,7 +50,7 @@ export const blocks = Object.entries({ ...examples, ...modules })
   );
 
 const NEW_BLOCK_PATH = `src/rooms/${room.id}/blocks/`;
-const ADD_ZONE = 420;
+const ADD_ZONE = 300; // the 'point here to add' band at the bottom, when there is room for it
 /** Height the floating bar takes at the bottom of the viewport; the world fits above it. */
 const BAR_INSET = 72; // px of always-empty canvas at the bottom: "point here to add something" (tall enough to point at when fitted)
 const GAP = () => Math.max(0, Math.min(80, canvas.gap ?? 24));
@@ -238,6 +238,9 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     const r = viewportRef.current!.getBoundingClientRect();
     return toWorld({ x: e.clientX, y: e.clientY }, r, pan, zoom);
   };
+  // the dark beyond the world's edge is not the wall: nothing is pointed at there, and a drag clamps to the edge
+  const insideWorld = (p: { x: number; y: number }) => p.x >= 0 && p.x <= world.w && p.y >= 0 && p.y <= worldH;
+  const clampToWorld = (p: { x: number; y: number }) => ({ x: Math.max(0, Math.min(world.w, p.x)), y: Math.max(0, Math.min(worldH, p.y)) });
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.pointerType === "touch") {
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -263,6 +266,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
         setG({ kind: "block", id: section.dataset.abBlock!, start: worldPoint(e), from: { x: p.x, y: p.y }, delta: { x: 0, y: 0 }, moved: false });
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       } else if (!section && picking) {
+        if (!insideWorld(worldPoint(e))) return; // off the map: nothing to point at
         setG({ kind: "marquee", start: worldPoint(e), rect: null });
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       }
@@ -298,7 +302,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
       setPan(clampPan({ x: g.pan.x + dx, y: g.pan.y + dy }, zoom, vp, { w: world.w, h: worldH }));
       if (moved !== g.moved) setG({ ...g, moved });
     } else if (g.kind === "marquee") {
-      const p = worldPoint(e);
+      const p = clampToWorld(worldPoint(e));
       const rect = { x: Math.min(g.start.x, p.x), y: Math.min(g.start.y, p.y), w: Math.abs(p.x - g.start.x), h: Math.abs(p.y - g.start.y) };
       setG({ ...g, rect: rect.w > 10 || rect.h > 10 ? rect : null });
     } else if (g.kind === "block") {
@@ -335,6 +339,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
         pickerStore.select({ path: NEW_BLOCK_PATH, line: 0, blockId: undefined, blockTitle: "This space", tag: "region", text: regionText(rect, contains), rect: client, element: wall, granularity: "block", point: { x: e.clientX, y: e.clientY } });
       } else {
         const p = worldPoint(e);
+        if (!insideWorld(p)) return;
         pickerStore.select({ path: NEW_BLOCK_PATH, line: 0, blockId: undefined, blockTitle: "New block", tag: "wall", text: pointText(p), rect: new DOMRect(e.clientX - 8, e.clientY - 8, 16, 16), element: wall, granularity: "block", point: { x: e.clientX, y: e.clientY } });
       }
       return;
@@ -396,7 +401,6 @@ function CanvasRoom({ compact }: { compact: boolean }) {
           className="canvas-viewport"
           data-room={room.id}
           data-canvas
-          data-grid={canvas.grid ?? "dots"}
           data-pan={gesture?.kind === "pan" ? "active" : ""}
           onPointerDownCapture={(e) => {
             if (!pickerStore.get().arming) return;
@@ -437,7 +441,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             setG(null);
           }}
         >
-          <div ref={wallRef} className="wall canvas-world" style={worldStyle} data-world={`${world.w}x${worldH}`} data-content-bottom={Math.round(layout.bottom)} data-zoom={zoom.toFixed(3)} data-zoomband={zoom < 0.22 ? "far" : zoom < 0.7 ? "mid" : "near"}>
+          <div ref={wallRef} className="wall canvas-world" style={worldStyle} data-grid={canvas.grid ?? "dots"} data-world={`${world.w}x${worldH}`} data-content-bottom={Math.round(layout.bottom)} data-zoom={zoom.toFixed(3)} data-zoomband={zoom < 0.22 ? "far" : zoom < 0.7 ? "mid" : "near"}>
             <Heat spots={heat} world={{ w: world.w, h: worldH }} />
             {liquid.length ? <LiquidLayer wallRef={wallRef} bodies={liquid} goo={canvas.goo ?? true} morph={canvas.morph ?? true} /> : null}
             {hung.map(({ meta, Component, path, h }) => {

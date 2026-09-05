@@ -49,9 +49,9 @@ function CursorsLive({ roomId, boxRef, scale }: { roomId: string; boxRef: RefObj
       const now = performance.now();
       if (now - last.current < THROTTLE_MS) return;
       const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width;
-      const y = (e.clientY - r.top) / r.height;
-      if (x < -1 || x > 2 || y < -1 || y > 2) return; // over the room, including the ground around the wall
+      // the dark beyond the world is not the wall: a pointer out there shows at the nearest edge
+      const x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      const y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
       last.current = now;
       void move({ roomId, sessionId: session, x, y, hue, name }).catch(() => {});
     };

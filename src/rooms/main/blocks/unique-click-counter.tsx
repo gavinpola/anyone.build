@@ -12,15 +12,15 @@ export const block: BlockMeta = {
 };
 
 export default function UniqueClickCounter() {
-  // One shared counter for the whole wall; the count = unique people, since the backend
-  // records each visitor (account or browser tab) once.
-  const { value, bump } = useCounter("unique-click-counter");
-  // "counted" is local to this viewer so a single person can't rack up the number twice.
-  const [counted, setCounted] = useState(false);
+  // One shared counter for the whole wall, counting each person once, ever: the server remembers
+  // who has pushed (by account, or by this browser), so a reload can't count you twice.
+  const { value, bump, counted: countedByServer } = useCounter("unique-click-counter", { once: true });
+  const [pressed, setPressed] = useState(false);
+  const counted = countedByServer || pressed;
 
   const onPush = () => {
     if (counted) return;
-    setCounted(true);
+    setPressed(true);
     bump();
   };
 

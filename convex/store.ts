@@ -47,6 +47,23 @@ export const counter = query({
   },
 });
 
+/** For a once-per-person counter: has this person (account, or the browser's guest id) already counted? */
+export const counted = query({
+  args: { name: v.string(), guestId: v.optional(v.string()) },
+  handler: async (ctx, { name, guestId }) => {
+    const namespace = "counter:" + name;
+    if (!NAMESPACE_RE.test(namespace)) return false;
+    const viewer = await getViewerUser(ctx);
+    const who = viewer ? `u:${viewer._id}` : guestId && /^[a-f0-9]{32}$/.test(guestId) ? `g:${guestId}` : null;
+    if (!who) return false;
+    const mark = await ctx.db
+      .query("storeDocs")
+      .withIndex("by_namespace_key", (q) => q.eq("namespace", namespace).eq("key", `by:${who}`))
+      .unique();
+    return Boolean(mark);
+  },
+});
+
 /** Upsert one doc. Anyone may write (the wall is anyone's): signed-in people own docs by account, signed-out people by tab id, both rate-limited. */
 export const put = mutation({
   args: { namespace: v.string(), key: v.string(), value: v.any(), anonId: v.optional(v.string()) },
@@ -103,14 +120,25 @@ export const put = mutation({
 
 /** Atomic counter bump. Anonymous allowed (rate-limited). */
 export const bump = mutation({
-  args: { name: v.string(), by: v.optional(v.number()), anonId: v.optional(v.string()) },
-  handler: async (ctx, { name, by, anonId }) => {
+  args: { name: v.string(), by: v.optional(v.number()), anonId: v.optional(v.string()), once: v.optional(v.boolean()), guestId: v.optional(v.string()) },
+  handler: async (ctx, { name, by, anonId, once, guestId }) => {
     const namespace = `counter:${name}`;
     if (!NAMESPACE_RE.test(namespace)) throw new Error("Bad counter name");
     const delta = Math.max(-1, Math.min(1, Math.trunc(by ?? 1)));
     const viewer = await getViewerUser(ctx);
     const limitKey = viewer ? `u:${viewer._id}` : `a:${anonId ?? "anon"}`;
     await rateLimiter.limit(ctx, viewer ? "storeWrite" : "storeWriteAnon", { key: limitKey, throws: true });
+    // once: one count per person, ever. Signed in = the account; signed out = the browser's stable guest id.
+    if (once) {
+      const who = viewer ? `u:${viewer._id}` : guestId && /^[a-f0-9]{32}$/.test(guestId) ? `g:${guestId}` : null;
+      if (!who) throw new Error("Couldn't identify this browser. Reload and try again.");
+      const mark = await ctx.db
+        .query("storeDocs")
+        .withIndex("by_namespace_key", (q) => q.eq("namespace", namespace).eq("key", `by:${who}`))
+        .unique();
+      if (mark) return { counted: false };
+      await ctx.db.insert("storeDocs", { namespace, key: `by:${who}`, value: 1, at: Date.now(), bytes: 1 });
+    }
     const existing = await ctx.db
       .query("storeDocs")
       .withIndex("by_namespace_key", (q) => q.eq("namespace", namespace).eq("key", "value"))

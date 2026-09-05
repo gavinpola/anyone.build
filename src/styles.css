@@ -345,8 +345,8 @@ body[data-picking] .canvas-add { border-color: var(--accent); background: color-
   flex: none; width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
   background: var(--paper-2); border: 1px solid var(--line); font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .06em; color: var(--ink-2);
 }
-.canvas-viewport[data-grid="dots"] { background-color: var(--paper-2); background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px); background-size: 22px 22px; }
-.canvas-viewport[data-grid="lines"] { background-color: var(--paper-2); background-image: linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; }
+.canvas-world[data-grid="dots"] { background-color: var(--paper-2); background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px); background-size: 22px 22px; }
+.canvas-world[data-grid="lines"] { background-color: var(--paper-2); background-image: linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; }
 [data-skin="instrument"] .canvas-world { background: transparent !important; border-radius: 0; }
 [data-skin="instrument"] .canvas-world::after { display: none; }
 .heat { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; transition: background-image 600ms ease; }
@@ -513,7 +513,13 @@ body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking
 [data-live-counters] .presence-dot { width: 18px; height: 18px; font-size: 9px; }
 
 /* ===== The world has an edge, and the map is that rectangle ===== */
-.canvas-world { box-shadow: 0 0 0 max(1px, calc(1.5px / var(--zoom, 1))) color-mix(in oklab, var(--ink) 22%, transparent); }
+.canvas-world { box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(255, 255, 255, 0.12), 0 0 0 max(2px, calc(3px / var(--zoom, 1))) rgba(0, 0, 0, 0.35), 0 40px 120px rgba(0, 0, 0, 0.55); }
 .minimap-edge { fill: none; stroke: var(--ink); stroke-width: 12; stroke-opacity: 0.55; }
 .minimap-me { fill: var(--ink); stroke: var(--paper); stroke-width: 8; }
+
+/* ===== The letterbox: the world is the screen, the dark around it is not the wall ===== */
+.canvas-viewport { background: radial-gradient(120% 90% at 50% 45%, #1a1712 0%, #0e0d0a 70%, #090806 100%); }
+.canvas-viewport::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(80% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.35) 100%); }
+body[data-picking] .canvas-viewport { cursor: default; }
+body[data-picking] .canvas-world { cursor: crosshair; }
 
