@@ -10,9 +10,10 @@ export const move = mutation({
   args: { roomId: v.string(), sessionId: v.string(), x: v.number(), y: v.number(), hue: v.number(), name: v.optional(v.string()) },
   handler: async (ctx, { roomId, sessionId, x, y, hue, name }) => {
     if (!SESSION_RE.test(sessionId) || roomId.length > 32) return;
-    // clamp so a bad client can't store garbage
-    const cx = Math.max(0, Math.min(1, x));
-    const cy = Math.max(0, Math.min(1, y));
+    // clamp so a bad client can't store garbage; the wall is centred with empty ground around it at the
+    // overview, and a pointer over that ground is still a pointer, so a margin beyond the wall is allowed
+    const cx = Math.max(-1, Math.min(2, x));
+    const cy = Math.max(-1, Math.min(2, y));
     const h = Math.max(0, Math.min(360, Math.round(hue)));
     const now = Date.now();
     const existing = await ctx.db
@@ -50,6 +51,6 @@ export const active = query({
     return rows
       .filter((c) => c.sessionId !== sessionId)
       .slice(0, MAX_CURSORS)
-      .map((c) => ({ id: c.sessionId, x: c.x, y: c.y, hue: c.hue, name: c.name ?? null }));
+      .map((c) => ({ id: c.sessionId, x: c.x, y: c.y, hue: c.hue, name: c.name ?? null, at: c.at }));
   },
 });

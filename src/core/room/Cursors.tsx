@@ -5,6 +5,7 @@ import { hasConvex } from "@/core/lib/providers";
 import { tabSessionId } from "@/core/lib/session";
 import { useLiveStats } from "@/core/lib/useLiveStats";
 import { useViewer } from "@/core/auth/useViewer";
+import { useNow } from "@/core/lib/useNow";
 
 const THROTTLE_MS = 120;
 const MIN_PEERS = 2; // don't broadcast when you're alone
@@ -16,7 +17,7 @@ function hueFrom(id: string): number {
   return h;
 }
 
-/** Live cursors over the wall. Positions are fractions of the room box, so they map across screens. */
+/** Live cursors over the wall. Positions are fractions of the world box (a little beyond it is fine: the ground around the wall is part of the room), so they map across screens and zooms. */
 export function Cursors({ roomId, boxRef, scale = 1 }: { roomId: string; boxRef: RefObject<HTMLElement | null>; scale?: number }) {
   const stats = useLiveStats();
   const on = hasConvex && stats.online >= MIN_PEERS && stats.online <= MAX_PEERS;
@@ -50,7 +51,7 @@ function CursorsLive({ roomId, boxRef, scale }: { roomId: string; boxRef: RefObj
       const r = el.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width;
       const y = (e.clientY - r.top) / r.height;
-      if (x < -0.05 || x > 1.05 || y < -0.05 || y > 1.05) return; // only over the wall
+      if (x < -1 || x > 2 || y < -1 || y > 2) return; // over the room, including the ground around the wall
       last.current = now;
       void move({ roomId, sessionId: session, x, y, hue, name }).catch(() => {});
     };
@@ -67,10 +68,13 @@ function CursorsLive({ roomId, boxRef, scale }: { roomId: string; boxRef: RefObj
     };
   }, [boxRef, move, leave, roomId, session, hue, name]);
 
+  // a cursor that stopped moving fades out on this side too (the query only re-runs when someone moves)
+  const now = useNow(2000);
+  const fresh = peers.filter((p) => now - p.at < 8_000);
   if (!box) return null;
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden" aria-hidden>
-      {peers.map((p) => (
+    <div className="pointer-events-none absolute inset-0 z-30 overflow-visible" aria-hidden data-cursors={fresh.length}>
+      {fresh.map((p) => (
         <span
           key={p.id}
           className="absolute -ml-1 -mt-1 transition-[left,top] duration-100 ease-linear"
