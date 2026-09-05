@@ -1,0 +1,51 @@
+name: sweep
+# Once a night, mount every block on the wall alone and play it (the same playtester the pull requests
+# get). A change to one block can break another; this catches it. On a failure, one issue is opened or
+# updated with what the playtester saw, so it is never silent.
+on:
+  schedule:
+    - cron: "17 10 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: sweep
+  cancel-in-progress: true
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - name: Play every block
+        id: play
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          (pnpm exec vite preview --host 127.0.0.1 --port 4173 --strictPort >/tmp/preview.log 2>&1 &)
+          for i in $(seq 1 30); do curl -s -o /dev/null http://127.0.0.1:4173/ && break; sleep 1; done
+          set +e
+          pnpm exec playwright test --config playwright.blocks.config.ts 2>&1 | tee /tmp/sweep.log
+          echo "exit=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Open or update the issue
+        if: steps.play.outputs.exit != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body=$(grep -E "playtest .*works=|playtester:|Error:|expect\(|✘|×" /tmp/sweep.log | head -30 | sed 's/^/    /')
+          title="Nightly sweep: a block on the wall stopped working"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number')
+          text="**The nightly playtest found a block that no longer works** ($(date -u +%Y-%m-%d)). Every block is mounted alone and played; this is what the playtester saw:"$'\n\n'"$body"$'\n\n'"Fix it on the wall (ask for the fix, or rebuild from /admin), then close this."
+          if [ -n "$existing" ]; then gh issue comment "$existing" --body "$text"; else gh issue create --title "$title" --body "$text" --label "sweep" 2>/dev/null || gh issue create --title "$title" --body "$text"; fi
+      - name: All good
+        if: steps.play.outputs.exit == '0'
+        run: echo "every block on the wall works"

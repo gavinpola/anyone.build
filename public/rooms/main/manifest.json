@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-05T03:37:19.736Z",
+  "generatedAt": "2026-09-05T07:24:05.466Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -41,6 +41,14 @@
       "size": "full",
       "order": 4,
       "path": "src/rooms/main/blocks/dino-game.tsx"
+    },
+    {
+      "id": "fading-reveal",
+      "title": "Fading reveal",
+      "description": "A foggy lid — click it and it melts away to show what's hiding underneath.",
+      "size": "md",
+      "order": 4,
+      "path": "src/rooms/main/blocks/fading-reveal.tsx"
     },
     {
       "id": "collaborative-art",

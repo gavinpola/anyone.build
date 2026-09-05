@@ -7,7 +7,7 @@ import { useLiveStats } from "@/core/lib/useLiveStats";
 import { useViewer } from "@/core/auth/useViewer";
 import { useNow } from "@/core/lib/useNow";
 
-const THROTTLE_MS = 120;
+const THROTTLE_MS = 200; // each move fans out to every viewer; five a second is plenty
 const MIN_PEERS = 2; // don't broadcast when you're alone
 const MAX_PEERS = 30; // above this, cursors turn off (keeps the shared cost bounded)
 
