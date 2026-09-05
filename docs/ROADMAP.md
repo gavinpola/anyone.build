@@ -179,4 +179,6 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 
 ## The map is the world (Gavin, 2026-09-04: "make it very clear what the map dimensions are, and that never changes")
 - [x] The world no longer grows with content: it is exactly `canvas.size` (2400×3000 today, set in the wall's own file; a taller wall is an ask). The wall shows its edge; the map is labelled with its size, draws the edge, the viewport frame in ink, what you point at in orange, and your own pointer as a dot, so you can see where you are while you click. The add zone appears only while there is room for it; pointing at any empty spot still adds.
+- [x] The world is a screen (Gavin: "like a window screen… black borders so you can't move off the map"): 3200×2000 (16:10), the ground painted on the world and a dark letterbox beyond it; you can't pan past the edge (never could), and now nothing beyond the edge is the wall: no point, no space, a drag clamps to the edge, cursors pin to it. The add zone shrank to 300 px so there is room for it; pointing at any empty spot still adds.
+- [x] `useCounter(name, { once: true })`: one count per person, ever, by account or by the browser's guest id, with `counted` for this person; the unique clicker uses it (a reload can't count you twice).
 
