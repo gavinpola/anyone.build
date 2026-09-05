@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Button, Row, Stack, Text, useCounter } from "@/kit";
+import { Button, Row, Stack, Text, useCounter, useStore } from "@/kit";
 import type { BlockMeta } from "@/kit";
 
 export const block: BlockMeta = {
@@ -15,8 +14,8 @@ export default function UniqueClickCounter() {
   // One shared counter for the whole wall; the count = unique people, since the backend
   // records each visitor (account or browser tab) once.
   const { value, bump } = useCounter("unique-click-counter");
-  // "counted" is local to this viewer so a single person can't rack up the number twice.
-  const [counted, setCounted] = useState(false);
+  // "counted" is persisted per viewer so a single person can't rack up the number twice.
+  const [counted, setCounted] = useStore("unique-click-counter-counted", false);
 
   const onPush = () => {
     if (counted) return;
