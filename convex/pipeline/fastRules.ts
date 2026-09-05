@@ -4,7 +4,7 @@ export const BLOCK_OR_PAGE_FILE_RE = /^src\/rooms\/[a-z0-9-]+\/((blocks|pages)\/
 export type FastCandidate = {
   target: { path: string; blockId?: string };
   verdict?: { scope: string; touchesBackend?: boolean } | null;
-  run?: { fastFailed?: boolean } | null;
+  run?: { fastFailed?: boolean; playtestRetry?: boolean } | null;
 };
 
 export function fastEligible(r: FastCandidate, cfg: { fastPathEnabled?: boolean }): { ok: true } | { ok: false; reason: string } {
@@ -13,6 +13,7 @@ export function fastEligible(r: FastCandidate, cfg: { fastPathEnabled?: boolean 
   if (r.verdict.scope !== "tiny") return { ok: false, reason: `scope ${r.verdict.scope}` };
   if (r.verdict.touchesBackend) return { ok: false, reason: "backend" };
   if (r.run?.fastFailed) return { ok: false, reason: "fast path already went red" };
+  if (r.run?.playtestRetry) return { ok: false, reason: "a second pass after a red PR belongs to the sandbox" };
   if (!r.target.blockId || r.target.blockId === "__new__") return { ok: false, reason: "new file" };
   // (the canvas file, blockId "__canvas__", is a fine fast-path target: one small file)
   if (!BLOCK_OR_PAGE_FILE_RE.test(r.target.path)) return { ok: false, reason: "not a block or page file" };

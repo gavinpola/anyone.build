@@ -19,3 +19,4 @@ export { judgeWithSecondLooks, BACKEND_OFF_ADDENDUM, type JudgeRunOptions, type 
 export { SecurityReview } from "./schemas";
 export { securitySystemPrompt, securityUserPrompt } from "./prompts/security";
 export { validateBackendFile, BACKEND_FILE_RE } from "./validate/backend.js";
+export { playtestNote } from "./playtest-note";

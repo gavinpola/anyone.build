@@ -131,6 +131,8 @@ export default defineSchema({
         securityRisk: v.optional(v.string()), // none | low | medium | high, from the security pass
         fastFailed: v.optional(v.boolean()), // the fast path's PR went red in CI; the sandbox is building instead
         collidedRetry: v.optional(v.boolean()), // the PR collided with a newer main once; rebuilt from the new base
+        playtestRetry: v.optional(v.boolean()), // the PR went red once (playtest or checks); one more sandbox pass with the note below
+        playtestNote: v.optional(v.string()), // what the checks and the playtester said about the previous attempt
       }),
     ),
     budgetCents: v.number(), // reserved cap for this request

@@ -16,6 +16,7 @@ const Octokit = OctokitCore.plugin(throttling, retry).defaults({
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
+import { playtestNote } from "../../packages/gatekeeper/src/playtest-note";
 
 /** GitHub App operations: commit via the Git Data API, PRs, merges, reverts, and inbound events. */
 
@@ -88,6 +89,15 @@ export async function openPullRequest(kit: Kit, opts: { branch: string; title: s
   return { number: pr.data.number, url: pr.data.html_url };
 }
 
+/** The failed check names on a ref plus the playtester's PR comment, as one bounded note for the coder. */
+async function redNote(kit: Kit, headSha: string, prNumber: number): Promise<string> {
+  const { owner, repo } = repoParts();
+  const runs = await kit.rest.checks.listForRef({ owner, repo, ref: headSha, per_page: 50 });
+  const failedChecks = runs.data.check_runs.filter((c) => c.conclusion && !["success", "neutral", "skipped"].includes(c.conclusion)).map((c) => c.name);
+  const comments = await kit.rest.issues.listComments({ owner, repo, issue_number: prNumber, per_page: 30 });
+  return playtestNote({ failedChecks, comments: comments.data.map((c) => c.body ?? "") });
+}
+
 export async function closePullRequest(kit: Kit, number: number, branch?: string) {
   const { owner, repo } = repoParts();
   await kit.rest.pulls.update({ owner, repo, pull_number: number, state: "closed" }).catch(() => {});
@@ -134,7 +144,17 @@ export const tryMerge = internalAction({
         await ctx.runMutation(internal.pipeline.executor.release, { requestId });
         return;
       }
-      await ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category: "build_failed", hint: "The checks didn't pass. Try a smaller ask.", error: "CI failed" });
+      // What went red, in words the coder can act on: the failed check names and the playtester's comment.
+      const note = await redNote(kit, r.run.headSha, r.run.prNumber).catch(() => "The previous attempt's checks did not pass.");
+      if (!r.run.playtestRetry) {
+        // one more sandbox pass, told what the playtester saw (re-queue before closing: see above)
+        console.log("PR went red; one more pass with the playtester's note:", requestId);
+        await ctx.runMutation(internal.pipeline.state.requeue, { id: requestId, costCents: r.run.costCents, playtestNote: note });
+        await closePullRequest(kit, r.run.prNumber, r.run.branch);
+        await ctx.runMutation(internal.pipeline.executor.release, { requestId });
+        return;
+      }
+      await ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category: "build_failed", hint: "The checks didn't pass twice. Try a smaller ask.", error: `CI failed twice\n${note}` });
       await closePullRequest(kit, r.run.prNumber, r.run.branch);
       await ctx.runMutation(internal.pipeline.executor.release, { requestId });
       return;

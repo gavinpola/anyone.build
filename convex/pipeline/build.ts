@@ -54,7 +54,7 @@ export const run = internalAction({
       requestId,
       systemPrompt: coderSystemPrompt({ backend: allowBackend }),
       allowBackend,
-      userPrompt: coderUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target }),
+      userPrompt: coderUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target, previousAttempt: request.run?.playtestNote }),
       model: coderModel,
       maxSteps: config.maxTurns,
       // leave the sandbox ~2 minutes for checkout, checks, and the diff after the model loop ends

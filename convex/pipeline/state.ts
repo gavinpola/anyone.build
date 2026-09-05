@@ -41,13 +41,13 @@ export const fail = internalMutation({
 
 /** Fast path → sandbox: put an in-flight request back in the queue, keeping what the attempt cost. */
 export const requeue = internalMutation({
-  args: { id: v.id("requests"), costCents: v.optional(v.number()), fastFailed: v.optional(v.boolean()), collidedRetry: v.optional(v.boolean()) },
-  handler: async (ctx, { id, costCents, fastFailed, collidedRetry }) => {
+  args: { id: v.id("requests"), costCents: v.optional(v.number()), fastFailed: v.optional(v.boolean()), collidedRetry: v.optional(v.boolean()), playtestNote: v.optional(v.string()) },
+  handler: async (ctx, { id, costCents, fastFailed, collidedRetry, playtestNote }) => {
     const r = await ctx.db.get(id);
     if (!r || !["queued", "building", "validating", "reviewing", "preview"].includes(r.status)) return;
     // back to the queue with the fast path's PR details cleared (the sandbox opens its own), cost carried
     const { prNumber: _pr, prUrl: _url, headSha: _sha, previewUrl: _prev, ...rest } = r.run ?? {};
-    await ctx.db.patch(id, { status: "queued", stage: fastFailed ? "trying again in the sandbox" : collidedRetry ? "rebuilding on the new wall" : undefined, run: { ...rest, costCents: costCents ?? r.run?.costCents, ...(fastFailed ? { fastFailed: true } : {}), ...(collidedRetry ? { collidedRetry: true } : {}) }, updatedAt: Date.now() });
+    await ctx.db.patch(id, { status: "queued", stage: playtestNote ? "fixing what the playtester saw" : fastFailed ? "trying again in the sandbox" : collidedRetry ? "rebuilding on the new wall" : undefined, run: { ...rest, costCents: costCents ?? r.run?.costCents, ...(fastFailed ? { fastFailed: true } : {}), ...(collidedRetry ? { collidedRetry: true } : {}), ...(playtestNote ? { playtestRetry: true, playtestNote } : {}) }, updatedAt: Date.now() });
   },
 });
 
