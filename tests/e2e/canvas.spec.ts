@@ -212,6 +212,8 @@ test("in pick mode a drag over the open canvas picks, it does not draw", async (
   await chip.dispatchEvent("pointerdown");
   await page.waitForTimeout(500);
   const block = page.locator('[data-ab-block="collaborative-art"]');
+  await expect(block.locator("[data-art-live]")).toHaveAttribute("data-art-live", "1", { timeout: 5_000 });
+  await expect(block).not.toContainText(/zoom in to draw|loading strokes/, { timeout: 15_000 });
   const before = (await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? "0";
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
   const box = (await block.locator("canvas").boundingBox())!;
