@@ -150,7 +150,10 @@ function CanvasRoom({ compact }: { compact: boolean }) {
   }, [hung, heights, world.w, world.h, gap, pad]);
   // the world never grows: its size is the wall's own (canvas.ts), so the map is always the same rectangle
   const worldH = world.h;
-  const roomForAddZone = layout.bottom + 60 <= worldH - ADD_ZONE - pad;
+  // the band takes whatever room is left below the content, up to ADD_ZONE, and only disappears when even a
+  // thin band would not fit (then pointing at any empty spot still adds)
+  const addZoneH = Math.min(ADD_ZONE, worldH - pad - (layout.bottom + 40));
+  const roomForAddZone = addZoneH >= 140;
   const at = useMemo(() => new Map(layout.placed.map((p) => [p.id, p])), [layout]);
 
   // viewport, zoom, pan
@@ -485,7 +488,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
               data-ab-block="__new__"
               data-ab-path={NEW_BLOCK_PATH}
               className="canvas-add flex flex-col"
-              style={{ left: pad, top: worldH - ADD_ZONE - pad, width: world.w - pad * 2, height: ADD_ZONE }}
+              style={{ left: pad, top: worldH - addZoneH - pad, width: world.w - pad * 2, height: addZoneH }}
             >
               <div className="frame-body flex flex-1 flex-col items-center justify-center p-6 text-center">
                 <p className="text-[15px] text-ink-2">Nothing lives here yet.</p>

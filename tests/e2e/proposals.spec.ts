@@ -20,7 +20,7 @@ test("a big ask becomes a proposal, appears on the leaderboard, and can be voted
   // a trust-1 (dev) account ships up to medium; a genuinely large build becomes a proposal
   const tag = "chess " + Math.random().toString(36).slice(2, 6);
   await page.getByRole("button", { name: /change something/i }).click();
-  await page.locator('[data-ab-block="__new__"]').click({ position: { x: 120, y: 80 } });
+  await page.locator('[data-ab-block="__new__"]').click();
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await box.getByRole("textbox").fill(`${tag}: redesign every block on the wall in a neon theme, change all of them together, and add three new pages (rules, a gallery, and a full multiplayer chess game with accounts and matchmaking)`);
   await box.getByRole("button", { name: /^send|^ask/i }).first().click();

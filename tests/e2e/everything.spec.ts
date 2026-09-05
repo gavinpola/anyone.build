@@ -120,7 +120,7 @@ test.describe("the loop", () => {
   test("approved: point, ask, watch, live, then it shows on the leaderboard", async ({ page }) => {
     await signIn(page);
     await page.getByRole("button", { name: /change something/i }).click();
-    await page.locator('[data-ab-block="__new__"]').click({ position: { x: 120, y: 80 } });
+    await page.locator('[data-ab-block="__new__"]').click();
     const box = page.getByRole("dialog", { name: /ask for a change/i });
     await expect(box).toBeVisible();
     await expect(box.getByText("New block")).toBeVisible();
@@ -145,7 +145,7 @@ test.describe("the loop", () => {
   test("rejected stays private; cancel works; keyboard send works", async ({ page, browser }) => {
     await signIn(page);
     await page.getByRole("button", { name: /change something/i }).click();
-    await page.locator('[data-ab-block="__new__"]').click({ position: { x: 160, y: 60 } });
+    await page.locator('[data-ab-block="__new__"]').click();
     const box = page.getByRole("dialog", { name: /ask for a change/i });
     await box.getByRole("textbox").fill("Add a link to my startup https://coolapp.io please");
     await page.keyboard.press("Meta+Enter");
@@ -163,7 +163,7 @@ test.describe("the loop", () => {
 
     // cancel a request mid-flight
     await page.getByRole("button", { name: /change something/i }).click();
-    await page.locator('[data-ab-block="__new__"]').click({ position: { x: 200, y: 70 } });
+    await page.locator('[data-ab-block="__new__"]').click();
     await box.getByRole("textbox").fill("A clock that shows the time in UTC");
     await box.getByRole("button", { name: /send/i }).click();
     await expect(box.getByText(/approved/i)).toBeVisible({ timeout: 30_000 });
@@ -179,7 +179,7 @@ test.describe("the loop", () => {
   test("escape closes the composer; the Live pill toggles the drawer", async ({ page }) => {
     await signIn(page);
     await page.getByRole("button", { name: /change something/i }).click();
-    await page.locator('[data-ab-block="__new__"]').click({ position: { x: 90, y: 90 } });
+    await page.locator('[data-ab-block="__new__"]').click();
     await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeHidden();
@@ -268,7 +268,7 @@ test("the composer closes when you navigate to another page", async ({ page }) =
   await page.goto(url);
   await expect(page.locator('html[data-convex="ready"]')).toBeAttached({ timeout: 20_000 });
   await page.getByRole("button", { name: /change something/i }).click();
-  await page.locator('[data-ab-block="__new__"]').click({ position: { x: 100, y: 60 } });
+  await page.locator('[data-ab-block="__new__"]').click();
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await expect(box).toBeVisible();
   await page.getByRole("link", { name: "Leaderboard" }).click();

@@ -18,7 +18,7 @@ test("share a change: copy the link, open it, land on the block", async ({ brows
   await expect(page.locator('html[data-convex="ready"]')).toBeAttached({ timeout: 20_000 });
 
   await page.getByRole("button", { name: /change something/i }).click();
-  await page.locator('[data-ab-block="__new__"]').click({ position: { x: 110, y: 70 } });
+  await page.locator('[data-ab-block="__new__"]').click();
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await box.getByRole("textbox").fill("A one-line thank-you note at the bottom of the wall for everyone who visits");
   await box.getByRole("button", { name: /^send|^ask/i }).first().click();

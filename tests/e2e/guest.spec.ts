@@ -12,7 +12,7 @@ test("a guest can ask without signing in and it shows as a guest", async ({ page
   await ready(page);
   await expect(page.getByRole("button", { name: /^sign in/i })).toBeVisible();
   await page.getByRole("button", { name: /change something/i }).click();
-  await page.locator('[data-ab-block="__new__"]').click({ position: { x: 120, y: 80 } });
+  await page.locator('[data-ab-block="__new__"]').click();
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await expect(box.getByText(/no account needed/i)).toBeVisible();
   await box.getByRole("textbox").fill("A one-line hello note at the bottom of the wall");
@@ -30,7 +30,7 @@ test("signing in offers to claim the guest's work", async ({ page }) => {
   await page.goto(url);
   await ready(page);
   await page.getByRole("button", { name: /change something/i }).click();
-  await page.locator('[data-ab-block="__new__"]').click({ position: { x: 90, y: 60 } });
+  await page.locator('[data-ab-block="__new__"]').click();
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await box.getByRole("textbox").fill("Add a tiny thank-you note at the bottom of the wall");
   await box.getByRole("button", { name: /send/i }).click();
