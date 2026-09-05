@@ -127,8 +127,10 @@ export const tryMerge = internalAction({
       // The fast path has no compiler in its loop; when its PR goes red, the sandbox (which does) gets one go.
       if (r.run.turns === 1 && !r.run.fastFailed) {
         console.log("fast path PR went red; handing the request to the sandbox:", requestId);
-        await closePullRequest(kit, r.run.prNumber, r.run.branch);
+        // re-queue BEFORE closing the PR: GitHub's "closed" webhook would otherwise find a request still on
+        // this PR and cancel it (that happened: a fast-path miss came back as "Cancelled" instead of retried)
         await ctx.runMutation(internal.pipeline.state.requeue, { id: requestId, costCents: r.run.costCents, fastFailed: true });
+        await closePullRequest(kit, r.run.prNumber, r.run.branch);
         await ctx.runMutation(internal.pipeline.executor.release, { requestId });
         return;
       }
@@ -146,13 +148,15 @@ export const tryMerge = internalAction({
     try {
       const pr = await kit.rest.pulls.get({ owner, repo, pull_number: r.run.prNumber });
       if (pr.data.mergeable === false) {
-        await closePullRequest(kit, r.run.prNumber, r.run.branch);
         if (!r.run.collidedRetry) {
           // main moved under this PR: rebuild once from the new base instead of making the person re-ask
+          // (re-queue first, then close: see the fast-path note above)
           await ctx.runMutation(internal.pipeline.state.requeue, { id: requestId, collidedRetry: true });
+          await closePullRequest(kit, r.run.prNumber, r.run.branch);
           await ctx.runMutation(internal.pipeline.executor.release, { requestId });
           return;
         }
+        await closePullRequest(kit, r.run.prNumber, r.run.branch);
         await ctx.runMutation(internal.pipeline.state.fail, { id: requestId, category: "collided", hint: "The wall moved under you twice. Try again on the new version.", error: "merge conflict (after one rebuild)" });
         await ctx.runMutation(internal.pipeline.executor.release, { requestId });
         return;
@@ -224,11 +228,14 @@ export const onWebhook = internalAction({
     }
     if (event === "pull_request") {
       const action = p.action as string;
-      const pr = p.pull_request as { merged?: boolean; head?: { ref?: string } } | undefined;
+      const pr = p.pull_request as { merged?: boolean; number?: number; head?: { ref?: string } } | undefined;
       const branch = pr?.head?.ref ?? "";
       if (action === "closed" && pr && !pr.merged && branch.startsWith("playground/")) {
         const r = await ctx.runQuery(internal.pipeline.state.findByBranch, { branch });
-        if (r && !["live", "failed", "cancelled"].includes(r.status)) {
+        // only a request still waiting on THIS pull request: one that was re-queued (fast-path miss, collision)
+        // has moved on and must not be cancelled by the close we did ourselves
+        const stillOnThisPr = r && ["preview", "merging"].includes(r.status) && r.run?.prNumber === pr.number;
+        if (r && stillOnThisPr) {
           await ctx.runMutation(internal.requests.setStatus, { id: r._id, status: "cancelled", stage: "closed on GitHub" });
           await ctx.runMutation(internal.pipeline.executor.release, { requestId: r._id });
         }

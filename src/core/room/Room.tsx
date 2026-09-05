@@ -397,6 +397,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
           data-pan={gesture?.kind === "pan" ? "active" : ""}
           onPointerDownCapture={(e) => {
             if (!pickerStore.get().arming) return;
+            if ((e.target as HTMLElement).closest("[data-canvas-bar], [data-minimap], [data-canvas-ui]")) return; // the floating UI keeps its own handlers
             onPointerDown(e); // the canvas gesture (marquee, point, drag) still starts
             e.stopPropagation(); // the block under the pointer never hears it
           }}
@@ -407,6 +408,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
           }}
           onPointerUpCapture={(e) => {
             if (!pickerStore.get().arming) return;
+            if ((e.target as HTMLElement).closest("[data-canvas-bar], [data-minimap], [data-canvas-ui]")) return;
             onPointerUp(e);
             e.stopPropagation();
           }}

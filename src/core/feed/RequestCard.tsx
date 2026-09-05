@@ -2,14 +2,16 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { ExternalLink, GitPullRequest, Plus, X } from "lucide-react";
 import { cn } from "@/core/lib/cn";
+import { useViewer } from "@/core/auth/useViewer";
 import { elapsed, timeAgo } from "@/core/lib/useNow";
-import { cancelRequest, plusOneRequest } from "@/core/lib/useRequests";
+import { cancelRequest, plusOneRequest, submitRequest } from "@/core/lib/useRequests";
 import { REJECTION_COPY, STAGE_COPY, STATUS_STEPS, stepIndex, type FeedRequest } from "@/core/lib/types";
 import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 
 const TERMINAL = new Set(["live", "rejected", "failed", "cancelled"]);
 
 export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
+  const viewer = useViewer();
   const [open, setOpen] = useState(false);
   const idx = stepIndex(r.status);
   const rejected = r.status === "rejected";
@@ -108,6 +110,18 @@ export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
           ) : null}
         </div>
       )}
+      {r.mine && (r.status === "cancelled" || r.status === "failed") ? (
+        <div className="mt-2 flex">
+          <button
+            type="button"
+            onClick={() => void submitRequest({ prompt: r.prompt, target: r.target, handle: viewer.handle, avatarUrl: viewer.avatarUrl }).catch(() => {})}
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-line bg-card px-2.5 text-[12px] font-medium hover:border-line-2"
+            data-try-again
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
     </motion.article>
   );
 }

@@ -33,6 +33,20 @@ export const list = query({
   },
 });
 
+/** A shared counter's value. Counters live under the reserved "counter:" prefix, which list() hides, so they read through here. */
+export const counter = query({
+  args: { name: v.string() },
+  handler: async (ctx, { name }) => {
+    const namespace = "counter:" + name;
+    if (!NAMESPACE_RE.test(namespace)) return 0;
+    const doc = await ctx.db
+      .query("storeDocs")
+      .withIndex("by_namespace_key", (q) => q.eq("namespace", namespace).eq("key", "value"))
+      .unique();
+    return typeof doc?.value === "number" ? doc.value : 0;
+  },
+});
+
 /** Upsert one doc. Anyone may write (the wall is anyone's): signed-in people own docs by account, signed-out people by tab id, both rate-limited. */
 export const put = mutation({
   args: { namespace: v.string(), key: v.string(), value: v.any(), anonId: v.optional(v.string()) },

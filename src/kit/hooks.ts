@@ -110,9 +110,8 @@ function useCounterMock(name: string) {
   return { value, bump };
 }
 function useCounterConvex(name: string) {
-  const rows = useQuery(api.store.list, { namespace: "counter:" + name });
+  const value = useQuery(api.store.counter, { name }) ?? 0;
   const bumpM = useMutation(api.store.bump);
-  const value = (rows?.find((d) => d.key === "value")?.value as number | undefined) ?? 0;
   const bump = useCallback((by = 1) => void bumpM({ name, by, anonId: tabSessionId() }).catch(() => {}), [bumpM, name]);
   return { value, bump };
 }

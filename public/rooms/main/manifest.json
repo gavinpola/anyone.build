@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-04T23:55:48.253Z",
+  "generatedAt": "2026-09-05T00:42:12.733Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -49,6 +49,14 @@
       "size": "full",
       "order": 5,
       "path": "src/rooms/main/blocks/collaborative-art.tsx"
+    },
+    {
+      "id": "unique-click-counter",
+      "title": "Unique clicker",
+      "description": "A button for the whole wall — each unique person gets one click counted.",
+      "size": "md",
+      "order": 6,
+      "path": "src/rooms/main/blocks/unique-click-counter.tsx"
     }
   ],
   "pages": []
