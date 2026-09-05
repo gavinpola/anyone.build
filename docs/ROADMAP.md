@@ -177,3 +177,6 @@ Each tick: (1) if a "Now" item is unchecked, do the top one; (2) else pick from 
 - [ ] **Before launch, yours:** Convex Pro (sockets and bandwidth; the free tier's function-call and bandwidth caps are hours of a busy launch), Vercel Pro (commercial use, the 100-deploys/day cap, bandwidth), a launch-day budget on /admin (`dailyBudgetCents`; $20 is minutes at scale) with OpenRouter credit to match, Turnstile keys, the Actions permission on the GitHub App (timelapse kicker).
 - [ ] NEXT: re-measure fan-out after the bake ships; cursors off above 30 is in place, consider 20; a stress drill of 20 asks in 5 minutes; a GitHub merge queue so a burst of green PRs is one deploy.
 
+## The map is the world (Gavin, 2026-09-04: "make it very clear what the map dimensions are, and that never changes")
+- [x] The world no longer grows with content: it is exactly `canvas.size` (2400×3000 today, set in the wall's own file; a taller wall is an ask). The wall shows its edge; the map is labelled with its size, draws the edge, the viewport frame in ink, what you point at in orange, and your own pointer as a dot, so you can see where you are while you click. The add zone appears only while there is room for it; pointing at any empty spot still adds.
+

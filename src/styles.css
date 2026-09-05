@@ -512,3 +512,8 @@ body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking
 .patron-cta:hover { border-bottom-style: solid; }
 [data-live-counters] .presence-dot { width: 18px; height: 18px; font-size: 9px; }
 
+/* ===== The world has an edge, and the map is that rectangle ===== */
+.canvas-world { box-shadow: 0 0 0 max(1px, calc(1.5px / var(--zoom, 1))) color-mix(in oklab, var(--ink) 22%, transparent); }
+.minimap-edge { fill: none; stroke: var(--ink); stroke-width: 12; stroke-opacity: 0.55; }
+.minimap-me { fill: var(--ink); stroke: var(--paper); stroke-width: 8; }
+

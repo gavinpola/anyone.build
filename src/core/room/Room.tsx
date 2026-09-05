@@ -148,11 +148,14 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     return packBlocks(items, world, gap, pad, gap + 26); // labels sit above objects
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hung, heights, world.w, world.h, gap, pad]);
-  const worldH = Math.max(world.h, layout.bottom + 120 + ADD_ZONE + pad * 2);
+  // the world never grows: its size is the wall's own (canvas.ts), so the map is always the same rectangle
+  const worldH = world.h;
+  const roomForAddZone = layout.bottom + 60 <= worldH - ADD_ZONE - pad;
   const at = useMemo(() => new Map(layout.placed.map((p) => [p.id, p])), [layout]);
 
   // viewport, zoom, pan
   const [vp, setVp] = useState({ w: 0, h: 0 });
+  const [me, setMe] = useState<{ x: number; y: number } | null>(null);
   // a quiet refresh (a change just landed) comes back exactly where you were
   const [savedView] = useState(() => loadView(`${world.w}x${world.h}`));
   const [zoom, setZoom] = useState(savedView?.zoom ?? 1);
@@ -402,6 +405,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             e.stopPropagation(); // the block under the pointer never hears it
           }}
           onPointerMoveCapture={(e) => {
+            setMe(worldPoint(e));
             if (!pickerStore.get().arming) return;
             onPointerMove(e);
             // no stopPropagation: the picker's hover listener lives on window and needs the move; a block cannot draw from a move it never got a pointerdown for
@@ -472,7 +476,8 @@ function CanvasRoom({ compact }: { compact: boolean }) {
               );
             })}
             {/* always-empty canvas at the bottom: pointing here means "add a block" (and it's where tests point) */}
-            <section
+            {roomForAddZone ? (<section
+
               data-ab-block="__new__"
               data-ab-path={NEW_BLOCK_PATH}
               className="canvas-add flex flex-col"
@@ -482,13 +487,13 @@ function CanvasRoom({ compact }: { compact: boolean }) {
                 <p className="text-[15px] text-ink-2">Nothing lives here yet.</p>
                 <p className="mt-1 text-[13px] text-muted">Point here to add something. Hold ⇧⌘ and drag out a space to work on it, or drag an object to move it.</p>
               </div>
-            </section>
+            </section>) : null}
             {gesture?.kind === "marquee" && gesture.rect ? <div className="marquee" style={{ left: gesture.rect.x, top: gesture.rect.y, width: gesture.rect.w, height: gesture.rect.h }} /> : null}
             <Pins at={at} />
             <Cursors roomId={room.id} boxRef={wallRef} scale={1 / zoom} />
           </div>
 
-          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} mark={gesture?.kind === "marquee" ? gesture.rect : null} /> : null}
+          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} mark={gesture?.kind === "marquee" ? gesture.rect : null} me={me} /> : null}
           <CanvasBar
             zoom={zoom}
             fit={fit}

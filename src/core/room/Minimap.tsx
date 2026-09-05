@@ -20,6 +20,7 @@ export function Minimap({
   onGo,
   onGoBlock,
   mark,
+  me,
   compact = false,
 }: {
   world: World;
@@ -31,6 +32,8 @@ export function Minimap({
   onGoBlock?: (id: string) => void;
   /** a space being dragged out right now, in world px */
   mark?: Rect | null;
+  /** your own pointer, in world px */
+  me?: { x: number; y: number } | null;
   compact?: boolean;
 }) {
   // what's highlighted on the wall shows here too
@@ -59,7 +62,7 @@ export function Minimap({
   return (
     <div className="minimap" data-minimap data-minimap-open={open ? "1" : "0"} aria-label="Map of the wall">
       <button type="button" className="minimap-toggle" onClick={toggle} aria-expanded={open} aria-label={open ? "Hide the map" : "Show the map"}>
-        <span className="placard smallcaps">map</span>
+        <span className="placard smallcaps">map · {world.w}×{world.h}</span>
         {open ? <ChevronDown size={12} aria-hidden /> : <ChevronUp size={12} aria-hidden />}
       </button>
       {open ? (
@@ -94,6 +97,8 @@ export function Minimap({
           {region ? <rect data-map-mark x={region.x} y={region.y} width={region.w} height={region.h} className="minimap-mark" /> : null}
           {point ? <circle data-map-mark cx={point.x} cy={point.y} r={28} className="minimap-dot" /> : null}
           <rect x={vx} y={vy} width={vw} height={vh} className="minimap-view" />
+          {me ? <circle data-map-me cx={me.x} cy={me.y} r={22} className="minimap-me" /> : null}
+          <rect x={6} y={6} width={world.w - 12} height={world.h - 12} className="minimap-edge" />
         </svg>
       ) : null}
     </div>
