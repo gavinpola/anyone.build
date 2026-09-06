@@ -7,6 +7,7 @@ import { elapsed, timeAgo } from "@/core/lib/useNow";
 import { cancelRequest, plusOneRequest, submitRequest } from "@/core/lib/useRequests";
 import { REJECTION_COPY, STAGE_COPY, STATUS_STEPS, stepIndex, type FeedRequest } from "@/core/lib/types";
 import { ShareButton, shareUrl } from "@/core/share/ShareButton";
+import { formatCents } from "@/core/lib/money";
 
 const TERMINAL = new Set(["live", "rejected", "failed", "cancelled"]);
 
@@ -36,6 +37,11 @@ export function RequestCard({ r, now }: { r: FeedRequest; now: number }) {
         <span className="text-[13px] font-medium">{r.user.guest ? <span className="text-ink-2">{r.user.handle.replace("guest-", "guest · ")}</span> : `@${r.user.handle}`}</span>
         <span className="placard">{timeAgo(r.createdAt, now)}</span>
         <StatusPill r={r} now={now} />
+        {live && formatCents(r.run?.costCents) ? (
+          <span className="placard tabular-nums" title="what this change cost to build" data-cost>
+            {formatCents(r.run?.costCents)}
+          </span>
+        ) : null}
         {live || r.status === "proposed" ? (
           <ShareButton compact className="ml-auto" url={shareUrl(r.status === "proposed" ? "p" : "c", r.id)} title={r.prompt} text={r.status === "proposed" ? "Vote for this on everyones.lol" : "Made on everyones.lol, the website anyone can change"} />
         ) : null}

@@ -7,6 +7,7 @@ import { timeAgo } from "@/core/lib/useNow";
 import { useViewer } from "@/core/auth/useViewer";
 import { cn } from "@/core/lib/cn";
 import { LEDGER_ROWS, ScrollHint, WhoAsked } from "./Ledger";
+import { formatCents } from "@/core/lib/money";
 
 export function ChangesSection() {
   const rows = useQuerySafe(api.votes.recentChanges, hasConvex ? { limit: 50 } : "skip");
@@ -40,6 +41,14 @@ export function ChangesSection() {
                   <span className="placard flex items-center gap-2">
                     <WhoAsked by={c.by} /> · {timeAgo(c.mergedAt)} · {c.blockIds.join(", ") || "wall"} ·{" "}
                     <span className="text-ok">+{c.linesAdded}</span> <span className="text-bad">−{c.linesRemoved}</span>
+                    {formatCents(c.costCents) ? (
+                      <>
+                        {" "}·{" "}
+                        <span className="tabular-nums" title="what it cost to build" data-cost>
+                          {formatCents(c.costCents)}
+                        </span>
+                      </>
+                    ) : null}
                   </span>
                 </span>
                   <ShareButton compact url={shareUrl("c", c.requestId)} title={c.summary || "A change on the wall"} text="Made on everyones.lol, the website anyone can change" />

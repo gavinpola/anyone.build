@@ -12,6 +12,8 @@ import { track } from "@/core/lib/analytics";
 import { feedStore } from "@/core/feed/feedStore";
 import { ShareButton, shareUrl } from "@/core/share/ShareButton";
 import { friendlyError } from "@/core/lib/errors";
+import { api } from "../../../convex/_generated/api";
+import { hasConvex, useQuerySafe } from "@/core/lib/providers";
 
 const EXAMPLES = [
   "A guestbook where anyone can leave one line",
@@ -41,6 +43,9 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const { attach: attachTurnstile, getToken: turnstileToken } = useTurnstile(turnstileOn && !viewer.signedIn);
   const [prompt, setPrompt] = useState(t.draft ?? "");
   const [sending, setSending] = useState(false);
+  // how busy the wall is: said before anyone types, and Send waits when the line is full or the budget is spent
+  const pressure = useQuerySafe(api.requests.pressure, hasConvex ? {} : "skip");
+  const held = Boolean(pressure?.budgetSpent || pressure?.queueFull);
   const [error, setError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   // A re-select on the same spot while the previous panel is still animating out reuses this
@@ -182,6 +187,15 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
           />
               {turnstileOn && !viewer.signedIn ? <div ref={attachTurnstile} className="mt-2" data-turnstile /> : null}
           {error ? <p role="alert" className="mt-2 rounded-md bg-bad-soft px-3 py-2 text-[13px] text-bad">{error}</p> : null}
+          {pressure?.budgetSpent ? (
+            <p className="mt-2 text-[13px] text-ink-2" data-pressure="budget">Today's budget is spent. It resets at midnight ET; a patron can top it up sooner.</p>
+          ) : pressure?.queueFull ? (
+            <p className="mt-2 text-[13px] text-ink-2" data-pressure="queue">The wall is full right now: sixty asks in line. Try again in a few minutes.</p>
+          ) : pressure?.budgetLow ? (
+            <p className="mt-2 text-[13px] text-ink-2" data-pressure="low">Today's budget is nearly spent; small asks still fit.</p>
+          ) : pressure && pressure.inLine >= 5 ? (
+            <p className="mt-2 text-[13px] text-ink-2" data-pressure="line">{pressure.inLine} in line ahead of you. Yours joins the end.</p>
+          ) : null}
           <div className="mt-2 flex items-center gap-2">
             <span className="placard">
               <kbd className="rounded border border-line bg-paper-2 px-1">{isMac ? "⌘" : "Ctrl"}</kbd>
@@ -201,7 +215,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
             <button
               type="button"
               onClick={() => void send()}
-              disabled={sending || !prompt.trim()}
+              disabled={sending || !prompt.trim() || held}
               className={cn(
                 "inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium transition",
                 "bg-accent text-accent-ink hover:brightness-95 disabled:opacity-40",

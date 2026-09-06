@@ -47,10 +47,12 @@ export const recentChanges = query({
           .unique();
         myVote = Boolean(vrow);
       }
+      const req = await ctx.db.get(c.requestId);
       out.push({
         id: c._id,
         requestId: c.requestId,
         summary: c.summary,
+        costCents: req?.run?.costCents ?? null,
         by: whoAsked(u),
         mine: viewer ? c.userId === viewer._id : false,
         blockIds: c.blockIds,

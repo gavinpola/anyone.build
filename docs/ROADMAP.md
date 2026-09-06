@@ -62,8 +62,8 @@ The wall is live in production (anyone-build.vercel.app, Convex `hushed-ladybug-
 
 - [ ] **Load-test the wall** at 100 / 1,000 concurrent viewers making changes. Verify the bucketed presence counters, the approved-only feed, the per-block build locks, the daily budget, and the 8-build concurrency hold up. Find the first thing that falls over.
 - [x] **Live cursors** — shipped. Other people's pointers show on the wall at 2+ present, off above 30, throttled to ~120ms, positions normalized to the wall, swept with presence. e2e covers it. NEXT: true scale (100-1000) needs a dedicated realtime transport, not Convex writes — that's the open item; also a name/tag on hover and a taste pass on the arrow.
-- [ ] **Backpressure and graceful degradation:** when the build queue or budget is saturated, the wall says "busy, try soon" instead of queuing for 30 minutes; the fast path (above) is the main relief valve.
-- [ ] **Cost dashboard:** show per-change cost on the feed card and ledger row (data already on each request), and a daily spend view on `/admin`.
+- [x] **Backpressure and graceful degradation** (2026-09-06): the full line (sixty) and a spent budget already reject within seconds at the judge stage, never a thirty-minute queue; now the composer says so before anyone types (`requests.pressure`: N in line from five up, budget nearly spent, budget spent, line full) and Send waits in the last two cases. The fast path stays the main relief valve.
+- [x] **Cost dashboard** (2026-09-06): per-change cost on the live feed card and the change ledger row (`formatCents`: 3¢ / $1.20), the daily spend view on `/admin` shipped earlier.
 
 ## Product: the SaaS offering (standing focus — see [[feedback-saas-offering]])
 

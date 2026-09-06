@@ -105,6 +105,25 @@ export const queuePosition = query({
   },
 });
 
+/**
+ * How busy the wall is right now, so the composer can say so before someone types: how many asks are in
+ * line, whether the line is full (sixty), and whether today's budget is spent or nearly so. Public, no ids.
+ */
+export const pressure = query({
+  args: {},
+  handler: async (ctx) => {
+    const queued = await ctx.db.query("requests").withIndex("by_status", (q) => q.eq("status", "queued")).take(200);
+    const b = await ctx.db
+      .query("budgets")
+      .withIndex("by_day", (q) => q.eq("day", siteDay()))
+      .unique();
+    const c = await getAllConfig(ctx);
+    const cap = (b?.capCents ?? c.dailyBudgetCents) + (b?.topUpCents ?? 0);
+    const available = Math.max(0, cap - (b?.spentCents ?? 0) - (b?.reservedCents ?? 0));
+    return { inLine: queued.length, queueFull: queued.length >= 60, budgetSpent: available <= 0, budgetLow: available > 0 && available < 100 };
+  },
+});
+
 export const get = query({
   args: { id: v.id("requests"), guestId: v.optional(v.string()) },
   handler: async (ctx, { id, guestId }) => {
