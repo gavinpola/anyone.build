@@ -6,7 +6,9 @@ test("the wall renders without console errors", async ({ page }) => {
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.goto("/");
   await expect(page.locator("[data-room]")).toBeVisible();
-  await expect(page.getByText("anyone", { exact: false }).first()).toBeVisible();
+  // the world is there at 100% (no zoom), with a way in
+  await expect(page.locator("[data-world]")).toBeAttached();
+  await expect(page.getByRole("button", { name: /change something/i })).toBeVisible();
   // every block either renders or shows its own crash card, never a blank wall
   const crashed = await page.getByText("this block crashed").count();
   expect(crashed).toBe(0);

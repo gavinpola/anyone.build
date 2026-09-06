@@ -278,7 +278,7 @@ body[data-picking] .frame-body { outline: 1px dashed color-mix(in oklab, var(--a
 .frame-bare:hover, body[data-picking] .frame-bare { border-color: var(--line); }
 .frame-custom { overflow: hidden; }
 
-/* The bounded canvas: a fixed world inside a viewport you zoom and pan. */
+/* The walkable world: an unbounded world of tiles inside a viewport you walk; the ground is painted on the viewport and moves with the camera. */
 .canvas-viewport {
   position: relative; height: min(84vh, 1100px); min-height: 520px; overflow: hidden;
   border-radius: 28px; background: var(--paper-2); border: 1px solid var(--line);
@@ -345,9 +345,7 @@ body[data-picking] .canvas-add { border-color: var(--accent); background: color-
   flex: none; width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
   background: var(--paper-2); border: 1px solid var(--line); font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .06em; color: var(--ink-2);
 }
-.canvas-world[data-grid="dots"] { background-color: var(--paper-2); background-image: radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px); background-size: 22px 22px; }
-.canvas-world[data-grid="lines"] { background-color: var(--paper-2); background-image: linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; }
-[data-skin="instrument"] .canvas-world { border-radius: 0; } /* the ground (dots) is painted on the world itself now; the viewport beyond it is the dark letterbox */
+[data-skin="instrument"] .canvas-world { border-radius: 0; }
 [data-skin="instrument"] .canvas-world::after { display: none; }
 .heat { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; transition: background-image 600ms ease; }
 .minimap {
@@ -441,14 +439,6 @@ body:has([data-canvas]) [data-global-pick] { display: none; }
 .directory-chip.is-editing { border-color: var(--accent); }
 .directory-chip.is-faded { opacity: .5; }
 .directory-chip-dot { width: 6px; height: 6px; border-radius: 999px; }
-/* labels keep a constant size on screen at any zoom, like frame names in a design tool */
-.canvas-world .object-label { transform: scale(calc(1 / var(--zoom, 1))); transform-origin: 0 100%; top: 0; margin-top: calc(-22px / var(--zoom, 1)); }
-
-/* labels: like frame names, they vanish when you're far out and stay within their object otherwise */
-.canvas-world .object-label { max-width: calc(100% * var(--zoom, 1)); overflow: hidden; text-overflow: ellipsis; }
-.canvas-world .object-label > span:first-child { overflow: hidden; text-overflow: ellipsis; }
-.canvas-world[data-zoomband="far"] .object-label { opacity: 0; pointer-events: none; }
-.canvas-world[data-zoomband="mid"] .object-label .object-status { display: none; }
 /* phones: the bar sits above the viewport (nothing floats over it), icons only */
 .canvas-shell.is-compact .canvas-column { flex-direction: column; }
 .canvas-shell.is-compact .canvas-bar { order: -1; overflow: visible; justify-content: flex-start; gap: 4px; }
@@ -468,7 +458,6 @@ body:has([data-canvas]) [data-global-pick] { display: none; }
 .minimap { bottom: 64px; }
 .canvas-pages { position: absolute; left: 14px; top: 12px; z-index: 50; display: flex; align-items: center; gap: 6px; }
 .canvas-directory, .directory-strip { display: none; }
-.object-label { display: none; }
 body:has([data-canvas]) footer { display: none; }
 body:has([data-canvas]) { padding-bottom: 0; }
 body:has([data-canvas]) .flex.min-h-dvh { padding-bottom: 0; }
@@ -512,14 +501,9 @@ body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking
 .patron-cta:hover { border-bottom-style: solid; }
 [data-live-counters] .presence-dot { width: 18px; height: 18px; font-size: 9px; }
 
-/* ===== The world has an edge, and the map is that rectangle ===== */
-.canvas-world { box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(255, 255, 255, 0.12), 0 0 0 max(2px, calc(3px / var(--zoom, 1))) rgba(0, 0, 0, 0.35), 0 40px 120px rgba(0, 0, 0, 0.55); }
 .minimap-edge { fill: none; stroke: var(--ink); stroke-width: 12; stroke-opacity: 0.55; }
 .minimap-me { fill: var(--ink); stroke: var(--paper); stroke-width: 8; }
 
-/* ===== The letterbox: the world is the screen, the dark around it is not the wall ===== */
-.canvas-viewport { background: radial-gradient(120% 90% at 50% 45%, #1a1712 0%, #0e0d0a 70%, #090806 100%); }
-.canvas-viewport::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(80% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.35) 100%); }
 body[data-picking] .canvas-viewport { cursor: default; }
 body[data-picking] .canvas-world { cursor: crosshair; }
 
@@ -528,3 +512,157 @@ body[data-picking] .canvas-world { cursor: crosshair; }
 .minimap-faded { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 6px; max-width: 168px; font-size: 11px; line-height: 1.3; color: var(--ink-2); }
 .minimap-faded button { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 2px; }
 .minimap-faded button:hover { color: var(--accent); }
+
+/* ===== The walkable world (2026-09-05): a tile is a phone width, the world is 100%, you walk it ===== */
+/* the ground moves with you: dots and faint tile lines, offset by the camera */
+.canvas-viewport { --cam-x: 0px; --cam-y: 0px; background-color: var(--paper-2); }
+.canvas-viewport[data-grid="dots"] {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--ink) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--ink) 9%, transparent) 1px, transparent 1px),
+    radial-gradient(color-mix(in oklab, var(--ink) 16%, transparent) 1px, transparent 1.2px);
+  background-size: 360px 220px, 360px 220px, 22px 22px;
+  background-position: calc(-1 * var(--cam-x)) calc(-1 * var(--cam-y)), calc(-1 * var(--cam-x)) calc(-1 * var(--cam-y)), calc(-1 * var(--cam-x)) calc(-1 * var(--cam-y));
+}
+.canvas-viewport[data-grid="lines"] {
+  background-image: linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px; background-position: calc(-1 * var(--cam-x)) calc(-1 * var(--cam-y));
+}
+.canvas-world { width: 0; height: 0; overflow: visible; transition: none; }
+/* clip, never scroll: the camera is the only thing that moves the world (scrollIntoView on a hidden-overflow box would shift it) */
+.canvas-viewport { overflow: hidden; overflow: clip; }
+/* the frontier: past the last block there is nothing yet, and the edge fades to say so */
+.canvas-viewport::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2; background: none; transition: background 200ms ease; }
+.canvas-viewport[data-more-right]::before { background: linear-gradient(90deg, transparent calc(100% - 28px), color-mix(in oklab, var(--ink) 10%, transparent)); }
+.canvas-viewport[data-more-left][data-more-right]::before { background: linear-gradient(90deg, color-mix(in oklab, var(--ink) 10%, transparent), transparent 28px, transparent calc(100% - 28px), color-mix(in oklab, var(--ink) 10%, transparent)); }
+.canvas-viewport[data-more-left]:not([data-more-right])::before { background: linear-gradient(90deg, color-mix(in oklab, var(--ink) 10%, transparent), transparent 28px); }
+/* objects slide when the world repacks around a newcomer (the nudge), never while you drag one */
+.canvas-world .hung { transition: left 420ms cubic-bezier(.2, .9, .3, 1), top 420ms cubic-bezier(.2, .9, .3, 1), opacity 300ms ease, filter 300ms ease; }
+.canvas-world .hung.dragging { transition: none; }
+.canvas-world .hung.moving { outline: 1.5px dashed var(--accent); outline-offset: 8px; opacity: .8; }
+/* a block that just landed drops in and settles */
+@keyframes ab-drop { 0% { transform: translateY(-30px) scale(.93); opacity: 0; } 62% { transform: translateY(5px) scale(1.012); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.canvas-world .hung.landed { animation: ab-drop .9s cubic-bezier(.2, 1.5, .4, 1) both; }
+.canvas-world .hung.landed > .frame-body { outline: 1px solid color-mix(in oklab, var(--accent) 50%, transparent); outline-offset: 4px; }
+/* untouched things cool: a dying block dims toward an outline, a faded one is a ghost */
+.canvas-world .hung[data-life="dying"] { opacity: .78; }
+.canvas-world .hung.faded { opacity: .38; filter: saturate(.3); }
+/* the label is the handle: who · what · size, and a hint that it does something */
+.canvas-world .object-label {
+  display: flex; position: absolute; left: 0; top: -22px; z-index: 6; max-width: 100%; height: 20px;
+  align-items: center; gap: 6px; padding: 0; border: 0; background: transparent; text-align: left;
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; user-select: none; -webkit-user-select: none; white-space: nowrap;
+}
+.canvas-world .object-label > span { flex: none; }
+.canvas-world .object-label .object-title { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.canvas-world .object-label:hover, .canvas-world .object-label:focus-visible { color: var(--ink-2); }
+.canvas-world .object-label .object-status { margin-left: 4px; color: var(--ink-2); }
+.canvas-world .object-label.is-new .object-status { color: var(--ok); }
+.canvas-world .object-label.is-new .object-status::before { content: "● "; }
+.canvas-world .object-label.is-editing .object-status { color: var(--accent); }
+.canvas-world .object-label.is-dying .object-status { color: var(--warn); }
+.canvas-world .object-label.is-faded .object-status { color: var(--bad); }
+.canvas-world .object-hint { margin-left: 4px; padding: 2px 5px; border: 1px solid var(--line); border-radius: 3px; font-size: 8.5px; letter-spacing: .08em; color: var(--muted); opacity: 0; transition: opacity 120ms ease; }
+.canvas-world .hung:hover .object-hint, .canvas-world .object-label:focus-visible .object-hint { opacity: 1; }
+.canvas-shell.is-compact .canvas-world .object-hint { opacity: 1; }
+body[data-picking] .canvas-world .object-hint { opacity: 0; }
+.canvas-world .hung.object { overflow: visible; }
+/* empty ground: one tile that says where you are and what to do */
+.canvas-add {
+  position: absolute; z-index: 1; display: flex; flex-direction: column; cursor: pointer;
+  border: 1px dashed color-mix(in oklab, var(--accent) 45%, transparent); background: color-mix(in oklab, var(--accent) 5%, transparent);
+  transition: left 300ms ease, top 300ms ease;
+}
+.canvas-add:hover { border-color: var(--accent); }
+.canvas-add-where { font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: color-mix(in oklab, var(--accent) 80%, var(--ink)); }
+.canvas-add-cta { display: inline-flex; align-items: center; padding: 11px 18px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font-size: 12.5px; font-weight: 600; box-shadow: 0 4px 18px color-mix(in oklab, var(--accent) 30%, transparent); }
+/* the marquee snaps to tiles */
+.marquee { z-index: 40; }
+/* where you are, in the bar */
+.canvas-tile { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.canvas-tile .n { color: var(--accent); }
+.canvas-toast { cursor: default; }
+button.canvas-toast { cursor: pointer; }
+button.canvas-toast:hover { border-color: var(--ok); }
+.canvas-toast .go { margin-left: 2px; color: var(--ok); }
+/* the walk hint, bottom-left on a laptop */
+.walk-hint {
+  position: absolute; left: 14px; bottom: 14px; z-index: 50; display: inline-flex; align-items: center; gap: 9px; padding: 8px 12px;
+  border-radius: 6px; background: color-mix(in oklab, var(--card) 92%, transparent); border: 1px solid var(--line);
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); pointer-events: none;
+}
+.walk-hint .keys { color: var(--ink); letter-spacing: .05em; }
+/* moving: the next tap says where */
+.move-hint {
+  position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 55; pointer-events: none; display: inline-flex; align-items: center; gap: 10px; padding: 8px 12px;
+  border-radius: 6px; background: var(--ink); color: var(--paper); border: 1px solid var(--ink); font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.2); white-space: nowrap; max-width: calc(100% - 28px);
+}
+.move-hint strong { font-weight: 600; }
+.move-hint button { pointer-events: auto; padding: 2px 8px; border-radius: 4px; border: 1px solid color-mix(in oklab, var(--paper) 40%, transparent); font-size: 12px; }
+.move-hint button:hover { background: color-mix(in oklab, var(--paper) 15%, transparent); }
+.canvas-viewport[data-moving] { cursor: copy; }
+/* next door: a phone shows one tile across, so the strip says what's left and right */
+.neighbour-strip {
+  position: absolute; left: 8px; right: 8px; bottom: 66px; z-index: 45; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 9.5px; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); pointer-events: none;
+}
+.neighbour-strip > * { pointer-events: auto; }
+.neighbour-strip button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 6px; background: color-mix(in oklab, var(--card) 92%, transparent); border: 1px solid var(--line); color: var(--ink-2); }
+.neighbour-strip .here { color: var(--accent); }
+.neighbour-strip .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--ink-2); }
+.neighbour-strip .people { color: var(--ok); }
+body[data-picking] .neighbour-strip, body[data-picking] .walk-hint { opacity: .35; pointer-events: none; }
+/* the teleport pad */
+.minimap-grid { stroke: color-mix(in oklab, var(--ink) 9%, transparent); stroke-width: 6; }
+.minimap-block { transition: fill 160ms ease; }
+.minimap-block.is-lit { fill: var(--accent); }
+.minimap-block.is-dim { fill: color-mix(in oklab, var(--ink) 10%, transparent); }
+.minimap-view { fill: color-mix(in oklab, var(--ok) 10%, transparent); stroke: var(--ok); stroke-width: 14; }
+.minimap-peer { fill: var(--ok); }
+.minimap-filters { display: flex; margin-top: 6px; border-top: 1px solid var(--line); }
+.minimap-filter { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-right: 1px solid var(--line); }
+.minimap-filter:last-child { border-right: 0; }
+.minimap-filter:hover { color: var(--ink-2); }
+.minimap-filter.is-on { color: var(--accent); }
+.minimap-filter .n { color: var(--ink-2); }
+/* the object sheet */
+.object-sheet {
+  position: fixed; z-index: 62; width: 300px; max-width: calc(100vw - 16px); padding: 12px 14px 14px; border-radius: 6px;
+  background: var(--card); border: 1px solid var(--line); box-shadow: 0 12px 34px rgba(60, 40, 10, .18);
+}
+.object-sheet.is-sheet { left: 8px; right: 8px; bottom: 8px; width: auto; max-width: none; padding-bottom: max(14px, env(safe-area-inset-bottom)); border-radius: 10px; }
+.object-sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.object-sheet-title { font-size: 14px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.object-sheet-facts { margin-top: 3px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 10.5px; letter-spacing: .04em; color: var(--muted); }
+.object-sheet-x { flex: none; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 5px; color: var(--muted); }
+.object-sheet-x:hover { background: var(--paper-2); color: var(--ink); }
+.object-sheet-actions { display: flex; gap: 8px; margin-top: 12px; }
+.object-sheet-cta { flex: 1; height: 40px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-size: 13.5px; font-weight: 600; }
+.object-sheet-cta:hover { filter: brightness(.95); }
+.object-sheet-btn { flex: 1; height: 40px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 13.5px; font-weight: 500; }
+.object-sheet-btn:hover { border-color: var(--line-2); background: var(--paper-2); }
+/* phones: the bar is the big orange Change and Live; the map is a chip above it */
+.canvas-shell.is-compact .canvas-bar { padding: 6px; gap: 6px; }
+.canvas-shell.is-compact .canvas-bar .canvas-bar-cta { flex: 1; height: 44px !important; border-radius: 7px !important; justify-content: center; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); margin-left: 0; font-size: 14px; }
+.canvas-shell.is-compact .canvas-bar .canvas-bar-cta[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); }
+.canvas-shell.is-compact .canvas-bar .canvas-bar-live { height: 44px !important; border-radius: 7px !important; }
+.canvas-shell.is-compact .canvas-bar .canvas-toast { display: none; }
+.canvas-shell.is-compact .minimap { right: 8px; bottom: 104px; }
+.canvas-shell.is-compact .canvas-howto { right: 8px; bottom: 104px; display: none; }
+.canvas-shell.is-compact .minimap[data-minimap-open="0"] { padding: 6px 10px; }
+.canvas-shell.is-compact .canvas-add-cta { padding: 13px 18px; font-size: 13.5px; }
+/* when every free tile is off screen, the add zone floats over the world and walks you to the nearest one */
+.canvas-add.is-floating { position: absolute; left: 14px; bottom: 64px; width: 328px; min-height: 120px; z-index: 48; background: color-mix(in oklab, var(--card) 92%, transparent); transition: none; box-shadow: 0 8px 24px rgba(60, 40, 10, .12); }
+/* phones: a slim pill above the neighbour strip, leaving the map chip its corner */
+.canvas-shell.is-compact .canvas-add.is-floating { left: 8px; right: 104px; top: auto; bottom: 104px; width: auto; min-height: 0; }
+.canvas-shell.is-compact .canvas-add.is-floating .frame-body { flex-direction: row; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 10px; }
+.canvas-shell.is-compact .canvas-add.is-floating .canvas-add-where { display: none; }
+.canvas-shell.is-compact .canvas-add.is-floating .canvas-add-cta { padding: 9px 12px; font-size: 12.5px; }
+body[data-picking] .canvas-add.is-floating { opacity: 1; pointer-events: auto; }
+/* the active object: the one with the keys */
+.canvas-world .hung.is-active { outline: 1.5px solid color-mix(in oklab, var(--ok) 70%, transparent); outline-offset: 8px; }
+.canvas-world .hung.is-active.editing { outline-color: var(--accent); }
+.canvas-world .object-keys { margin-left: 4px; padding: 2px 5px; border-radius: 3px; background: var(--ok); color: white; font-size: 8.5px; letter-spacing: .08em; }
+.walk-hint[data-walk-hint="keys"] { border-color: color-mix(in oklab, var(--ok) 50%, var(--line)); color: var(--ink-2); }
+.walk-hint[data-walk-hint="keys"] .keys { color: var(--ok); }

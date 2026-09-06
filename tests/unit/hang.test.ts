@@ -18,7 +18,7 @@ describe("how a block hangs on the wall", () => {
     expect(h.shape).toBe("bare");
     expect(h.tilt).toBe(3);
     expect(h.span).toBe(12);
-    expect(h.place).toEqual({ x: 95, y: 0, w: 5 });
+    expect(h.place).toEqual({ x: 120, y: -5, w: 2 }); // tiles now; the room migrates and clamps through placeOf
   });
   it("size maps to a span of the canvas's columns; the canvas can change the column count", () => {
     expect(hang({ id: "s", size: "sm" }, c).span).toBe(4);

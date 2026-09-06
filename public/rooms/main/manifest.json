@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-06T07:29:32.515Z",
+  "generatedAt": "2026-09-06T18:27:29.698Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -57,6 +57,14 @@
       "size": "full",
       "order": 5,
       "path": "src/rooms/main/blocks/collaborative-art.tsx"
+    },
+    {
+      "id": "gta-browser",
+      "title": "GTA: browser edition",
+      "description": "A tiny overhead city cruise. Steer with the arrow keys, don't hit the buildings.",
+      "size": "full",
+      "order": 5,
+      "path": "src/rooms/main/blocks/gta-browser.tsx"
     },
     {
       "id": "unique-click-counter",

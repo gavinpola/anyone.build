@@ -22,6 +22,7 @@ import { Route as TimelapseRouteImport } from './routes/timelapse'
 import { Route as CIdRouteImport } from './routes/c.$id'
 import { Route as LabIdRouteImport } from './routes/lab.$id'
 import { Route as PIdRouteImport } from './routes/p.$id'
+import { Route as TTileRouteImport } from './routes/t.$tile'
 import { Route as RRoomSlugRouteImport } from './routes/r.$room.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -89,6 +90,11 @@ const PIdRoute = PIdRouteImport.update({
   path: '/p/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TTileRoute = TTileRouteImport.update({
+  id: '/t/$tile',
+  path: '/t/$tile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RRoomSlugRoute = RRoomSlugRouteImport.update({
   id: '/r/$room/$slug',
   path: '/r/$room/$slug',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/c/$id': typeof CIdRoute
   '/lab/$id': typeof LabIdRoute
   '/p/$id': typeof PIdRoute
+  '/t/$tile': typeof TTileRoute
   '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/c/$id': typeof CIdRoute
   '/lab/$id': typeof LabIdRoute
   '/p/$id': typeof PIdRoute
+  '/t/$tile': typeof TTileRoute
   '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRoutesById {
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/c/$id': typeof CIdRoute
   '/lab/$id': typeof LabIdRoute
   '/p/$id': typeof PIdRoute
+  '/t/$tile': typeof TTileRoute
   '/r/$room/$slug': typeof RRoomSlugRoute
 }
 export interface FileRouteTypes {
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/c/$id'
     | '/lab/$id'
     | '/p/$id'
+    | '/t/$tile'
     | '/r/$room/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/c/$id'
     | '/lab/$id'
     | '/p/$id'
+    | '/t/$tile'
     | '/r/$room/$slug'
   id:
     | '__root__'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/c/$id'
     | '/lab/$id'
     | '/p/$id'
+    | '/t/$tile'
     | '/r/$room/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   CIdRoute: typeof CIdRoute
   LabIdRoute: typeof LabIdRoute
   PIdRoute: typeof PIdRoute
+  TTileRoute: typeof TTileRoute
   RRoomSlugRoute: typeof RRoomSlugRoute
 }
 
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/t/$tile': {
+      id: '/t/$tile'
+      path: '/t/$tile'
+      fullPath: '/t/$tile'
+      preLoaderRoute: typeof TTileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$room/$slug': {
       id: '/r/$room/$slug'
       path: '/r/$room/$slug'
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   CIdRoute: CIdRoute,
   LabIdRoute: LabIdRoute,
   PIdRoute: PIdRoute,
+  TTileRoute: TTileRoute,
   RRoomSlugRoute: RRoomSlugRoute,
 }
 export const routeTree = rootRouteImport

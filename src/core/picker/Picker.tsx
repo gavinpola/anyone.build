@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { pickerStore, resolveTarget, usePicker, wordAtPoint, type PickerTarget } from "./pickerStore";
+import { sheetStore } from "@/core/room/sheetStore";
 
 /** Element under the pointer, refined to a single word when the pointer is on text. */
 function targetAt(x: number, y: number): PickerTarget | null {
@@ -19,7 +20,8 @@ const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigat
 
 /**
  * The signature interaction. Hold ⇧⌘ (⇧Ctrl elsewhere) or toggle pick mode, point at
- * anything on the wall, click. Long-press on touch devices.
+ * anything on the wall, click. Long-press on touch devices: on an object in the world it opens the
+ * object's sheet (who made it · Change · Move); elsewhere it picks.
  */
 export function Picker() {
   const { arming, hover, selected } = usePicker();
@@ -100,7 +102,15 @@ export function Picker() {
       const x = touch.clientX;
       const y = touch.clientY;
       longPress.current = window.setTimeout(() => {
-        const t = resolveTarget(document.elementFromPoint(x, y));
+        const el = document.elementFromPoint(x, y);
+        const frame = el?.closest<HTMLElement>("[data-ab-block]");
+        const id = frame?.dataset.abBlock;
+        if (frame && id && id !== "__new__" && id !== "__canvas__" && frame.closest("[data-canvas]")) {
+          navigator.vibrate?.(10);
+          sheetStore.open(id);
+          return;
+        }
+        const t = resolveTarget(el);
         if (t) {
           navigator.vibrate?.(10);
           pickerStore.select({ ...t, point: { x, y } });

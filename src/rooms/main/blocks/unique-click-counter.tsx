@@ -8,7 +8,7 @@ export const block: BlockMeta = {
   description: "A button for the whole wall — each unique person gets one click counted.",
   order: 6,
   size: "md",
-  place: { x: 900, y: 520, w: 560 },
+  place: { x: 3, y: 2, w: 2 }, // tiles: three right of the origin, two down, two wide
 };
 
 export default function UniqueClickCounter() {

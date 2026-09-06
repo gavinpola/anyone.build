@@ -5,15 +5,14 @@ const SESSION_RE = /^[a-z0-9:_-]{8,80}$/i;
 const FRESH_MS = 5_000;
 const MAX_CURSORS = 24; // render cap; also bounds the O(n^2) subscription cost
 
-/** Throttled upsert of one tab's cursor (fraction 0..1 of the wall). Client throttles to ~120ms. */
+/** Throttled upsert of one tab's cursor, in tiles (the world's unit; fractional, negative is normal). Client throttles to ~200ms. */
 export const move = mutation({
   args: { roomId: v.string(), sessionId: v.string(), x: v.number(), y: v.number(), hue: v.number(), name: v.optional(v.string()) },
   handler: async (ctx, { roomId, sessionId, x, y, hue, name }) => {
     if (!SESSION_RE.test(sessionId) || roomId.length > 32) return;
-    // clamp so a bad client can't store garbage; the wall is centred with empty ground around it at the
-    // overview, and a pointer over that ground is still a pointer, so a margin beyond the wall is allowed
-    const cx = Math.max(-1, Math.min(2, x));
-    const cy = Math.max(-1, Math.min(2, y));
+    // clamp so a bad client can't store garbage: the world is unbounded but nobody is a thousand tiles out
+    const cx = Number.isFinite(x) ? Math.max(-1000, Math.min(1000, x)) : 0;
+    const cy = Number.isFinite(y) ? Math.max(-1000, Math.min(1000, y)) : 0;
     const h = Math.max(0, Math.min(360, Math.round(hue)));
     const now = Date.now();
     const existing = await ctx.db

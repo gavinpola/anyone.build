@@ -101,9 +101,8 @@ export function hang(meta: Pick<BlockMeta, "id" | "size"> & Partial<Pick<BlockMe
   const stagger = STAGGER_STEPS[(h >> 6) % STAGGER_STEPS.length]! * clamp(c.stagger ?? 14, 0, 60);
   const columns = columnsOf(c);
   const span = meta.span != null ? clamp(Math.round(meta.span), 1, columns) : sizeToSpan(meta.size, columns);
-  const place = meta.place && Number.isFinite(meta.place.x) && Number.isFinite(meta.place.y) && Number.isFinite(meta.place.w)
-    ? { x: clamp(meta.place.x, 0, 95), y: clamp(meta.place.y, 0, 20000), w: clamp(meta.place.w, 5, 100) }
-    : undefined;
+  // the place is in tiles and the room reads it through placeOf (canvas.ts); it passes through here untouched
+  const place = meta.place && Number.isFinite(meta.place.x) && Number.isFinite(meta.place.y) ? meta.place : undefined;
   const tints = c.palette?.length ? c.palette : DEFAULT_PALETTE;
   const custom = typeof shape === "string" ? null : shape;
   const kind: Body["kind"] = typeof shape === "string" ? shape : "custom";

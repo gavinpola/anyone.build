@@ -29,7 +29,9 @@ function Inner({ id, kind }: { id: string; kind: "c" | "p" }) {
     const t0 = setTimeout(() => {
       ring = document.querySelector(selector);
       if (!ring) return;
-      ring.scrollIntoView({ behavior: "smooth", block: "center" });
+      // on the walkable world the camera goes to the block (the room listens); elsewhere the page scrolls
+      if (ring.closest("[data-canvas]")) window.dispatchEvent(new CustomEvent("ab:focus-block", { detail: blockId }));
+      else ring.scrollIntoView({ behavior: "smooth", block: "center" });
       ring.classList.add("share-ring");
     }, 150);
     const t1 = setTimeout(() => ring?.classList.remove("share-ring"), 3200);

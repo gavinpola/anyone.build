@@ -41,13 +41,16 @@ export function HowTo() {
         <div id="canvas-howto" className="canvas-howto-pop" data-canvas-howto>
           <p className="placard smallcaps">How to use the canvas</p>
           <p className="mt-2">
-            Hold <kbd>⇧</kbd>
-            <kbd>{isMac ? "⌘" : "Ctrl"}</kbd> and point at anything, then say what should change. Or press <strong>Change something</strong>.
+            The world is always 100%: <strong>walk it</strong>. Drag the ground, scroll, or use the arrow keys. The map in the corner teleports.
           </p>
-          <p className="mt-2">Drag out a space to work on that space. Drag an object to move it.</p>
           <p className="mt-2">
-            On a phone: tap <strong>Change</strong>, then tap.
+            Tap an object's <strong>label</strong> to see who made it, change it, or move it. Tap empty ground to add something there.
           </p>
+          <p className="mt-2">
+            Hold <kbd>⇧</kbd>
+            <kbd>{isMac ? "⌘" : "Ctrl"}</kbd> and point at anything to change just that; drag out tiles to work on a space. Or press <strong>Change something</strong>.
+          </p>
+          <p className="mt-2">On a phone: swipe to walk, long-press an object for its sheet.</p>
           <button
             type="button"
             className="mt-3 text-[13px] font-medium text-accent hover:underline"

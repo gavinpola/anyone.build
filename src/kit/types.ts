@@ -8,7 +8,7 @@ export type BlockMeta = {
   description: string;
   /** Lower comes first. Ties broken by id. */
   order: number;
-  /** Width on the 12-column wall. */
+  /** How many tiles wide: "sm" and "md" are one tile (a phone width), "lg" and "full" are two. Height comes from the content (one to three tiles). */
   size: "sm" | "md" | "lg" | "full";
   /**
    * How the block sits on the wall. A preset ("card" = the classic frame, "square" = a plain box with no corners, "soft" = big rounded corners,
@@ -18,18 +18,20 @@ export type BlockMeta = {
   shape?: ShapePreset | CustomShape;
   /** A slight hand-hung tilt in degrees, -3..3. Unset = picked from the id within the canvas's tilt range. */
   tilt?: number;
-  /** Width in wall columns (1..12), overriding `size`. */
+  /** Legacy width in wall columns (1..12), overriding `size`: more than 6 is two tiles wide. Prefer `size`. */
   span?: number;
   /** never fades (the wall header, the rules): decay skips it */
   pinned?: boolean;
   /** Taken off the wall. The file stays as history and "bring it back" is one flip; the wall, the manifest, and the playtester skip it. */
   removed?: boolean;
   /**
-   * Where the block sits on the canvas, in world pixels (the canvas has a fixed size, see CanvasMeta.size):
-   * x and y from the top-left, w the width. A placed block sits exactly there; blocks without a place are
-   * packed into the free space in `order`. On phones everything stacks.
+   * Where the block sits in the world, in TILES (a tile is one phone width; the world is unbounded and 0,0 is
+   * its middle, so negative tiles are normal: "tile 4,-2"). x and y are the top-left tile, w is 1 or 2 tiles
+   * wide, h (optional) 1 to 3 tall. A placed block sits exactly there; blocks without a place are packed
+   * into the nearest free tiles to the origin, in `order`. Old pixel places ({ x: 900, y: 520, w: 560 }) are
+   * still read and migrated (tx = round(x / 360)).
    */
-  place?: { x: number; y: number; w: number };
+  place?: { x: number; y: number; w?: number; h?: number };
 };
 
 /** "blob" = an organic eight-radius body that morphs slowly and merges with its neighbours on the liquid layer. */
@@ -90,11 +92,11 @@ export type CanvasMeta = {
   decay?: number | false;
   /** the ground warms where people are working */
   heat?: boolean;
-  /** a map of the world in the corner */
+  /** the teleport map in the corner: tap a tile to go there */
   minimap?: boolean;
-  /** phones: the same canvas with pinch and pan (default), or a plain stack */
+  /** phones: the same world, one tile across, walked with a finger (default), or a plain stack */
   mobile?: "canvas" | "stack";
-  /** the fixed size of the canvas in px at zoom 1 (people zoom and pan inside it); default 2400 × 1600 */
+  /** legacy: the old bounded board's size. The world is unbounded now and renders at 100%; this is ignored by the room. */
   size?: { w: number; h: number };
   /** minimum height of the wall when blocks are placed freely, px (legacy; `size` wins) */
   height?: number;

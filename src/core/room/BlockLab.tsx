@@ -1,4 +1,6 @@
-import { RoomContext } from "@/kit/room-context";
+import { useEffect } from "react";
+import { BlockContext, RoomContext } from "@/kit/room-context";
+import { keysStore } from "./keysStore";
 import { BlockBoundary } from "@/core/lib/BlockBoundary";
 import { room } from "@/rooms/main/room";
 import { blocks } from "./Room";
@@ -9,6 +11,11 @@ import { blocks } from "./Room";
  */
 export function BlockLab({ id }: { id: string }) {
   const b = blocks.find((x) => x.meta.id === id);
+  // alone in the lab, the block has the keys from the start (the playtester presses Space and ArrowUp)
+  useEffect(() => {
+    keysStore.activate(id);
+    return () => keysStore.deactivate(id);
+  }, [id]);
   if (!b) {
     return (
       <div className="mx-auto max-w-[960px] px-4 py-10" data-lab="missing">
@@ -27,7 +34,9 @@ export function BlockLab({ id }: { id: string }) {
         <section data-ab-block={meta.id} data-ab-path={path} className="frame flex flex-col">
           <div className="frame-body flex-1">
             <BlockBoundary title={meta.title}>
-              <Component />
+              <BlockContext.Provider value={meta.id}>
+                <Component />
+              </BlockContext.Provider>
             </BlockBoundary>
           </div>
         </section>

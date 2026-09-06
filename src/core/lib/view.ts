@@ -1,17 +1,17 @@
 /**
- * Where you were: the room's pan and zoom (and a page's scroll), kept in sessionStorage across the
- * quiet refresh that brings in a newly landed change, so the wall updates under you without moving.
- * Ten minutes old is stale; a different world size means the saved view no longer applies.
+ * Where you were: the room's camera (and a page's scroll), kept in sessionStorage across the quiet
+ * refresh that brings in a newly landed change, so the world updates under you without moving.
+ * Ten minutes old is stale; a different world key (the geometry changed) means the saved view no longer applies.
  */
 const FRESH_MS = 10 * 60 * 1000;
 
-export type SavedView = { pan: { x: number; y: number }; zoom: number; world: string; at: number };
+export type SavedView = { cam: { x: number; y: number }; world: string; at: number };
 
 export function saveView(v: Omit<SavedView, "at">): void {
   try {
     sessionStorage.setItem("ab:view", JSON.stringify({ ...v, at: Date.now() }));
   } catch {
-    /* storage blocked: the next load simply fits */
+    /* storage blocked: the next load simply lands where the action is */
   }
 }
 
@@ -21,7 +21,7 @@ export function loadView(world: string): SavedView | null {
     if (!raw) return null;
     const v = JSON.parse(raw) as SavedView;
     if (!v || v.world !== world || Date.now() - v.at > FRESH_MS) return null;
-    if (!Number.isFinite(v.zoom) || !Number.isFinite(v.pan?.x) || !Number.isFinite(v.pan?.y)) return null;
+    if (!Number.isFinite(v.cam?.x) || !Number.isFinite(v.cam?.y)) return null;
     return v;
   } catch {
     return null;

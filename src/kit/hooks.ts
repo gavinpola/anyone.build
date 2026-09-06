@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBlockId } from "./room-context";
+import { keysStore } from "@/core/room/keysStore";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { hasConvex } from "@/core/lib/providers";
@@ -188,6 +190,24 @@ export function useTick(callback: (dt: number) => void, opts: { fps?: number; ac
       cancelAnimationFrame(raf);
     };
   }, [fps, active]);
+}
+
+/**
+ * The keys held down right now, for a game: a live Set of `key` names ("ArrowLeft", " ", "w") that is
+ * filled while this block is the ACTIVE object on the wall (the one the person last tapped; the wall
+ * shows which one has the keys) and empty otherwise. Read it inside useTick each frame:
+ * `if (keys.has("ArrowLeft")) car.angle -= dt * 3`. Arrow and space presses are kept from scrolling
+ * the page while they go to a block. The same Set object comes back on every render, so it never
+ * re-renders the block; call setState yourself when the screen must change.
+ */
+export function useKeys(): ReadonlySet<string> {
+  const id = useBlockId();
+  const [set] = useState(() => new Set<string>()); // one Set for the block's whole life
+  useEffect(() => {
+    if (!id) return;
+    return keysStore.bind(id, set);
+  }, [id, set]);
+  return set;
 }
 
 // ---- high scores ----

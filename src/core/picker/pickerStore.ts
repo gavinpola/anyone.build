@@ -101,7 +101,8 @@ export function resolveTarget(el: Element | null): PickerTarget | null {
   const path = stamp.slice(0, i);
   const line = Number(stamp.slice(i + 1));
   if (isNew) {
-    return { path, line: 0, blockId: undefined, blockTitle: "New block", tag: "wall", text: undefined, rect: frame!.getBoundingClientRect(), element: frame!, granularity: "block" };
+    // the add zone says which tile it stands on ("tile 4,-2"), so the coder places the new block there
+    return { path, line: 0, blockId: undefined, blockTitle: "New block", tag: "wall", text: frame!.dataset.abText || undefined, rect: frame!.getBoundingClientRect(), element: frame!, granularity: "block" };
   }
   const text = (node.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
   return {

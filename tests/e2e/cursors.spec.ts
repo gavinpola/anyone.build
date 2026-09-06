@@ -26,7 +26,7 @@ test("a second person's cursor appears on the wall", async ({ browser }) => {
   await b.context().close();
 });
 
-test("a cursor over the dark beside the wall still shows for others, at the edge", async ({ browser }) => {
+test("cursors travel in tiles: where A points, W sees a pointer over the same ground", async ({ browser }) => {
   test.setTimeout(60_000);
   const a = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
   const w = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
@@ -35,19 +35,24 @@ test("a cursor over the dark beside the wall still shows for others, at the edge
     await expect(p.locator('html[data-convex="ready"]')).toBeAttached({ timeout: 20_000 });
   }
   await a.waitForTimeout(1500);
-  const world = (await a.locator("[data-world]").boundingBox())!;
+  // A keeps its pointer moving on the add zone (empty ground) while W looks for it: cursors only travel once
+  // two people are counted here, so the first moves may go unsent
+  const add = (await a.locator('[data-ab-block="__new__"]').boundingBox())!;
+  const gx = add.x + add.width / 2;
+  const gy = add.y + add.height / 2;
+  // the tile under A's pointer, through A's camera (the add zone may be floating over the world, so read the ground itself)
   const vp = (await a.locator(".canvas-viewport").boundingBox())!;
-  test.skip(world.x + world.width > vp.x + vp.width - 60, "no ground to the right of the wall at this size");
-  // A parks its pointer on the empty ground right of the wall and keeps it alive
-  const gx = vp.x + vp.width - 30;
-  const gy = world.y + world.height * 0.3;
-  for (let k = 0; k < 8; k++) {
+  const cam = ((await a.locator("[data-world]").getAttribute("data-cam")) ?? "0,0").split(",").map(Number);
+  const tile = [Math.floor((gx - vp.x + cam[0]!) / 360), Math.floor((gy - vp.y + cam[1]!) / 220)];
+  let found = false;
+  for (let k = 0; k < 80 && !found; k++) {
     await a.mouse.move(gx - (k % 2), gy);
-    await a.waitForTimeout(300);
+    await a.waitForTimeout(250);
+    // W draws it in world px at that tile, whatever W's own camera shows (other tests' pages may be pointing too:
+    // one of the cursors W sees is A's, on A's tile)
+    const all = await w.locator("[data-world] .cursor-label").evaluateAll((els) => els.map((el) => ({ left: parseFloat((el.parentElement as HTMLElement).style.left), top: parseFloat((el.parentElement as HTMLElement).style.top) })));
+    found = all.some((at) => Math.floor(at.left / 360) === tile[0] && Math.floor(at.top / 220) === tile[1]);
   }
-  const seen = w.locator("[data-world] .cursor-label");
-  await expect(seen.first()).toBeAttached({ timeout: 10_000 });
-  const left = await seen.first().locator("xpath=..").evaluate((el) => parseFloat((el as HTMLElement).style.left));
-  expect(left).toBeGreaterThanOrEqual(99); // pinned to the wall's right edge, and still drawn
+  expect(found).toBe(true);
 });
 

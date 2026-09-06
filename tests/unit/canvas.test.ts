@@ -1,83 +1,154 @@
 import { describe, expect, it } from "vitest";
-import { clampPan, clampZoom, fitZoom, packBlocks, parsePoint, parseRegion, pointText, regionText, toWorld, widthFor, worldSize, zoomAround } from "../../src/core/room/canvas";
+import {
+  TILE_H,
+  TILE_W,
+  camForTiles,
+  clampCam,
+  isFree,
+  lifeLeft,
+  nearestFreeTile,
+  packTiles,
+  parseTile,
+  parseTiles,
+  placeOf,
+  spawnTile,
+  tileAt,
+  tileBox,
+  tileFromPath,
+  tileOfView,
+  tilePath,
+  tileText,
+  tilesCovering,
+  tilesTall,
+  tilesText,
+  tilesWide,
+  toWorld,
+  worldBounds,
+} from "../../src/core/room/canvas";
 
-const world = { w: 2400, h: 1600 };
-
-describe("the bounded canvas", () => {
-  it("has a fixed world, clamped to sane sizes", () => {
-    expect(worldSize({})).toEqual({ w: 2400, h: 1600 });
-    expect(worldSize({ size: { w: 100, h: 99999 } })).toEqual({ w: 800, h: 12000 });
+describe("tiles: the world's unit", () => {
+  it("a tile is a phone width; a block's box is its tiles minus the gutter and its label's room", () => {
+    expect(TILE_W).toBe(360);
+    expect(tileAt({ x: 0, y: 0 })).toEqual({ x: 0, y: 0 });
+    expect(tileAt({ x: -1, y: -1 })).toEqual({ x: -1, y: -1 });
+    expect(tileAt({ x: 725, y: 439 })).toEqual({ x: 2, y: 1 });
+    const b = tileBox({ x: 1, y: 1, w: 2, h: 1 });
+    expect(b.x).toBe(TILE_W + 16);
+    expect(b.w).toBe(2 * TILE_W - 32);
+    expect(b.h).toBe(TILE_H - 32 - 24);
   });
-  it("fits the world to the viewport (never magnifying) and clamps zoom between fit and the max", () => {
-    const fit = fitZoom({ w: 1200, h: 800 }, world);
-    expect(fit).toBeCloseTo(0.5);
-    expect(fitZoom({ w: 5000, h: 5000 }, world)).toBe(1);
-    expect(clampZoom(0.1, fit)).toBe(fit);
-    expect(clampZoom(9, fit)).toBe(1.6);
+  it("sizes map to tiles: sm/md one wide, lg/full two; height from the content, one to three", () => {
+    expect(tilesWide({ size: "sm" })).toBe(1);
+    expect(tilesWide({ size: "md" })).toBe(1);
+    expect(tilesWide({ size: "lg" })).toBe(2);
+    expect(tilesWide({ size: "full" })).toBe(2);
+    expect(tilesWide({ size: "sm", span: 9 })).toBe(2);
+    expect(tilesTall(100)).toBe(1);
+    expect(tilesTall(300)).toBe(2);
+    expect(tilesTall(9000)).toBe(3);
   });
-  it("keeps the world on screen: centred when smaller, never dragged fully off when larger", () => {
-    expect(clampPan({ x: 999, y: 999 }, 0.25, { w: 1200, h: 800 }, world)).toEqual({ x: 300, y: 200 });
-    const p = clampPan({ x: -99999, y: 50 }, 1, { w: 1200, h: 800 }, world);
-    expect(p.x).toBe(1200 - 2400);
-    expect(p.y).toBe(0);
-  });
-  it("zooming around a point keeps the world under the pointer still", () => {
-    const from = { pan: { x: 0, y: 0 }, zoom: 1 };
-    const pan = zoomAround({ x: 600, y: 400 }, from, 2);
-    const before = toWorld({ x: 600, y: 400 }, { left: 0, top: 0 }, from.pan, from.zoom);
-    const after = toWorld({ x: 600, y: 400 }, { left: 0, top: 0 }, pan, 2);
-    expect(after.x).toBeCloseTo(before.x);
-    expect(after.y).toBeCloseTo(before.y);
+  it("reads a place in tiles, and migrates an old pixel place", () => {
+    expect(placeOf({ x: 4, y: -2 })).toEqual({ x: 4, y: -2, w: 1, h: 0 });
+    expect(placeOf({ x: 3, y: 2, w: 2, h: 2 })).toEqual({ x: 3, y: 2, w: 2, h: 2 });
+    expect(placeOf({ x: 900, y: 520, w: 560 })).toEqual({ x: 3, y: 2, w: 2, h: 0 }); // the old board's pixels
+    expect(placeOf({ x: 1, y: 1, w: 7 })).toEqual({ x: 1, y: 1, w: 2, h: 0 }); // never wider than two
+    expect(placeOf(undefined)).toBeNull();
+    expect(placeOf({ x: NaN, y: 1 })).toBeNull();
   });
 });
 
 describe("packing blocks into the world", () => {
-  const item = (id: string, w: number, h: number, order = 0, place?: { x: number; y: number; w: number }) => ({ id, w, h, order, place });
+  const item = (id: string, w: number, h: number, order = 0, place?: { x: number; y: number; w?: number; h?: number }) => ({ id, w, h, order, place });
   const overlaps = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-  it("never overlaps, keeps explicit places, fills rows left to right, and reports the bottom", () => {
-    const items = [item("a", 1200, 400, 0), item("b", 1100, 300, 1), item("c", 800, 200, 2), item("d", 600, 500, 3, { x: 1500, y: 900, w: 600 }), item("e", 2300, 240, 4)];
-    const { placed, bottom } = packBlocks(items, world, 20, 20);
+  it("never overlaps, keeps explicit places, and packs outward from the origin", () => {
+    const items = [item("a", 2, 1, 0), item("b", 1, 1, 1), item("c", 1, 2, 2), item("d", 2, 2, 3, { x: 3, y: 2 }), item("e", 1, 1, 4)];
+    const placed = packTiles(items);
     expect(placed).toHaveLength(5);
     for (const p of placed) for (const q of placed) if (p.id !== q.id) expect(overlaps(p, q), `${p.id} overlaps ${q.id}`).toBe(false);
     const by = Object.fromEntries(placed.map((p) => [p.id, p]));
-    expect(by.d).toMatchObject({ x: 1500, y: 900, w: 600, pinned: true });
-    expect(by.a).toMatchObject({ x: 20, y: 20 });
-    expect(by.b!.y).toBe(20); // fits beside a
-    expect(by.b!.x).toBeGreaterThan(1200);
-    expect(by.c!.y).toBeGreaterThan(300); // next row
-    expect(bottom).toBeGreaterThanOrEqual(Math.max(...placed.map((p) => p.y + p.h)));
+    expect(by.d).toMatchObject({ x: 3, y: 2, w: 2, h: 2, pinned: true });
+    expect(by.a).toMatchObject({ x: 0, y: 0, w: 2, h: 1 }); // the first block starts at the origin
+    // everything unplaced sits within a couple of tiles of the origin
+    for (const id of ["a", "b", "c", "e"]) expect(Math.max(Math.abs(by[id]!.x), Math.abs(by[id]!.y))).toBeLessThanOrEqual(2);
   });
-  it("is deterministic and clamps a place to the world", () => {
-    const items = [item("x", 500, 100, 0), item("y", 500, 100, 1, { x: 99999, y: -5, w: 99999 })];
-    const a = packBlocks(items, world, 20, 20);
-    const b = packBlocks(items, world, 20, 20);
+  it("is deterministic, and a placed block that lands on another placed one is nudged to the nearest free tiles", () => {
+    const items = [item("x", 1, 1, 0, { x: 0, y: 0 }), item("y", 1, 1, 1, { x: 0, y: 0 }), item("z", 2, 1, 2)];
+    const a = packTiles(items);
+    const b = packTiles(items);
     expect(a).toEqual(b);
-    const y = a.placed.find((p) => p.id === "y")!;
-    expect(y.w).toBe(2400 - 40);
-    expect(y.x).toBe(20);
-    expect(y.y).toBe(20);
+    const by = Object.fromEntries(a.map((p) => [p.id, p]));
+    expect(by.x).toMatchObject({ x: 0, y: 0 });
+    expect(by.y!.x === 0 && by.y!.y === 0).toBe(false);
+    expect(Math.abs(by.y!.x) + Math.abs(by.y!.y)).toBe(1); // right next door
   });
-  it("widths come from span or size, relative to the world", () => {
-    expect(widthFor({ size: "full" }, world, 20, 20)).toBe(1120);
-    expect(widthFor({ size: "md" }, world, 20, 20)).toBe(520);
-    expect(widthFor({ size: "sm" }, world, 20, 20)).toBe(360);
-    expect(widthFor({ size: "sm", span: 3 }, world, 20, 20)).toBe(575);
-    expect(widthFor({ size: "full" }, { w: 800, h: 600 }, 20, 20)).toBe(760);
-  });
-});
-
-describe("regions and points as words", () => {
-  it("round-trip through text the judge reads", () => {
-    const t = regionText({ x: 120.4, y: 80, w: 640, h: 400 }, ["hello-note", "electric-message"]);
-    expect(t).toBe("region 120,80,640,400 · contains: hello-note, electric-message");
-    expect(parseRegion(t)).toEqual({ x: 120, y: 80, w: 640, h: 400 });
-    expect(parseRegion("nothing")).toBeNull();
-    expect(parsePoint(pointText({ x: 10.6, y: 20 }))).toEqual({ x: 11, y: 20 });
-    expect(regionText({ x: 0, y: 0, w: 1, h: 1 }, Array.from({ length: 40 }, (_, i) => `block-${i}`)).length).toBeLessThanOrEqual(120);
+  it("the known world is the content plus a frontier, never smaller than three by three", () => {
+    expect(worldBounds([])).toEqual({ x: -2, y: -2, w: 5, h: 5 });
+    const b = worldBounds([{ x: 3, y: 2, w: 2, h: 2 }]);
+    expect(b).toEqual({ x: -2, y: -2, w: 8, h: 7 });
+    expect(isFree({ x: 3, y: 2 }, [{ x: 3, y: 2, w: 2, h: 2 }])).toBe(false);
+    expect(isFree({ x: 5, y: 2 }, [{ x: 3, y: 2, w: 2, h: 2 }])).toBe(true);
+    const n = nearestFreeTile({ x: 3.5, y: 2.5 }, [{ x: 3, y: 2, w: 2, h: 2 }], b)!;
+    expect(Math.abs(n.x - 3) + Math.abs(n.y - 2)).toBe(1); // right next door to the taken tile
   });
 });
 
-import { lifeLeft } from "../../src/core/room/canvas";
+describe("the camera", () => {
+  const vp = { w: 1440, h: 800 };
+  it("centres a tile, and never wanders past the frontier", () => {
+    const cam = camForTiles({ x: 0, y: 0, w: 1, h: 1 }, vp);
+    expect(cam).toEqual({ x: TILE_W / 2 - 720, y: TILE_H / 2 - 400 });
+    const bounds = { x: -2, y: -2, w: 5, h: 5 }; // 1800 × 1100 px: wider than the screen, taller too
+    // as far as the frontier's edge tile sitting in the middle of the screen, no further
+    expect(clampCam({ x: -99999, y: 99999 }, vp, bounds)).toEqual({ x: -2 * TILE_W - (1440 - TILE_W) / 2, y: 3 * TILE_H - 800 + (800 - TILE_H) / 2 });
+    expect(tileOfView(clampCam(camForTiles({ x: 2, y: 2, w: 1, h: 1 }, vp), vp, bounds), vp)).toEqual({ x: 2, y: 2 });
+    // a world narrower than the screen is centred
+    expect(clampCam({ x: 500, y: 0 }, { w: 4000, h: 800 }, bounds).x).toBe(-2 * TILE_W + (5 * TILE_W - 4000) / 2);
+  });
+  it("client points map through the camera, and the middle of the screen is where you are", () => {
+    const cam = { x: 100, y: 50 };
+    expect(toWorld({ x: 210, y: 120 }, { left: 10, top: 20 }, cam)).toEqual({ x: 300, y: 150 });
+    expect(tileOfView({ x: 4 * TILE_W - 720, y: -2 * TILE_H - 400 }, vp)).toEqual({ x: 4, y: -2 });
+  });
+});
+
+describe("tiles as words", () => {
+  it("round-trip through the text the judge reads, and read the old pixel texts too", () => {
+    expect(tileText({ x: 4, y: -2 })).toBe("tile 4,-2");
+    expect(parseTile("tile 4,-2")).toEqual({ x: 4, y: -2 });
+    expect(parseTile("here 900,520")).toEqual({ x: 2, y: 2 }); // legacy pixels
+    expect(parseTile("nothing")).toBeNull();
+    const t = tilesText({ x: 4, y: 0, w: 2, h: 1 }, ["hello-note", "electric-message"]);
+    expect(t).toBe("tiles 4,0→5,0 · contains: hello-note, electric-message");
+    expect(parseTiles(t)).toEqual({ x: 4, y: 0, w: 2, h: 1 });
+    expect(parseTiles("tiles 5,1→4,0")).toEqual({ x: 4, y: 0, w: 2, h: 2 });
+    expect(parseTiles("region 120,80,640,400")).toEqual({ x: 0, y: 0, w: 3, h: 3 }); // legacy pixels
+    expect(tilesText({ x: 0, y: 0, w: 1, h: 1 }, Array.from({ length: 40 }, (_, i) => `block-${i}`)).length).toBeLessThanOrEqual(120);
+    expect(tilesCovering({ x: 10, y: 10, w: 700, h: 100 })).toEqual({ x: 0, y: 0, w: 2, h: 1 });
+  });
+  it("deep links keep their tile", () => {
+    expect(tilePath({ x: 4, y: -2 })).toBe("/t/4,-2");
+    expect(tileFromPath("4,-2")).toEqual({ x: 4, y: -2 });
+    expect(tileFromPath("x,y")).toBeNull();
+    expect(tileFromPath("1000,0")).toBeNull();
+  });
+});
+
+describe("where you land", () => {
+  const placed = [
+    { id: "a", x: 0, y: 0, w: 2, h: 1, pinned: false },
+    { id: "b", x: -1, y: 1, w: 1, h: 1, pinned: false },
+    { id: "c", x: 6, y: 6, w: 1, h: 1, pinned: false },
+  ];
+  const now = 100 * 3_600_000;
+  it("the newest block if it is fresh, else the hottest, else the newest, else the densest cluster", () => {
+    expect(spawnTile({ placed, lastAt: { c: now - 3_600_000, a: now - 50 * 3_600_000 }, heat: {}, now })).toEqual({ x: 6, y: 6 });
+    expect(spawnTile({ placed, lastAt: { c: now - 20 * 3_600_000 }, heat: { b: 2 }, now })).toEqual({ x: -1, y: 1 });
+    expect(spawnTile({ placed, lastAt: { c: now - 20 * 3_600_000 }, heat: {}, now })).toEqual({ x: 6, y: 6 });
+    expect(spawnTile({ placed, lastAt: {}, heat: {}, now })).toEqual({ x: 0, y: 0 }); // a has a neighbour, c has none
+    expect(spawnTile({ placed: [], lastAt: {}, heat: {}, now })).toEqual({ x: 0, y: 0 });
+  });
+});
+
 describe("decay", () => {
   const day = 86_400_000;
   it("counts down from the last touch, never for pinned blocks or when decay is off", () => {
