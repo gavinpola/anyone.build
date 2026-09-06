@@ -3,8 +3,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { BlockModule } from "@/kit";
 import { PageLink } from "@/kit/PageLink";
 import { RoomContext } from "@/kit/room-context";
+import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { hasConvex, useQuerySafe } from "@/core/lib/providers";
+import { track } from "@/core/lib/analytics";
 import { tabSessionId } from "@/core/lib/session";
 import { useNow } from "@/core/lib/useNow";
 import { useRequests } from "@/core/lib/useRequests";
@@ -385,6 +387,31 @@ function CanvasRoom({ compact }: { compact: boolean }) {
     if (p) goTo({ x: p.x + p.w / 2, y: p.y + Math.min(p.h / 2, 260) }, Math.max(zoom, 0.85));
   };
 
+  // a faded object leaves the wall; the map lists it by name, and a click there touches it back. Once it
+  // is placed again, the view goes to it.
+  const touchM = useMutation(api.life.touch);
+  const pendingRevive = useRef<string | null>(null);
+  const fadedList = useMemo(
+    () => (showAll ? [] : blocks.filter((b) => facts.get(b.meta.id)?.faded).map((b) => ({ id: b.meta.id, title: b.meta.title }))),
+    [facts, showAll],
+  );
+  const revive = (id: string) => {
+    if (!hasConvex) return;
+    pendingRevive.current = id;
+    track("revive", { block: id });
+    void touchM({ roomId: room.id, blockId: id, anonId: tabSessionId() }).catch(() => {
+      pendingRevive.current = null;
+    });
+  };
+  useEffect(() => {
+    const id = pendingRevive.current;
+    if (!id || !at.has(id)) return;
+    pendingRevive.current = null;
+    focus(id);
+    // focus reads the current layout; it is recreated each render, so depending on it would run this every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at]);
+
   const worldStyle = {
     ...wallStyle(canvas, false),
     width: world.w,
@@ -502,7 +529,7 @@ function CanvasRoom({ compact }: { compact: boolean }) {
             <Cursors roomId={room.id} boxRef={wallRef} scale={1 / zoom} />
           </div>
 
-          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} mark={gesture?.kind === "marquee" ? gesture.rect : null} me={me} /> : null}
+          {canvas.minimap !== false ? <Minimap world={{ w: world.w, h: worldH }} placed={layout.placed} pan={pan} zoom={zoom} viewport={vp} onGo={(p) => goTo(p)} onGoBlock={focus} compact={compact} mark={gesture?.kind === "marquee" ? gesture.rect : null} me={me} faded={fadedList} onRevive={revive} /> : null}
           <CanvasBar
             zoom={zoom}
             fit={fit}

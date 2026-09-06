@@ -22,6 +22,8 @@ export function Minimap({
   mark,
   me,
   compact = false,
+  faded,
+  onRevive,
 }: {
   world: World;
   placed: Placed[];
@@ -35,6 +37,9 @@ export function Minimap({
   /** your own pointer, in world px */
   me?: { x: number; y: number } | null;
   compact?: boolean;
+  /** objects that faded off the wall; their names are buttons that revive them */
+  faded?: { id: string; title: string }[];
+  onRevive?: (id: string) => void;
 }) {
   // what's highlighted on the wall shows here too
   const { hover, selected } = usePicker();
@@ -66,6 +71,7 @@ export function Minimap({
         {open ? <ChevronDown size={12} aria-hidden /> : <ChevronUp size={12} aria-hidden />}
       </button>
       {open ? (
+        <>
         <svg
           width={W}
           height={H}
@@ -100,6 +106,17 @@ export function Minimap({
           {me ? <circle data-map-me cx={me.x} cy={me.y} r={22} className="minimap-me" /> : null}
           <rect x={6} y={6} width={world.w - 12} height={world.h - 12} className="minimap-edge" />
         </svg>
+        {faded && faded.length > 0 && onRevive ? (
+          <div className="minimap-faded" data-map-faded-list>
+            <span className="placard smallcaps">faded</span>
+            {faded.map((f) => (
+              <button key={f.id} type="button" data-map-faded={f.id} aria-label={`Revive ${f.title}`} title="Bring it back onto the wall" onClick={() => onRevive(f.id)}>
+                {f.title}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        </>
       ) : null}
     </div>
   );

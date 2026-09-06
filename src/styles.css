@@ -523,3 +523,8 @@ body[data-picking] .minimap, body[data-picking] .canvas-pages, body[data-picking
 body[data-picking] .canvas-viewport { cursor: default; }
 body[data-picking] .canvas-world { cursor: crosshair; }
 
+
+/* faded objects, listed on the map: a name is a button that revives it */
+.minimap-faded { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 6px; max-width: 168px; font-size: 11px; line-height: 1.3; color: var(--ink-2); }
+.minimap-faded button { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 2px; }
+.minimap-faded button:hover { color: var(--accent); }

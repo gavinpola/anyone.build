@@ -25,9 +25,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   submitBurst: { kind: "token bucket", rate: 8, period: MINUTE, capacity: 8 }, // a human iterating fast, not a script
   // global approvals per hour (cost control)
   approvalsGlobal: { kind: "fixed window", rate: 240, period: HOUR },
-  // kit store writes
+  // kit store writes: a stroke is one write, and the eraser re-puts every piece of every stroke it crosses,
+  // so a doodling guest needs the same room as a signed-in one (5/min silently refused the sixth stroke).
+  // The namespace caps (docs, bytes) and the erase budget bound what a tab can do with it.
   storeWrite: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 30 },
-  storeWriteAnon: { kind: "token bucket", rate: 5, period: MINUTE, capacity: 5 },
+  storeWriteAnon: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 30 },
   // erasing on a whiteboard: one token per remove call (up to 50 keys each), signed-in or not
   storeErase: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 30 },
   // flags

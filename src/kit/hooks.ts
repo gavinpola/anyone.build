@@ -71,8 +71,10 @@ function useStoreConvex<T>(namespace: string, opts: StoreOpts = {}) {
   const putM = useMutation(api.store.put);
   const removeM = useMutation(api.store.remove);
   const removeManyM = useMutation(api.store.removeMany);
-  const put = useCallback((key: string, value: T) => void putM({ namespace, key, value, anonId: tabSessionId() }).catch(() => {}), [putM, namespace]);
-  const remove = useCallback((key: string) => void removeM({ namespace, key, anonId: tabSessionId() }).catch(() => {}), [removeM, namespace]);
+  // a refused write is silent for the block (it keeps working on what it has) but not for the console
+  const warn = (what: string) => (e: unknown) => console.warn(`[kit store] ${what} refused:`, e instanceof Error ? e.message : e);
+  const put = useCallback((key: string, value: T) => void putM({ namespace, key, value, anonId: tabSessionId() }).catch(warn(`put ${namespace}`)), [putM, namespace]);
+  const remove = useCallback((key: string) => void removeM({ namespace, key, anonId: tabSessionId() }).catch(warn(`remove ${namespace}`)), [removeM, namespace]);
   const removeMany = useCallback(
     (keys: string[]) => {
       for (let i = 0; i < keys.length; i += 50) void removeManyM({ namespace, keys: keys.slice(i, i + 50), anonId: tabSessionId() }).catch(() => {});

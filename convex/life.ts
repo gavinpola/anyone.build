@@ -49,6 +49,19 @@ export const touchInternal = internalMutation({
   },
 });
 
+/** Retire one block by hand (it leaves the wall, listed on the map as faded; a touch revives it). Admin tooling: `npx convex run life:fade '{"blockId":"…"}'`. */
+export const fade = internalMutation({
+  args: { roomId: v.optional(v.string()), blockId: v.string() },
+  handler: async (ctx, { roomId, blockId }) => {
+    if (!ID_RE.test(blockId)) throw new Error("bad block id");
+    const room = roomId ?? "main";
+    const now = Date.now();
+    const row = await ctx.db.query("blockLife").withIndex("by_room_block", (q) => q.eq("roomId", room).eq("blockId", blockId)).unique();
+    if (row) await ctx.db.patch(row._id, { fadedAt: now });
+    else await ctx.db.insert("blockLife", { roomId: room, blockId, lastTouchedAt: now, touches: 0, fadedAt: now });
+  },
+});
+
 /** Once a day: mark what ran out. `days` is the window; `keep` are ids that never fade (pinned). */
 export const sweep = internalMutation({
   args: { roomId: v.optional(v.string()), days: v.optional(v.number()), keep: v.optional(v.array(v.string())) },

@@ -1,4 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 
 /**
  * The bounded canvas: a fixed world you zoom and pan; drag out a space to work on it; click a point to
@@ -134,6 +136,10 @@ test("the map shows every object and jumps to one", async ({ page }) => {
 
 test("a signed-out visitor's stroke on the open canvas survives a reload", async ({ page }) => {
   test.setTimeout(90_000);
+  // a refused store write is silent on the page; surface it here so a failure explains itself
+  page.on("console", (m) => {
+    if (m.text().includes("[kit store]")) console.log("PAGE:", m.text().slice(0, 240));
+  });
   await page.goto(url);
   await ready(page);
   const chip = page.locator('[data-map-block="collaborative-art"]');
@@ -330,6 +336,33 @@ test("the map shows what you point at: a hovered block, a dragged-out space, a p
   await expect(page.getByRole("dialog", { name: /ask for a change/i })).toBeVisible();
   await expect(page.locator("circle[data-map-mark]")).toBeVisible();
   await page.keyboard.press("Escape");
+});
+
+test("a faded object is listed on the map, and a click there brings it back", async ({ page }) => {
+  test.setTimeout(120_000);
+  const env = existsSync(".env.local") ? readFileSync(".env.local", "utf8") : "";
+  test.skip(!/CONVEX_DEPLOYMENT=/.test(env), "needs the dev deployment (npx convex run)");
+  await page.goto(url);
+  await ready(page);
+  // an object that can fade: the last unpinned one on the wall
+  const candidates = page.locator("[data-world] [data-ab-block]:not([data-ab-block='__new__']):not([data-ab-left='pinned'])");
+  test.skip((await candidates.count()) === 0, "nothing on this wall can fade");
+  const id = (await candidates.last().getAttribute("data-ab-block"))!;
+  const run = (fn: string, args: object) => execFileSync("npx", ["convex", "run", fn, JSON.stringify(args)], { stdio: "pipe" });
+  run("life:fade", { blockId: id });
+  try {
+    await expect(page.locator(`[data-world] [data-ab-block="${id}"]`)).toHaveCount(0, { timeout: 15_000 });
+    await expect(page.locator(`[data-map-block="${id}"]`)).toHaveCount(0);
+    const revive = page.locator(`[data-map-faded="${id}"]`);
+    await expect(revive).toBeVisible();
+    await revive.click();
+    await expect(page.locator(`[data-world] [data-ab-block="${id}"]`)).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.locator(`[data-map-block="${id}"]`)).toHaveCount(1);
+    await expect(page.locator("[data-map-faded-list]")).toHaveCount(0);
+  } finally {
+    // whatever happened, the object is back for the next test
+    run("life:touchInternal", { roomId: "main", blockIds: [id] });
+  }
 });
 
 test("the placard and the composer say who made an object and how long it has left", async ({ page }) => {
