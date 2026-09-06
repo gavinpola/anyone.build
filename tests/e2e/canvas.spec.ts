@@ -30,6 +30,26 @@ async function onScreen(page: Page, wx: number, wy: number) {
   return { x: vp.x + wx - cam.x, y: vp.y + wy - cam.y };
 }
 
+/**
+ * Walk until a world point is well inside the viewport, one arrow key per tile. Keys move the world
+ * whatever is under the pointer (a drag would not: on the e2e wall the example blocks fill the first
+ * screen), and the camera clamps to the known world, so the frontier is always reachable.
+ */
+async function walkTo(page: Page, wx: number, wy: number) {
+  await page.mouse.click(10, 10); // no object has the keys
+  const vp = (await page.locator(".canvas-viewport").boundingBox())!;
+  const m = 60;
+  for (let i = 0; i < 80; i++) {
+    const p = await onScreen(page, wx, wy);
+    const dx = p.x < vp.x + m ? -1 : p.x > vp.x + vp.width - m ? 1 : 0;
+    const dy = p.y < vp.y + m ? -1 : p.y > vp.y + vp.height - m ? 1 : 0;
+    if (dx === 0 && dy === 0) return p;
+    await page.keyboard.press(dx < 0 ? "ArrowLeft" : dx > 0 ? "ArrowRight" : dy < 0 ? "ArrowUp" : "ArrowDown");
+    await page.waitForTimeout(80);
+  }
+  return onScreen(page, wx, wy);
+}
+
 test("the world is tiles at 100%: no zoom anywhere, and you land on a block, not the top-left", async ({ page }) => {
   await page.goto(url);
   await ready(page);
@@ -118,25 +138,7 @@ test("tap empty ground and the add zone moves there", async ({ page }) => {
   // walk to the frontier's top-left corner, which is empty by definition, and tap it
   const fx = bounds[0]!;
   const fy = bounds[1]!;
-  const pos = await onScreen(page, fx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
-  const vp = (await page.locator(".canvas-viewport").boundingBox())!;
-  if (pos.x < vp.x || pos.y < vp.y || pos.x > vp.x + vp.width || pos.y > vp.y + vp.height) {
-    // not on screen: drag the ground until it is (each drag walks up to a screen)
-    for (let i = 0; i < 6; i++) {
-      const p = await onScreen(page, fx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
-      if (p.x >= vp.x + 20 && p.y >= vp.y + 20 && p.x <= vp.x + vp.width - 20 && p.y <= vp.y + vp.height - 20) break;
-      const dx = Math.max(-vp.width * 0.6, Math.min(vp.width * 0.6, vp.x + vp.width / 2 - p.x));
-      const dy = Math.max(-vp.height * 0.6, Math.min(vp.height * 0.6, vp.y + vp.height / 2 - p.y));
-      const gx = vp.x + vp.width / 2;
-      const gy = vp.y + 40; // the top band is the frontier row: ground, not a block
-      await page.mouse.move(gx, gy);
-      await page.mouse.down();
-      await page.mouse.move(gx + dx, gy + dy, { steps: 8 });
-      await page.mouse.up();
-      await page.waitForTimeout(150);
-    }
-  }
-  const at = await onScreen(page, fx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
+  const at = await walkTo(page, fx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
   await page.mouse.click(at.x, at.y);
   await page.waitForTimeout(300);
   await expect(add).toHaveAttribute("data-tile", `${fx},${fy}`);
@@ -150,18 +152,10 @@ test("drag out tiles and the composer opens for that space, snapped to tiles", a
   const bounds = ((await world.getAttribute("data-bounds")) ?? "").split(",").map(Number);
   // the frontier row above the content is empty ground: drag across it
   const y = bounds[1]! * TILE_H + TILE_H / 2;
-  const cam = camOf(await world.getAttribute("data-cam"));
-  const vp = (await page.locator(".canvas-viewport").boundingBox())!;
-  // walk so that row is on screen
-  const need = y - (cam.y + 120);
-  if (Math.abs(need) > 10) {
-    await page.mouse.move(vp.x + vp.width / 2, vp.y + vp.height - 60);
-    await page.mouse.down();
-    await page.mouse.move(vp.x + vp.width / 2, vp.y + vp.height - 60 - Math.max(-vp.height + 100, Math.min(vp.height - 100, need)), { steps: 8 });
-    await page.mouse.up();
-    await page.waitForTimeout(200);
-  }
-  const start = await onScreen(page, cam.x + 80, y);
+  // walk so that row is on screen, then start the drag a little inside the world's left edge on that row
+  const x = bounds[0]! * TILE_W + 80;
+  await walkTo(page, x + 500, y);
+  const start = await walkTo(page, x, y);
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
