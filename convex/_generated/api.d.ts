@@ -41,6 +41,7 @@ import type * as pipeline_fast from "../pipeline/fast.js";
 import type * as pipeline_fastRules from "../pipeline/fastRules.js";
 import type * as pipeline_github from "../pipeline/github.js";
 import type * as pipeline_judge from "../pipeline/judge.js";
+import type * as pipeline_lintCheck from "../pipeline/lintCheck.js";
 import type * as pipeline_source from "../pipeline/source.js";
 import type * as pipeline_state from "../pipeline/state.js";
 import type * as presence from "../presence.js";
@@ -103,6 +104,7 @@ declare const fullApi: ApiFromModules<{
   "pipeline/fastRules": typeof pipeline_fastRules;
   "pipeline/github": typeof pipeline_github;
   "pipeline/judge": typeof pipeline_judge;
+  "pipeline/lintCheck": typeof pipeline_lintCheck;
   "pipeline/source": typeof pipeline_source;
   "pipeline/state": typeof pipeline_state;
   presence: typeof presence;

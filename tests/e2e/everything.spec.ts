@@ -228,7 +228,7 @@ test.describe("leaderboard", () => {
     // footer pages
     await page.getByRole("link", { name: "Rules", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Rules", exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "FAQ", exact: true }).click();
+    await page.getByRole("link", { name: "More", exact: true }).click(); // the footer calls the FAQ "More" now
     await expect(page.getByText("When is my card charged?")).toBeVisible();
   });
 

@@ -5,6 +5,7 @@ import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import { coderSystemPrompt, coderUserPrompt, reviewDiff, reviewBlocks, reviewNote, securityReview, securityBlocks, resourceOnly, validateDiff, costCents, priceFor, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { octokit, headSha, commitFiles, openPullRequest } from "./github";
+import { lintFiles } from "../../packages/gatekeeper/src/lint/lint-files.js";
 
 type RunnerResult = { ok: boolean; summary: string; files: string[]; steps: number; inputTokens: number; outputTokens: number; checks: Record<string, boolean>; error?: string };
 
@@ -139,6 +140,12 @@ export const run = internalAction({
       const validation = validateDiff(diff, scope, { fullFiles, allowBackend });
       if (!validation.ok) {
         await fail("unsafe_code", "That change didn't pass the checks.", validation.problems.join("; "), cost);
+        return;
+      }
+      // the same AST rules the sandbox and CI apply, here too, so the floor is the same on every side
+      const lint = await lintFiles(Object.entries(fullFiles).map(([path, content]) => ({ path, content })));
+      if (!lint.ok) {
+        await fail("unsafe_code", "That change didn't pass the checks.", "lint: " + lint.problems.join("; ").slice(0, 600), cost);
         return;
       }
 

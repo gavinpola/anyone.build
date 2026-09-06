@@ -2,7 +2,9 @@
   "node": {
     "externalPackages": [
       "@vercel/sandbox",
-      "@resvg/resvg-js"
+      "@resvg/resvg-js",
+      "eslint",
+      "typescript-eslint"
     ]
   }
 }

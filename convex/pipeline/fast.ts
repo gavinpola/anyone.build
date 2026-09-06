@@ -19,6 +19,7 @@ import {
   priceFor,
   type ModelConfig,
 } from "../../packages/gatekeeper/src/index";
+import { lintFiles } from "../../packages/gatekeeper/src/lint/lint-files.js";
 import { octokit, headSha, fileAt, commitFiles, openPullRequest } from "./github";
 
 const MAX_BLOCK_LINES = 400;
@@ -87,6 +88,9 @@ export const run = internalAction({
       const fullFiles = { [path]: rw.content };
       const validation = validateDiff(diff, verdict.scope, { fullFiles, allowBackend: false });
       if (!validation.ok) return back("validator: " + validation.problems.join("; ").slice(0, 200), cost);
+      // the AST rules too (the sandbox iterates on lint errors; a one-shot rewrite gets no second try here)
+      const lint = await lintFiles([{ path, content: rw.content }]);
+      if (!lint.ok) return back("lint: " + lint.problems.join("; ").slice(0, 200), cost);
 
       await set("reviewing", "second opinion on the diff");
       const { review, usage } = await reviewDiff(cfg, { prompt: request.prompt, plan: verdict.plan, diff });
