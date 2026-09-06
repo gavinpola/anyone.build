@@ -23,7 +23,9 @@ export function Footer() {
       <p className="mt-2">
         <Link to="/rules" className={link}>Rules</Link>
         <span className="mx-2">·</span>
-        <Link to="/faq" className={link}>FAQ</Link>
+        <Link to="/faq" className={link}>More</Link>
+        <span className="mx-2">·</span>
+        <Link to="/leaderboard" hash="feedback" className={link}>Feedback</Link>
         <span className="mx-2">·</span>
         <Link to="/terms" className={link}>Terms</Link>
         <span className="mx-2">·</span>

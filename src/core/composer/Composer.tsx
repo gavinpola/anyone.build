@@ -55,6 +55,8 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
   const [forTarget, setForTarget] = useState(t);
   if (forTarget !== t) {
     setForTarget(t);
+  }
+  if (forTarget !== t && !t.reshaped) {
     setPrompt(t.draft ?? "");
     setSubmittedId(null);
     setError(null);
@@ -101,7 +103,7 @@ function ComposerPanel({ target: t }: { target: PickerTarget }) {
     if (!p || sending) return;
     setSending(true);
     setError(null);
-    const { rect: _r, element: _e, point: _p, granularity: _g, facts: _f, draft: _d, ...target } = t;
+    const { rect: _r, element: _e, point: _p, granularity: _g, facts: _f, draft: _d, reshaped: _s, ...target } = t;
     try {
       // signed-out askers pass the bot check first (only when the site key is configured)
       let turnstileTicket: string | undefined;

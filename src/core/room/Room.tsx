@@ -143,7 +143,33 @@ function useBlockFacts() {
 type Gesture =
   | { kind: "pan"; startX: number; startY: number; cam: Cam; moved: boolean; onBlock: string | null }
   | { kind: "marquee"; start: { x: number; y: number }; rect: Rect | null }
-  | { kind: "block"; id: string; start: { x: number; y: number }; delta: { x: number; y: number }; moved: boolean };
+  | { kind: "block"; id: string; start: { x: number; y: number }; delta: { x: number; y: number }; moved: boolean }
+  | { kind: "resize"; edges: Edges; from: TileRect };
+
+/** Which edges of a selected space a handle moves. */
+type Edges = { n?: boolean; s?: boolean; e?: boolean; w?: boolean };
+const HANDLES: { edges: Edges; cls: string }[] = [
+  { edges: { n: true, w: true }, cls: "nw" },
+  { edges: { n: true }, cls: "n" },
+  { edges: { n: true, e: true }, cls: "ne" },
+  { edges: { e: true }, cls: "e" },
+  { edges: { s: true, e: true }, cls: "se" },
+  { edges: { s: true }, cls: "s" },
+  { edges: { s: true, w: true }, cls: "sw" },
+  { edges: { w: true }, cls: "w" },
+];
+/** The space with one edge (or corner) dragged to the tile under the pointer; never thinner than one tile. */
+function resized(from: TileRect, edges: Edges, to: Tile): TileRect {
+  let x1 = from.x;
+  let x2 = from.x + from.w;
+  let y1 = from.y;
+  let y2 = from.y + from.h;
+  if (edges.w) x1 = Math.min(to.x, x2 - 1);
+  if (edges.e) x2 = Math.max(to.x + 1, x1 + 1);
+  if (edges.n) y1 = Math.min(to.y, y2 - 1);
+  if (edges.s) y2 = Math.max(to.y + 1, y1 + 1);
+  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+}
 
 /** The live parts of a block keep a finger (a game, a canvas, a button, a field); its quiet parts (text, a card) walk the world. */
 function interactive(el: HTMLElement): boolean {
@@ -164,7 +190,7 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
   const decayOn = Boolean(canvas.decay) && (canvas.decay as number) > 0;
   const skin = canvas.skin ?? "instrument";
   const showAll = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("all");
-  const { arming } = usePicker();
+  const { arming, selected } = usePicker();
   const sheet = useSheet();
   const active = useActiveBlock();
 
@@ -213,9 +239,11 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
     setCamState(n);
   }, []);
   const anim = useRef<number | null>(null);
+  const gliding = useRef<Cam | null>(null); // where the current glide is headed, so quick presses chain instead of collapsing
   const stopGlide = () => {
     if (anim.current != null) cancelAnimationFrame(anim.current);
     anim.current = null;
+    gliding.current = null;
   };
   /** Ease the camera somewhere (an arrow key, a teleport); a plain set when motion is reduced. */
   const glide = useCallback(
@@ -227,12 +255,14 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
         setCam(target);
         return;
       }
+      gliding.current = target;
       const t0 = performance.now();
       const step = (t: number) => {
         const k = Math.min(1, (t - t0) / ms);
         const e = 1 - Math.pow(1 - k, 3);
         setCam({ x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e });
         anim.current = k < 1 ? requestAnimationFrame(step) : null;
+        if (k >= 1) gliding.current = null;
       };
       anim.current = requestAnimationFrame(step);
     },
@@ -240,23 +270,31 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
   );
   useEffect(() => stopGlide, []);
   const goToTile = useCallback((t: Tile) => glide(camForTiles({ ...t, w: 1, h: 1 }, vpRef.current)), [glide]);
+  /**
+   * Give a block the keys, if it wants them: one that reads useKeys, or one with a focusable element (a game
+   * with tabIndex + onKeyDown), which is focused so it hears them too. A note or a picture never takes the
+   * keys, so the arrows keep walking.
+   */
+  const activate = useCallback((id: string) => {
+    const section = wallRef.current?.querySelector<HTMLElement>(`[data-ab-block="${CSS.escape(id)}"]`);
+    const focusable = section?.querySelector<HTMLElement>("[tabindex]:not([tabindex='-1']), canvas[tabindex]");
+    if (!keysStore.listens(id) && !focusable) {
+      keysStore.deactivate();
+      return;
+    }
+    keysStore.activate(id);
+    const a = document.activeElement as HTMLElement | null;
+    if (focusable && !(a && section?.contains(a))) focusable.focus({ preventScroll: true });
+  }, []);
   const goToBlock = useCallback(
     (id: string) => {
       const p = at.get(id);
       if (!p) return;
       glide(camForTiles(p, vpRef.current));
-      keysStore.activate(id); // you went to it: it has the keys
+      activate(id); // you went to it: it has the keys, if it takes any
     },
-    [at, glide],
+    [at, glide, activate],
   );
-  /** Give a block the keys, and focus it so blocks that listen on a focusable element hear them too. */
-  const activate = useCallback((id: string) => {
-    keysStore.activate(id);
-    const section = wallRef.current?.querySelector<HTMLElement>(`[data-ab-block="${CSS.escape(id)}"]`);
-    const focusable = section?.querySelector<HTMLElement>("[tabindex]:not([tabindex='-1']), canvas[tabindex]");
-    const a = document.activeElement as HTMLElement | null;
-    if (focusable && !(a && section?.contains(a))) focusable.focus({ preventScroll: true });
-  }, []);
   // a block that left the wall gives the keys back
   useEffect(() => {
     if (active && !at.has(active)) keysStore.deactivate(active);
@@ -379,7 +417,8 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
       if (pickerStore.get().selected || !viewportRef.current?.isConnected) return;
       e.preventDefault();
       walked.current = true;
-      glide({ x: camRef.current.x + step[0] * TILE_W, y: camRef.current.y + step[1] * TILE_H });
+      const from = gliding.current ?? camRef.current; // a press mid-glide walks one more tile, not one from wherever the camera is
+      glide({ x: from.x + step[0] * TILE_W, y: from.y + step[1] * TILE_H });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -420,6 +459,25 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
     if (!t || !section) return;
     const title = blocks.find((b) => b.meta.id === id)?.meta.title ?? id;
     pickerStore.select({ ...t, blockId: id, granularity: "block", rect: section.getBoundingClientRect(), element: section, text: `move to ${tileText(to)}`, draft: `Move ${title} to tile ${to.x},${to.y} (keep its size).`, point });
+  };
+
+  // the selected space: the tiles you dragged out; its edges can be dragged again while the composer is open
+  // (kept after the composer closes; it only shows, and only counts, while a space is the selection)
+  const [region, setRegion] = useState<TileRect | null>(null);
+  const blocksIn = (tiles: TileRect) => layout.filter((p) => p.x < tiles.x + tiles.w && p.x + p.w > tiles.x && p.y < tiles.y + tiles.h && p.y + p.h > tiles.y).map((p) => p.id);
+  const selectSpace = (tiles: TileRect, point: { x: number; y: number }) => {
+    const wall = wallRef.current!;
+    setRegion(tiles);
+    pickerStore.select({ path: NEW_BLOCK_PATH, line: 0, blockId: undefined, blockTitle: "This space", tag: "region", text: tilesText(tiles, blocksIn(tiles)), rect: clientRectOf(tileGround(tiles)), element: wall, granularity: "block", point });
+  };
+  /** A handle on the selected space was pressed: drag it and the space follows, tile by tile. */
+  const onHandleDown = (edges: Edges) => (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (!region) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setG({ kind: "resize", edges, from: region });
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   // the add zone: the tile you tapped, or the free tile nearest the middle of your screen
@@ -511,13 +569,15 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
       const p = worldPoint(e);
       const delta = { x: p.x - g.start.x, y: p.y - g.start.y };
       setG({ ...g, delta, moved: g.moved || Math.hypot(delta.x, delta.y) > 6 });
+    } else if (g.kind === "resize") {
+      const next = resized(g.from, g.edges, tileAt(worldPoint(e)));
+      setRegion((r) => (r && r.x === next.x && r.y === next.y && r.w === next.w && r.h === next.h ? r : next));
     }
   };
   const onPointerUp = (e: React.PointerEvent) => {
     const g = gestureRef.current;
     if (!g) return;
     setG(null);
-    const wall = wallRef.current!;
     if (g.kind === "pan") {
       if (g.moved) pickerStore.suppressClick();
       else onGroundTap(worldPoint(e), g.onBlock, e);
@@ -527,9 +587,7 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
       pickerStore.suppressClick();
       // a space is anything you dragged out, a skinny line included; only a click-sized twitch is a point
       if (g.rect && Math.max(g.rect.w, g.rect.h) >= 40 && Math.min(g.rect.w, g.rect.h) >= 3) {
-        const tiles = tilesCovering(g.rect);
-        const contains = layout.filter((p) => p.x < tiles.x + tiles.w && p.x + p.w > tiles.x && p.y < tiles.y + tiles.h && p.y + p.h > tiles.y).map((p) => p.id);
-        pickerStore.select({ path: NEW_BLOCK_PATH, line: 0, blockId: undefined, blockTitle: "This space", tag: "region", text: tilesText(tiles, contains), rect: clientRectOf(tileGround(tiles)), element: wall, granularity: "block", point: { x: e.clientX, y: e.clientY } });
+        selectSpace(tilesCovering(g.rect), { x: e.clientX, y: e.clientY });
       } else {
         selectTile(tileAt(worldPoint(e)), { x: e.clientX, y: e.clientY });
       }
@@ -541,6 +599,14 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
       const p = at.get(g.id);
       if (!p) return;
       proposeMove(g.id, { x: p.x + Math.round(g.delta.x / TILE_W), y: p.y + Math.round(g.delta.y / TILE_H) }, { x: e.clientX, y: e.clientY });
+      return;
+    }
+    if (g.kind === "resize") {
+      // the same ask, a new shape: the composer keeps what was typed and moves with the space
+      pickerStore.suppressClick();
+      const tiles = resized(g.from, g.edges, tileAt(worldPoint(e)));
+      setRegion(tiles);
+      pickerStore.reshape({ text: tilesText(tiles, blocksIn(tiles)), rect: clientRectOf(tileGround(tiles)) });
     }
   };
 
@@ -608,6 +674,7 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
   const liquid = skin === "paper" ? hung.filter((b) => b.h.body.merge).map((b) => ({ id: b.meta.id, body: b.h.body, tilt: b.h.tilt })) : [];
   const ground = tileGround(bounds);
   const marqueeTiles = gesture?.kind === "marquee" && gesture.rect ? tilesCovering(gesture.rect) : null;
+  const sizing = marqueeTiles != null; // dragging out a space: the add zone steps aside while the space is drawn
   const hot = useMemo(() => new Set(Object.entries(heatBy).filter(([, h]) => (h ?? 0) > 0).map(([id]) => id)), [heatBy]);
   const fresh = useMemo(() => new Set([...facts.entries()].filter(([, f]) => f.isNew).map(([id]) => id)), [facts]);
   const mine = useMemo(() => new Set([...facts.entries()].filter(([, f]) => f.mine).map(([id]) => id)), [facts]);
@@ -759,7 +826,8 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
                 );
               })}
               {/* empty ground: one tile where "add something here" lives; the one you tapped, or the free one nearest you */}
-              {addTile && addOnScreen
+              {/* it steps aside while a change is being proposed: the composer is the ask for that spot now */}
+              {addTile && addOnScreen && !selected && !sizing
                 ? (() => {
                     const g = tileGround({ ...addTile, w: 1, h: 1 });
                     return (
@@ -786,11 +854,24 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
                   })()
                 : null}
               {marqueeTiles ? <div className="marquee" style={{ ...tileGround(marqueeTiles), left: tileGround(marqueeTiles).x, top: tileGround(marqueeTiles).y, width: tileGround(marqueeTiles).w, height: tileGround(marqueeTiles).h }} /> : null}
+              {region && selected?.tag === "region"
+                ? (() => {
+                    // the selected space: its edges and corners are handles, so the ask can be made bigger or smaller without starting over
+                    const g = tileGround(region);
+                    return (
+                      <div className={cn("region-frame", gesture?.kind === "resize" && "is-resizing")} data-region={`${region.x},${region.y},${region.w},${region.h}`} style={{ left: g.x, top: g.y, width: g.w, height: g.h }}>
+                        {HANDLES.map((h) => (
+                          <button key={h.cls} type="button" className={`region-handle is-${h.cls}`} data-region-handle={h.cls} aria-label={`Resize this space (${h.cls})`} onPointerDown={onHandleDown(h.edges)} />
+                        ))}
+                      </div>
+                    );
+                  })()
+                : null}
               <Pins at={boxes} />
               <Cursors roomId={room.id} worldPoint={worldPoint} />
             </div>
 
-            {addTile && !addOnScreen ? (
+            {addTile && !addOnScreen && !selected && !sizing ? (
               // every free tile is off screen: the add zone floats here and walks you to the nearest one
               <section
                 data-ab-block="__new__"

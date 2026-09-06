@@ -26,13 +26,12 @@ test("the product page reads and links", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /your sites/i })).toBeVisible();
 });
 
-test("the footer and help panel point at it", async ({ page }) => {
+test("the footer and the More page point at it", async ({ page }) => {
   // the room is the canvas (no footer there); the footer lives on every other page
   await page.goto(url + "/leaderboard");
   await expect(page.getByRole("contentinfo").getByRole("link", { name: /for your site/i })).toBeVisible();
-  await page.getByRole("button", { name: /how this works/i }).click();
-  const help = page.getByRole("dialog", { name: /how this works/i });
-  await expect(help.getByRole("link", { name: /one script tag/i })).toBeVisible();
+  await page.goto(url + "/faq");
+  await expect(page.getByRole("link", { name: /one script tag/i })).toBeVisible();
 });
 
 test("add a site, leave a note through the widget, work the inbox", async ({ page }) => {

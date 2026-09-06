@@ -19,6 +19,7 @@ import type * as config from "../config.js";
 import type * as crons from "../crons.js";
 import type * as cursors from "../cursors.js";
 import type * as emails from "../emails.js";
+import type * as feedback from "../feedback.js";
 import type * as flags from "../flags.js";
 import type * as http from "../http.js";
 import type * as kit_room from "../kit/room.js";
@@ -80,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   cursors: typeof cursors;
   emails: typeof emails;
+  feedback: typeof feedback;
   flags: typeof flags;
   http: typeof http;
   "kit/room": typeof kit_room;

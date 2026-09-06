@@ -135,13 +135,18 @@ test("tap empty ground and the add zone moves there", async ({ page }) => {
   const bounds = ((await world.getAttribute("data-bounds")) ?? "").split(",").map(Number);
   const add = page.locator('[data-ab-block="__new__"]');
   const before = await add.getAttribute("data-tile");
-  // walk to the frontier's top-left corner, which is empty by definition, and tap it
+  // walk to the frontier's top-left corner, which is empty by definition, and tap it: the arrow keys walk
+  // whatever is under the pointer, and the camera stops with the corner tile in the middle of the screen
   const fx = bounds[0]!;
   const fy = bounds[1]!;
-  const at = await walkTo(page, fx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
+  await walkTo(page, fx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
+  // the add zone may already sit on the corner (it is the free tile nearest the middle now): tap the next one along
+  const there = (await add.getAttribute("data-tile")) === `${fx},${fy}`;
+  const tx = there ? fx + 1 : fx;
+  const at = await walkTo(page, tx * TILE_W + TILE_W / 2, fy * TILE_H + TILE_H / 2);
   await page.mouse.click(at.x, at.y);
   await page.waitForTimeout(300);
-  await expect(add).toHaveAttribute("data-tile", `${fx},${fy}`);
+  await expect(add).toHaveAttribute("data-tile", `${tx},${fy}`);
   expect(await add.getAttribute("data-tile")).not.toBe(before);
 });
 
@@ -150,7 +155,7 @@ test("drag out tiles and the composer opens for that space, snapped to tiles", a
   await ready(page);
   const world = page.locator("[data-world]");
   const bounds = ((await world.getAttribute("data-bounds")) ?? "").split(",").map(Number);
-  // the frontier row above the content is empty ground: drag across it
+  // the frontier row above the content is empty ground: walk up to it with the keys, then drag across it
   const y = bounds[1]! * TILE_H + TILE_H / 2;
   // walk so that row is on screen, then start the drag a little inside the world's left edge on that row
   const x = bounds[0]! * TILE_W + 80;
@@ -161,13 +166,29 @@ test("drag out tiles and the composer opens for that space, snapped to tiles", a
   await page.mouse.down();
   await page.mouse.move(start.x + 500, start.y + 40, { steps: 8 });
   await expect(page.locator("rect[data-map-mark]")).toBeVisible();
+  await expect(page.locator('[data-ab-block="__new__"]')).toHaveCount(0); // the add zone steps aside while the space is drawn
   await page.mouse.up();
   const dialog = page.getByRole("dialog", { name: /ask for a change/i });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("This space")).toBeVisible();
   await expect(dialog.getByText(/tiles -?\d+,-?\d+→-?\d+,-?\d+/)).toBeVisible();
+  // the space has handles: pull its right edge one tile further and the ask follows, keeping what was typed
+  const frame = page.locator("[data-region]");
+  await expect(frame).toBeVisible();
+  const before = (await frame.getAttribute("data-region"))!.split(",").map(Number);
+  await dialog.getByRole("textbox").fill("A bench for two");
+  const handle = (await page.locator('[data-region-handle="e"]').boundingBox())!;
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + handle.width / 2 + TILE_W, handle.y + handle.height / 2, { steps: 6 });
+  await page.mouse.up();
+  const after = (await frame.getAttribute("data-region"))!.split(",").map(Number);
+  expect(after[2]).toBe(before[2]! + 1);
+  await expect(dialog.getByText(`tiles ${after[0]},${after[1]}→${after[0]! + after[2]! - 1},${after[1]! + after[3]! - 1}`)).toBeVisible();
+  await expect(dialog.getByRole("textbox")).toHaveValue("A bench for two");
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+  await expect(frame).toHaveCount(0);
 });
 
 test("in pick mode, drag an object and the ask to move it is written for you, in tiles", async ({ page }) => {
@@ -505,23 +526,32 @@ test("the placard and the composer say who made an object and how long it has le
   await page.keyboard.press("Escape");
 });
 
-test("the ? says how, and opens the full story", async ({ page }) => {
+test("both question marks open the one card: three lines, how to point, More, feedback", async ({ page }) => {
   await page.goto(url);
   await ready(page);
   await page.getByRole("button", { name: /how to use the canvas/i }).click();
   const pop = page.locator("[data-canvas-howto]");
   await expect(pop).toBeVisible();
-  await expect(pop.getByText(/walk it/i)).toBeVisible();
-  await pop.getByRole("button", { name: /the full story/i }).click();
-  const help = page.getByRole("dialog", { name: /how this works/i });
-  await expect(help).toBeVisible();
-  expect((await help.boundingBox())!.height).toBeGreaterThan(300);
-  await page.keyboard.press("Escape");
-  await expect(help).toBeHidden();
-  await page.getByRole("button", { name: /how to use the canvas/i }).click();
-  await expect(pop).toBeVisible();
+  await expect(pop.getByText(/point\. ask\. watch it ship\./i)).toBeVisible();
+  await expect(pop.getByText(/tap an object's/i)).toBeVisible();
+  await expect(pop.getByText(/walk it|100%|bulldoze/i)).toHaveCount(0); // no rules, no walking lesson
+  await expect(pop.locator("[data-help-more]")).toHaveAttribute("href", "/faq");
+  await expect(pop.locator("[data-help-feedback] [data-feedback-form]")).toBeVisible(); // feedback is typed right here
+  await expect(pop.locator("[data-help-board]")).toHaveAttribute("href", "/leaderboard#feedback");
+  expect(await page.locator("[data-canvas-howto]").count()).toBe(1); // one card, not two
   await page.keyboard.press("Escape");
   await expect(pop).toBeHidden();
+  // the header's ? opens the same card, and closes it again
+  await page.getByRole("button", { name: /how this works/i }).click();
+  await expect(pop).toBeVisible();
+  await page.getByRole("button", { name: /how this works/i }).click();
+  await expect(pop).toBeHidden();
+  // Change something arms pointing and the card gets out of the way
+  await page.getByRole("button", { name: /how to use the canvas/i }).click();
+  await pop.locator("[data-help-change]").click();
+  await expect(pop).toBeHidden();
+  await expect(page.locator("body[data-picking]")).toBeAttached();
+  await page.keyboard.press("Escape");
 });
 
 test("Live lives in the bar and opens the feed", async ({ page }) => {

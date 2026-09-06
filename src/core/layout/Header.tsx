@@ -4,7 +4,7 @@ import { cn } from "@/core/lib/cn";
 import { AuthButton } from "@/core/auth/AuthButton";
 import { LiveCounters } from "./LiveCounters";
 import { PatronSlot } from "@/core/patrons/PatronSlot";
-import { HelpPanel } from "@/core/help/HelpPanel";
+import { HelpPop, useOnRoom } from "@/core/help/HelpPop";
 import { helpStore, useHelpOpen } from "@/core/help/helpStore";
 
 const nav = [
@@ -14,6 +14,8 @@ const nav = [
 
 export function Header() {
   const help = useHelpOpen();
+  // on the canvas the card is anchored to the canvas's own "?"; everywhere else it is this header's to show
+  const onRoom = useOnRoom();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur supports-[backdrop-filter]:bg-paper/70">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1.5 px-2.5 sm:gap-3 sm:px-6">
@@ -36,17 +38,19 @@ export function Header() {
           ))}
           <button
             type="button"
-            onClick={() => helpStore.open()}
+            onClick={() => helpStore.toggle()}
             className="rounded-md p-1.5 text-ink-2 hover:bg-paper-2 hover:text-ink"
             aria-label="How this works"
             title="How this works"
+            aria-expanded={help}
+            data-help-toggle
           >
             <CircleHelp size={18} />
           </button>
         </nav>
         <AuthButton />
       </div>
-      <HelpPanel open={help} onClose={() => helpStore.close()} />
+      {onRoom ? null : <HelpPop />}
     </header>
   );
 }

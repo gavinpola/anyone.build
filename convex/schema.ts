@@ -162,6 +162,32 @@ export default defineSchema({
     .index("by_request_user", ["requestId", "userId"])
     .index("by_user", ["userId"]),
 
+  // Feedback on the site itself (not the wall): a note, votes, and, once a maintainer approves it, the
+  // GitHub issue that asks the coding agent for a pull request.
+  feedback: defineTable({
+    text: v.string(),
+    userId: v.id("users"),
+    status: v.union(v.literal("open"), v.literal("approved"), v.literal("done"), v.literal("declined")),
+    votes: v.number(),
+    createdAt: v.number(),
+    approvedBy: v.optional(v.id("users")),
+    approvedAt: v.optional(v.number()),
+    issueUrl: v.optional(v.string()),
+    issueNumber: v.optional(v.number()),
+    issueError: v.optional(v.string()),
+    prUrl: v.optional(v.string()),
+  })
+    .index("by_status", ["status", "votes"])
+    .index("by_user", ["userId", "createdAt"]),
+
+  feedbackVotes: defineTable({
+    feedbackId: v.id("feedback"),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_feedback_user", ["feedbackId", "userId"])
+    .index("by_user", ["userId"]),
+
   changes: defineTable({
     requestId: v.id("requests"),
     userId: v.optional(v.id("users")),

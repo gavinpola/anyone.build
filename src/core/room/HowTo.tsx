@@ -1,68 +1,17 @@
-import { useEffect, useRef, useState } from "react";
 import { CircleHelp } from "lucide-react";
-import { helpStore } from "@/core/help/helpStore";
-import { usePicker } from "@/core/picker/pickerStore";
+import { helpStore, useHelpOpen } from "@/core/help/helpStore";
+import { HelpPop } from "@/core/help/HelpPop";
 import { track } from "@/core/lib/analytics";
 
-const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform + navigator.userAgent);
-
 /**
- * The "?" in the corner: one small card that says how to use the canvas. Not a dialog (the header's
- * "How this works" panel is the long version, reachable from here). Closes on Escape, on a press
- * outside, and the moment you start pointing.
+ * The "?" in the corner of the canvas. It opens the same card as the header's "?" (helpStore is the
+ * one switch), anchored here so the card sits just above the button.
  */
 export function HowTo() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const { arming } = usePicker();
-  const [wasArming, setWasArming] = useState(arming);
-  if (arming !== wasArming) {
-    setWasArming(arming);
-    if (arming) setOpen(false);
-  }
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    const onDown = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onDown, true);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onDown, true);
-    };
-  }, [open]);
+  const open = useHelpOpen();
   return (
-    <div ref={ref} className="canvas-howto" data-canvas-ui>
-      {open ? (
-        <div id="canvas-howto" className="canvas-howto-pop" data-canvas-howto>
-          <p className="placard smallcaps">How to use the canvas</p>
-          <p className="mt-2">
-            The world is always 100%: <strong>walk it</strong>. Drag the ground, scroll, or use the arrow keys. The map in the corner teleports.
-          </p>
-          <p className="mt-2">
-            Tap an object's <strong>label</strong> to see who made it, change it, or move it. Tap empty ground to add something there.
-          </p>
-          <p className="mt-2">
-            Hold <kbd>⇧</kbd>
-            <kbd>{isMac ? "⌘" : "Ctrl"}</kbd> and point at anything to change just that; drag out tiles to work on a space. Or press <strong>Change something</strong>.
-          </p>
-          <p className="mt-2">On a phone: swipe to walk, long-press an object for its sheet.</p>
-          <button
-            type="button"
-            className="mt-3 text-[13px] font-medium text-accent hover:underline"
-            onClick={() => {
-              setOpen(false);
-              helpStore.open();
-            }}
-          >
-            The full story
-          </button>
-        </div>
-      ) : null}
+    <div className="canvas-howto" data-canvas-ui>
+      <HelpPop anchored />
       <button
         type="button"
         className="canvas-howto-btn"
@@ -70,12 +19,11 @@ export function HowTo() {
         title="How to use the canvas"
         aria-expanded={open}
         aria-controls="canvas-howto"
-        onClick={() =>
-          setOpen((o) => {
-            if (!o) track("howto_open");
-            return !o;
-          })
-        }
+        data-help-toggle
+        onClick={() => {
+          if (!helpStore.get()) track("howto_open");
+          helpStore.toggle();
+        }}
       >
         <CircleHelp size={16} />
       </button>

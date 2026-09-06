@@ -121,8 +121,11 @@ body {
   letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "tnum" 1, "cv11" 1;
+  /* no "tnum" here: tabular figures widen the period and comma to digit width in Schibsted Grotesk, which
+     puts a gap before every period and comma in prose. Numbers that must line up opt in (the num utility, tabular-nums). */
+  font-feature-settings: "cv11" 1;
 }
+
 
 /* Placard: museum-label typography used for all metadata */
 .placard {
@@ -480,7 +483,7 @@ body:has([data-canvas]) [data-feed-pills] { display: none; }
 .canvas-howto { position: absolute; right: 14px; bottom: 14px; z-index: 50; }
 .canvas-howto-btn { width: 36px; height: 36px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--line); color: var(--ink-2); box-shadow: 0 8px 24px rgba(60, 40, 10, 0.12); }
 .canvas-howto-btn:hover, .canvas-howto-btn[aria-expanded="true"] { color: var(--ink); border-color: var(--line-2); }
-.canvas-howto-pop { position: absolute; right: 0; bottom: 44px; width: 300px; max-width: calc(100vw - 28px); z-index: 52; padding: 12px 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(60, 40, 10, 0.12); font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.canvas-howto-pop { position: absolute; right: 0; bottom: 44px; width: 340px; max-width: calc(100vw - 28px); max-height: calc(100dvh - 120px); overflow-y: auto; z-index: 52; padding: 12px 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(60, 40, 10, 0.12); font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .canvas-howto-pop kbd { border: 1px solid var(--line); background: var(--paper-2); border-radius: 3px; padding: 0 4px; font-family: var(--font-mono); font-size: 11px; }
 .canvas-howto-pop strong { color: var(--ink); font-weight: 600; }
 .canvas-shell.is-compact .canvas-howto { right: 8px; bottom: 60px; }
@@ -649,7 +652,9 @@ body[data-picking] .neighbour-strip, body[data-picking] .walk-hint { opacity: .3
 .canvas-shell.is-compact .canvas-bar .canvas-bar-live { height: 44px !important; border-radius: 7px !important; }
 .canvas-shell.is-compact .canvas-bar .canvas-toast { display: none; }
 .canvas-shell.is-compact .minimap { right: 8px; bottom: 104px; }
-.canvas-shell.is-compact .canvas-howto { right: 8px; bottom: 104px; display: none; }
+.canvas-shell.is-compact .canvas-howto { right: 8px; bottom: 104px; }
+.canvas-shell.is-compact .canvas-howto-btn { display: none; } /* the header's ? opens the card on phones */
+.canvas-shell.is-compact .canvas-howto-pop { bottom: 0; }
 .canvas-shell.is-compact .minimap[data-minimap-open="0"] { padding: 6px 10px; }
 .canvas-shell.is-compact .canvas-add-cta { padding: 13px 18px; font-size: 13.5px; }
 /* when every free tile is off screen, the add zone floats over the world and walks you to the nearest one */
@@ -666,3 +671,38 @@ body[data-picking] .canvas-add.is-floating { opacity: 1; pointer-events: auto; }
 .canvas-world .object-keys { margin-left: 4px; padding: 2px 5px; border-radius: 3px; background: var(--ok); color: white; font-size: 8.5px; letter-spacing: .08em; }
 .walk-hint[data-walk-hint="keys"] { border-color: color-mix(in oklab, var(--ok) 50%, var(--line)); color: var(--ink-2); }
 .walk-hint[data-walk-hint="keys"] .keys { color: var(--ok); }
+
+/* ===== The "?": one card, bottom right. Three lines, how to walk and point, a way in, More, feedback. ===== */
+.howto-title { font-family: var(--font-display); font-size: 20px; line-height: 1.1; letter-spacing: -.02em; font-weight: 800; color: var(--ink); white-space: nowrap; }
+.howto-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.howto-steps li { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.4; color: var(--ink-2); }
+.howto-steps .num { flex: none; padding-top: 2px; font-family: var(--font-mono); font-size: 11px; color: var(--accent); }
+.howto-rule { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.howto-actions { display: flex; gap: 8px; margin-top: 12px; }
+.howto-cta { flex: 1; height: 36px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-size: 13.5px; font-weight: 600; }
+.howto-cta:hover { filter: brightness(.95); }
+.howto-more { display: inline-flex; align-items: center; justify-content: center; gap: 3px; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 13.5px; font-weight: 500; }
+.howto-more:hover { border-color: var(--line-2); background: var(--paper-2); }
+.howto-feedback { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.howto-foot { margin-top: 10px; font-size: 12px; color: var(--muted); text-align: center; }
+.canvas-howto-pop.is-fixed { position: fixed; right: 14px; bottom: 14px; z-index: 81; }
+
+/* ===== The selected space: a frame whose edges and corners are handles, so the ask can grow or shrink without starting over ===== */
+.region-frame { position: absolute; z-index: 45; pointer-events: none; border: 1.5px dashed color-mix(in oklab, var(--accent) 60%, transparent); background: color-mix(in oklab, var(--accent) 6%, transparent); }
+.region-frame.is-resizing { border-style: solid; background: color-mix(in oklab, var(--accent) 10%, transparent); }
+.region-handle { position: absolute; pointer-events: auto; background: transparent; border: 0; padding: 0; touch-action: none; }
+.region-handle::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 3px; background: var(--card); border: 2px solid var(--accent); box-shadow: 0 2px 6px rgba(60, 40, 10, .18); }
+.region-handle.is-n, .region-handle.is-s { left: 24px; right: 24px; height: 14px; cursor: ns-resize; }
+.region-handle.is-n::after, .region-handle.is-s::after { width: 28px; margin-left: -14px; }
+.region-handle.is-e, .region-handle.is-w { top: 24px; bottom: 24px; width: 14px; cursor: ew-resize; }
+.region-handle.is-e::after, .region-handle.is-w::after { height: 28px; margin-top: -14px; }
+.region-handle.is-n { top: -7px; }
+.region-handle.is-s { bottom: -7px; }
+.region-handle.is-w { left: -7px; }
+.region-handle.is-e { right: -7px; }
+.region-handle.is-nw, .region-handle.is-ne, .region-handle.is-sw, .region-handle.is-se { width: 24px; height: 24px; }
+.region-handle.is-nw { left: -12px; top: -12px; cursor: nwse-resize; }
+.region-handle.is-se { right: -12px; bottom: -12px; cursor: nwse-resize; }
+.region-handle.is-ne { right: -12px; top: -12px; cursor: nesw-resize; }
+.region-handle.is-sw { left: -12px; bottom: -12px; cursor: nesw-resize; }
+.region-handle:hover::after, .region-frame.is-resizing .region-handle::after { background: var(--accent); }

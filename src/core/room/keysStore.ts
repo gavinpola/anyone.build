@@ -95,6 +95,10 @@ export const keysStore = {
       set.clear();
     };
   },
+  /** Does this block read the keyboard through useKeys? (Blocks that listen on a focusable element are found in the DOM.) */
+  listens(id: string) {
+    return (sets.get(id)?.size ?? 0) > 0;
+  },
   /** For tests: forget everything. */
   reset() {
     state = { active: null };

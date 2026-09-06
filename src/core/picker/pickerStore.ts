@@ -11,6 +11,8 @@ export type PickerTarget = Target & {
   draft?: string;
   /** who last touched the block and how long it has left ("pinned", "faded", or days) */
   facts?: { by: string | null; left: string | null; when: number | null };
+  /** true when this is the same ask as before with a new shape (a space resized): the composer keeps what was typed */
+  reshaped?: boolean;
 };
 
 /** The facts a block section carries as data attributes (Room.tsx writes them). */
@@ -63,6 +65,11 @@ export const pickerStore = {
   },
   select(t: PickerTarget | null) {
     set({ selected: t, arming: false, sticky: false, hover: null });
+  },
+  /** The selected space changed shape (its edges were dragged): same ask, new rect and tiles. */
+  reshape(patch: Pick<PickerTarget, "rect" | "text">) {
+    if (!state.selected) return;
+    set({ selected: { ...state.selected, ...patch, reshaped: true } });
   },
   clear() {
     set({ selected: null, hover: null, arming: false, sticky: false });

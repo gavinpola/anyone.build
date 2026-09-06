@@ -35,12 +35,13 @@ test.describe("header + navigation", () => {
     const help = page.getByRole("dialog", { name: /how this works/i });
     await expect(help).toBeVisible();
     await expect(help.getByText("Point. Ask. Watch it ship.")).toBeVisible();
-    // It must be a real panel, not squashed into the header (regression: fixed inside backdrop-blur).
+    // It must be a real card, not squashed into the header (regression: fixed inside backdrop-blur).
     expect((await help.boundingBox())!.height).toBeGreaterThan(300);
-    await help.getByRole("button", { name: /close/i }).click();
+    await page.getByRole("button", { name: /how this works/i }).click(); // the same ? closes it
     await expect(help).toBeHidden();
     await page.getByRole("button", { name: /how this works/i }).click();
     await page.keyboard.press("Escape");
+    await expect(help).toBeHidden();
     await signIn(page);
     await page.getByRole("button", { name: /sign out/i }).click();
     await expect(page.getByRole("button", { name: /^sign in/i })).toBeVisible({ timeout: 10_000 });

@@ -315,3 +315,39 @@ export const revertChange = internalAction({
     await kit.rest.pulls.merge({ owner, repo, pull_number: pr.number, merge_method: "squash" }).catch(() => {});
   },
 });
+
+/**
+ * A feedback note a maintainer approved becomes a job: a GitHub issue that asks the coding agent
+ * (@claude, .github/workflows/claude.yml) for a pull request. The maintainer merges the PR; that is
+ * the only other human step. Needs the App's `issues: write` permission.
+ */
+export const openFeedbackIssue = internalAction({
+  args: { feedbackId: v.id("feedback") },
+  handler: async (ctx, { feedbackId }) => {
+    const f = await ctx.runMutation(internal.feedback.forIssue, { feedbackId });
+    if (!f || f.issueUrl) return null;
+    try {
+      const kit = await octokit();
+      const { owner, repo } = repoParts();
+      const site = process.env.SITE_URL ?? "https://everyones.lol";
+      const title = `Feedback: ${f.text.slice(0, 80)}${f.text.length > 80 ? "…" : ""}`;
+      const body = [
+        `@claude please make this change to the site itself and open a pull request.`,
+        ``,
+        `> ${f.text}`,
+        ``,
+        `Left by @${f.by} on the feedback board (${f.votes} ${f.votes === 1 ? "vote" : "votes"}), approved by a maintainer: ${site}/feedback`,
+        ``,
+        `Notes for the agent:`,
+        `- This is about the site's own chrome and machinery (src/core, convex, packages), not the wall's blocks. Do not touch src/rooms: the wall's own pipeline owns that folder.`,
+        `- Keep the change as small as the note allows, in the codebase's voice (see AGENTS.md and docs/CONTRIBUTING.md).`,
+        `- Run pnpm typecheck, pnpm lint, and pnpm test before opening the PR, and say in the PR body what you changed and why.`,
+      ].join("\n");
+      const issue = await kit.rest.issues.create({ owner, repo, title, body, labels: ["feedback"] });
+      await ctx.runMutation(internal.feedback.issued, { feedbackId, issueUrl: issue.data.html_url, issueNumber: issue.data.number });
+    } catch (e) {
+      await ctx.runMutation(internal.feedback.issueFailed, { feedbackId, error: (e as Error).message ?? String(e) });
+    }
+    return null;
+  },
+});
