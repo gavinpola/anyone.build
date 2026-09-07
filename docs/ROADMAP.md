@@ -84,7 +84,7 @@ In order:
 
 - [ ] **Billing.** Stripe Checkout subscription mode for Drafts and Ships, customer portal, metered PR overage; a `plans` table keyed by workspace; entitlement checks in `sites.*` and the pipeline.
 - [ ] **Tenancy.** `workspaces` (owner, members, plan); sites under workspaces; per-site GitHub App installation id, judge addendum, models, and budget; the pipeline takes a site instead of the env repo.
-- [ ] **Onboarding.** Add site → paste tag → first note in a minute, with a dashboard confirmation; "connect a repo" as the upgrade moment.
+- [x] **Onboarding** (2026-09-07): a site with no notes shows the first minute as three steps (paste the tag, hold ⇧⌘ and click on your site, it lands here) with a live "waiting for the first note" line; the site row is live, so the strip becomes "Your first note landed just now" the moment it does; "Connect a repo" under the inbox is the upgrade moment (Drafts and Ships invite-only, hello@). e2e covers the fresh-site path. NEXT: "connect a repo" should open a real flow once the per-site GitHub App installation exists (tenancy).
 - [ ] **Retention.** Daily digest email of open notes and shipped PRs (Resend is wired); weekly "what shipped, what it cost"; Slack digest on Ships.
 - [ ] **Trust.** Public pipeline status page; per-PR cost and risk shown to customers; a written data policy; the SOC 2 path for Enterprise.
 - [ ] **Distribution.** The wall as the demo; "Built with everyones.lol" (opt-out on paid plans); a gallery of shipped changes; a template repo for the internal-tools use case; the Enterprise "talk to us" needs a real inbox (hello@everyones.lol) once the domain is bought.

@@ -1,6 +1,6 @@
 {
   "room": "main",
-  "generatedAt": "2026-09-06T23:25:35.752Z",
+  "generatedAt": "2026-09-07T03:22:49.048Z",
   "blocks": [
     {
       "id": "hello-wall",
@@ -33,6 +33,14 @@
       "size": "md",
       "order": 3,
       "path": "src/rooms/main/blocks/electric-message.tsx"
+    },
+    {
+      "id": "say-hi-ella",
+      "title": "Say hi Ella",
+      "description": "A little hello for Ella on the wall.",
+      "size": "sm",
+      "order": 3,
+      "path": "src/rooms/main/blocks/say-hi-ella.tsx"
     },
     {
       "id": "dino-game",

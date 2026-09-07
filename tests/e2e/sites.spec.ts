@@ -48,6 +48,10 @@ test("add a site, leave a note through the widget, work the inbox", async ({ pag
   const key = (await snippetBox.getAttribute("data-site-key")) ?? "";
   expect(key).toMatch(/^site_[a-f0-9]{20}$/);
   await expect(snippetBox.locator("code")).toContainText(`data-site="${key}"`);
+  // a fresh site shows the first minute (a site left over from an interrupted run may already have notes)
+  const fresh = (await page.locator("[data-first-run]").count()) > 0;
+  if (fresh) await expect(page.locator("[data-first-run]")).toContainText(/waiting for the first note/i);
+  await expect(page.locator("[data-upgrade]")).toContainText(/connect a repo/i);
 
   // the demo page with the real widget
   const demoHref = (await page.getByRole("link", { name: /try it/i }).getAttribute("href")) ?? "";
@@ -88,6 +92,7 @@ test("add a site, leave a note through the widget, work the inbox", async ({ pag
   const row = page.locator("li[data-note-status]", { hasText: noteText }).first();
   await expect(row).toBeVisible({ timeout: 15_000 });
   await expect(row).toContainText("/ask-demo.html");
+  if (fresh) await expect(page.locator("[data-first-note]")).toContainText(/first note landed/i); // the strip became the confirmation
   await row.getByRole("button", { name: "Done" }).click();
   await expect(row).toBeHidden();
   await page.getByRole("tab", { name: "Done" }).click();

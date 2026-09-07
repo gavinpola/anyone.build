@@ -217,6 +217,30 @@ function SiteDetail({ site, onRemoved }: { site: Site; onRemoved: () => void }) 
         </pre>
       </div>
 
+      {site.notes === 0 ? (
+        // the first minute: three steps, and a line that flips the moment the first note lands (the site row is live)
+        <ol className="mt-4 grid gap-2 text-[13px] text-ink-2 sm:grid-cols-3" data-first-run>
+          <li className="rounded-md border border-line p-3">
+            <span className="placard smallcaps">1</span>
+            <p className="mt-1">Paste the tag before <code className="font-mono">&lt;/body&gt;</code>. Copy is above.</p>
+          </li>
+          <li className="rounded-md border border-line p-3">
+            <span className="placard smallcaps">2</span>
+            <p className="mt-1">Open your site, hold ⇧⌘ (⇧Ctrl on Windows), click anything, say what's off.</p>
+          </li>
+          <li className="rounded-md border border-line p-3">
+            <span className="placard smallcaps">3</span>
+            <p className="mt-1 flex items-center gap-2">
+              <span className="live-dot" aria-hidden /> Waiting for the first note…
+            </p>
+          </li>
+        </ol>
+      ) : site.notes === 1 ? (
+        <p className="mt-4 rounded-md bg-ok-soft/40 px-3 py-2 text-[13px]" data-first-note>
+          Your first note landed{site.lastNoteAt ? ` ${ago(site.lastNoteAt)}` : ""}. That's the loop: a visitor points at something, you see it here.
+        </p>
+      ) : null}
+
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
         <div role="tablist" className="flex gap-1">
           {FILTERS.map((f) => (
@@ -266,6 +290,15 @@ function SiteDetail({ site, onRemoved }: { site: Site; onRemoved: () => void }) 
           notes.map((n) => <NoteRow key={n.id} n={n} />)
         )}
       </ul>
+
+      {/* the upgrade moment: notes are free; the next tier turns them into pull requests */}
+      <p className="mt-4 text-[13px] text-muted" data-upgrade>
+        Want these to become pull requests?{" "}
+        <Link to="/for-your-site" className="underline hover:text-ink">
+          Connect a repo
+        </Link>{" "}
+        · Drafts and Ships are invite-only for now; write to hello@everyones.lol.
+      </p>
     </div>
   );
 }

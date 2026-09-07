@@ -94,6 +94,8 @@ One footer link, one line at the bottom of the help panel, and the `/for-your-si
 2. Per-site GitHub App installation and a per-site judge addendum; the pipeline already takes a repo slug, so the executor needs a `siteId` and the installation id instead of the env repo.
 3. Internal-only mode (notes accepted only from signed-in members of a GitHub org, verified through the widget with a short-lived token).
 4. Email digest of open notes (Resend is wired).
+
+Done since: onboarding (2026-09-07) — the dashboard's first minute for a new site, a live confirmation when the first note lands, and "connect a repo" as the upgrade moment.
 5. Screenshot capture in the widget (html-to-image inside the shadow root; opt-in per site because of privacy).
 
 ## Standing directive (Gavin, 2026-09-03)
