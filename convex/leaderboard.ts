@@ -66,6 +66,7 @@ export const profile = query({
       user: publicUser(u),
       changes: changes.map((c) => ({
         id: c._id,
+        requestId: c.requestId,
         summary: c.summary,
         blockIds: c.blockIds,
         linesAdded: c.linesAdded,

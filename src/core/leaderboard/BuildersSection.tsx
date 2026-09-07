@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 import { api } from "../../../convex/_generated/api";
 import { hasConvex, useQuerySafe } from "@/core/lib/providers";
@@ -50,7 +51,9 @@ function Board({ period, metric, title }: { period: Period; metric: "changes" | 
                 <span aria-hidden className="absolute inset-y-0 left-0 bg-accent-soft/50" style={{ width: `${(100 * v) / max}%` }} />
                 <span className={cn("font-display num relative w-8 text-xl", i === 0 ? "text-accent" : "text-ink-2")}>{i + 1}</span>
                 <Avatar handle={r.handle} url={r.avatarUrl} size={24} />
-                <span className="relative min-w-0 flex-1 truncate text-[15px] font-medium">@{r.handle}</span>
+                <Link to="/u/$handle" params={{ handle: r.handle }} className="relative min-w-0 flex-1 truncate text-[15px] font-medium hover:text-accent" data-builder={r.handle}>
+                  @{r.handle}
+                </Link>
                 <span className="font-display num relative text-xl">{n(v)}</span>
               </li>
             );
