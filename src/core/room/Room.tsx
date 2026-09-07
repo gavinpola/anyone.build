@@ -23,6 +23,7 @@ import { CanvasBar } from "./CanvasBar";
 import { Pins } from "./Pins";
 import { Minimap } from "./Minimap";
 import { HowTo } from "./HowTo";
+import { useFirstVisit } from "@/core/help/helpStore";
 import { Heat } from "./Heat";
 import { ObjectSheet } from "./ObjectSheet";
 import { useTouch } from "./useTouch";
@@ -191,6 +192,7 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
   const skin = canvas.skin ?? "instrument";
   const showAll = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("all");
   const { arming, selected } = usePicker();
+  const firstVisit = useFirstVisit(); // the card is open for the first time: the add zone says what to do
   const sheet = useSheet();
   const active = useActiveBlock();
 
@@ -847,7 +849,7 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
                           <p className="canvas-add-where">
                             empty ground · tile {addTile.x},{addTile.y}
                           </p>
-                          <span className="canvas-add-cta">+ Add something here</span>
+                          <span className="canvas-add-cta">{firstVisit ? "Tap here to add something" : "+ Add something here"}</span>
                         </div>
                       </section>
                     );
@@ -894,7 +896,7 @@ function WorldRoom({ compact, tile }: { compact: boolean; tile: Tile | null }) {
                   <p className="canvas-add-where">
                     nearest empty ground · tile {addTile.x},{addTile.y}
                   </p>
-                  <span className="canvas-add-cta">{sheet.moving ? "Move it here" : "+ Add something here"}</span>
+                  <span className="canvas-add-cta">{sheet.moving ? "Move it here" : firstVisit ? "Tap here to add something" : "+ Add something here"}</span>
                 </div>
               </section>
             ) : null}

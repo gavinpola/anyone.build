@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { pickerStore, usePicker } from "@/core/picker/pickerStore";
-import { helpStore, useHelpOpen } from "./helpStore";
+import { helpStore, useFirstVisit, useHelpOpen } from "./helpStore";
 import { FeedbackForm } from "@/core/feedback/Feedback";
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform + navigator.userAgent);
@@ -21,6 +21,7 @@ export function useOnRoom() {
  */
 export function HelpPop({ anchored = false }: { anchored?: boolean }) {
   const open = useHelpOpen();
+  const firstVisit = useFirstVisit();
   const navigate = useNavigate();
   const onRoom = useOnRoom();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -28,6 +29,11 @@ export function HelpPop({ anchored = false }: { anchored?: boolean }) {
   useEffect(() => {
     if (arming) helpStore.close();
   }, [arming]);
+  // the first showing: Change something and the add zone beckon, so the first tap is the first step
+  useEffect(() => {
+    document.body.toggleAttribute("data-first-visit", open && firstVisit);
+    return () => document.body.removeAttribute("data-first-visit");
+  }, [open, firstVisit]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -53,7 +59,7 @@ export function HelpPop({ anchored = false }: { anchored?: boolean }) {
     setTimeout(() => pickerStore.arm(true), 60);
   };
   const card = (
-    <div ref={ref} id="canvas-howto" role="dialog" aria-label="How this works" className={anchored ? "canvas-howto-pop" : "canvas-howto-pop is-fixed"} data-canvas-howto data-help-pop>
+    <div ref={ref} id="canvas-howto" role="dialog" aria-label="How this works" className={anchored ? "canvas-howto-pop" : "canvas-howto-pop is-fixed"} data-canvas-howto data-help-pop data-first-visit={firstVisit ? "1" : undefined}>
       <p className="howto-title">Point. Ask. Watch it ship.</p>
       <ol className="howto-steps">
         <li>

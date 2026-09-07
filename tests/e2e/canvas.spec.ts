@@ -554,6 +554,33 @@ test("both question marks open the one card: three lines, how to point, More, fe
   await page.keyboard.press("Escape");
 });
 
+test.describe("the first landing", () => {
+  // the card opens itself once per browser, but not under automation; this test says it is a person
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, "webdriver", { get: () => false }));
+  });
+  test("the card opens by itself once, the ways in beckon, a tap on the ground closes it, and it stays closed", async ({ page }) => {
+    await page.goto(url);
+    await ready(page);
+    const pop = page.locator("[data-canvas-howto]");
+    await expect(pop).toBeVisible();
+    await expect(pop).toHaveAttribute("data-first-visit", "1");
+    await expect(page.locator("body[data-first-visit]")).toBeAttached();
+    await expect(page.locator('[data-ab-block="__new__"] .canvas-add-cta')).toHaveText(/tap here to add something/i);
+    await page.mouse.click(10, 10); // the ground
+    await expect(pop).toBeHidden();
+    await expect(page.locator("body[data-first-visit]")).toHaveCount(0);
+    await expect(page.locator('[data-ab-block="__new__"] .canvas-add-cta')).toHaveText(/add something here/i);
+    await page.reload();
+    await ready(page);
+    await page.waitForTimeout(1200);
+    await expect(pop).toBeHidden(); // remembered
+    await page.getByRole("button", { name: /how to use the canvas/i }).click(); // and the ? still works, as a plain showing
+    await expect(pop).toBeVisible();
+    await expect(pop).not.toHaveAttribute("data-first-visit", "1");
+  });
+});
+
 test("Live lives in the bar and opens the feed", async ({ page }) => {
   await page.goto(url);
   await ready(page);

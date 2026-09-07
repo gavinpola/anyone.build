@@ -706,3 +706,12 @@ body[data-picking] .canvas-add.is-floating { opacity: 1; pointer-events: auto; }
 .region-handle.is-ne { right: -12px; top: -12px; cursor: nesw-resize; }
 .region-handle.is-sw { left: -12px; bottom: -12px; cursor: nesw-resize; }
 .region-handle:hover::after, .region-frame.is-resizing .region-handle::after { background: var(--accent); }
+
+/* the first landing: the card is open by itself, and the two ways in beckon, twice, then rest */
+@keyframes beckon {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent); }
+  40% { transform: translateY(-3px); box-shadow: 0 0 0 8px color-mix(in oklab, var(--accent) 0%, transparent); }
+}
+body[data-first-visit] .canvas-bar-cta { animation: beckon 1.4s ease-out .4s 2; }
+body[data-first-visit] .canvas-add { border-color: var(--accent); border-style: solid; animation: beckon 1.4s ease-out .4s 2; }
+@media (prefers-reduced-motion: reduce) { body[data-first-visit] .canvas-bar-cta, body[data-first-visit] .canvas-add { animation: none; } }
