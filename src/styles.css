@@ -715,3 +715,6 @@ body[data-picking] .canvas-add.is-floating { opacity: 1; pointer-events: auto; }
 body[data-first-visit] .canvas-bar-cta { animation: beckon 1.4s ease-out .4s 2; }
 body[data-first-visit] .canvas-add { border-color: var(--accent); border-style: solid; animation: beckon 1.4s ease-out .4s 2; }
 @media (prefers-reduced-motion: reduce) { body[data-first-visit] .canvas-bar-cta, body[data-first-visit] .canvas-add { animation: none; } }
+
+/* the card's first line says what this is, in the same voice as the add zone's "empty ground" */
+.howto-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }

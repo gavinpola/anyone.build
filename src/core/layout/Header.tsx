@@ -22,6 +22,10 @@ export function Header() {
         <Link to="/" className="shrink-0 text-[17px] font-bold leading-none tracking-tight sm:text-[19px]">
           everyones<span className="text-accent">.</span>lol
         </Link>
+        {/* what this is, said once, where every visitor looks first; phones get it as the card's first line */}
+        <span className="ml-1 hidden min-w-0 shrink truncate text-[13px] text-muted lg:inline" data-tagline>
+          the website anyone can change
+        </span>
         <LiveCounters />
         <PatronSlot />
         <nav className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">

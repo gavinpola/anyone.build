@@ -27,6 +27,7 @@ test.describe("header + navigation", () => {
     await page.goto(url);
     await ready(page);
     await expect(page).toHaveTitle(/everyones\.lol/);
+    await expect(page.locator("[data-tagline]")).toHaveText("the website anyone can change"); // desktop: next to the wordmark
     await page.getByRole("link", { name: "Leaderboard" }).click();
     await expect(page).toHaveURL(/\/leaderboard$/);
     await page.getByRole("link", { name: "Room" }).click();

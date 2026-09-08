@@ -567,6 +567,12 @@ test.describe("the first landing", () => {
     await expect(pop).toHaveAttribute("data-first-visit", "1");
     await expect(page.locator("body[data-first-visit]")).toBeAttached();
     await expect(page.locator('[data-ab-block="__new__"] .canvas-add-cta')).toHaveText(/tap here to add something/i);
+    // the first showing is the short one: what this is, the three lines, two ways out
+    await expect(pop.locator("[data-help-eyebrow]")).toHaveText(/the website anyone can change/i);
+    await expect(pop).toContainText("Point. Ask. Watch it ship.");
+    await expect(pop.locator("[data-help-look]")).toBeVisible();
+    await expect(pop.locator("[data-help-feedback]")).toHaveCount(0);
+    await expect(pop.locator("[data-help-more]")).toHaveCount(0);
     await page.mouse.click(10, 10); // the ground
     await expect(pop).toBeHidden();
     await expect(page.locator("body[data-first-visit]")).toHaveCount(0);
@@ -575,9 +581,34 @@ test.describe("the first landing", () => {
     await ready(page);
     await page.waitForTimeout(1200);
     await expect(pop).toBeHidden(); // remembered
-    await page.getByRole("button", { name: /how to use the canvas/i }).click(); // and the ? still works, as a plain showing
+    await page.getByRole("button", { name: /how to use the canvas/i }).click(); // and the ? still works, as the whole card
     await expect(pop).toBeVisible();
     await expect(pop).not.toHaveAttribute("data-first-visit", "1");
+    await expect(pop.locator("[data-help-feedback]")).toBeVisible();
+    await expect(pop.locator("[data-help-more]")).toHaveAttribute("href", "/faq");
+  });
+
+  test("a tile link is not the front door: no card opens itself there", async ({ page }) => {
+    await page.goto(url + "/t/0,0");
+    await ready(page);
+    await page.waitForTimeout(1200);
+    await expect(page.locator("[data-canvas-howto]")).toHaveCount(0);
+  });
+
+  test.describe("on a phone", () => {
+    test.use({ viewport: { width: 390, height: 800 }, hasTouch: true, isMobile: true });
+    test("the card sits low, a tile of wall stays visible above it, and Change something arms the picker", async ({ page }) => {
+      await page.goto(url);
+      await ready(page);
+      const pop = page.locator("[data-canvas-howto]");
+      await expect(pop).toBeVisible();
+      const box = (await pop.boundingBox())!;
+      const vp = page.viewportSize()!;
+      expect(box.y).toBeGreaterThan(vp.height * 0.45);
+      await pop.locator("[data-help-change]").click();
+      await expect(page.locator("body[data-picking]")).toBeAttached();
+      await expect(pop).toBeHidden();
+    });
   });
 });
 

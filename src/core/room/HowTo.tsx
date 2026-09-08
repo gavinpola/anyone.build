@@ -12,9 +12,13 @@ export function HowTo() {
   const open = useHelpOpen();
   // the first landing: the card opens by itself once the world has landed, and never again for this browser
   // (not under automation: the smoke and e2e runs point at the wall, and the card would sit over the map)
+  // Only on the front door: a share link or a tile link came for one thing, and the FocusBar explains it.
   useEffect(() => {
     if (typeof navigator !== "undefined" && navigator.webdriver) return;
-    const t = window.setTimeout(() => helpStore.openFirstVisit(), 700);
+    if (window.location.pathname !== "/") return;
+    const t = window.setTimeout(() => {
+      if (helpStore.openFirstVisit()) track("howto_auto", { compact: window.innerWidth < 768 });
+    }, 700);
     return () => window.clearTimeout(t);
   }, []);
   return (
