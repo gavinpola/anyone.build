@@ -42,7 +42,7 @@ The first change landed on Thursday, September 3rd, at five in the morning Easte
 
 [IMAGE: a ledger row — the Changes ledger on https://everyones.lol/leaderboard, one row showing the summary, who, +lines −lines, the cents, and the PR link]
 
-By Sunday night, the numbers: 68 asks. 21 changes live. 35 rejected by the judge (9 unclear, 8 not for everyone, 7 too big, 5 unsafe code, 3 out of bounds, 3 slow down). 14 failed the checks. 1,246 lines written by an agent, 76 removed. Median build time: three minutes and four seconds. The 21 live changes cost 75 cents of model in total. The 14 that failed cost another 89 cents. Call it a dollar sixty-four for the week, plus 631 pageviews and three signed-in builders. [CHECK: 68 asks is `stats:global`; the outcome counts sum to 71. Say which.]
+By Tuesday night, the numbers: 73 asks. 24 changes live. 36 rejected by the judge (9 not for everyone, 9 unclear, 7 too big, 5 unsafe code, 3 out of bounds, 3 slow down). 15 failed the checks. 1,541 lines written by an agent, 76 removed. Median build time: three minutes and four seconds. The 21 live changes cost 75 cents of model in total. The 14 that failed cost another 89 cents. Call it a dollar sixty-four for the week, plus 631 pageviews and three signed-in builders. [CHECK: 68 asks is `stats:global`; the outcome counts sum to 71. Say which.]
 
 Three asks I keep coming back to.
 
@@ -74,11 +74,11 @@ everyones.lol is the same thing on purpose. Agents building in public, with a ru
 
 ## What we don't know
 
-Whether it fills with junk. Four days and 631 pageviews is not a launch. The judge rejected half the asks so far, and most of those were unclear, not malicious. We haven't met the flood yet.
+Whether it fills with junk. Six days and 713 pageviews is not a launch. The judge rejected half the asks so far, and most of those were unclear, not malicious. We haven't met the flood yet.
 
 Whether decay keeps it alive or just makes it empty. A week is a guess.
 
-Whether the vote board works. Nothing has won a round yet. [CHECK: any proposal promoted on prod.]
+Whether the vote board works. Nothing has won a round yet: the board has been empty most of the week.
 
 Whether the cheap models are enough. Most of the failures were the coder giving up partway through a medium build. The large tier routes to a frontier model and hasn't run in the loop yet.
 

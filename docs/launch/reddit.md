@@ -1,6 +1,6 @@
 # Reddit — three posts, three rooms, three days apart
 
-Never the same text twice. Answer questions; never argue. Numbers are as of Sunday night 2026-09-06. [CHECK: refresh before each post.]
+Never the same text twice. Answer questions; never argue. Numbers are as of Tuesday night 2026-09-08. Refreshed Tuesday night 2026-09-08.
 
 ## r/InternetIsBeautiful — Wednesday 2026-09-09, afternoon ET
 
@@ -22,7 +22,7 @@ everyones.lol is a site where anyone can point at anything and say what should c
 
 Pipeline: judge (Gemini Flash) → red team → coder (DeepSeek V4 Flash) in a Vercel Sandbox with deny-by-default egress → deterministic validator, run in the sandbox, before commit, and in CI → diff reviewer (Qwen) → security pass → PR via the Git Data API → CI: typecheck, lint, build, playtest → auto-merge → deploy.
 
-Since Thursday: 68 asks, 21 live, 35 rejected, 14 failed, 1,246 lines written by the agent, median build 3 minutes, 75 cents for everything that landed.
+Since Thursday: 73 asks, 24 live, 36 rejected, 15 failed, 1,541 lines written by the agent, median build 3 minutes, 85 cents for everything that landed.
 
 What broke, in order:
 
@@ -59,6 +59,6 @@ What "on purpose" means here:
 - A budget. When the day's money is spent, it stops.
 - Decay. Anything nobody touches for a week fades.
 
-Since Thursday: 68 asks, 21 live, 35 rejected, 14 failed, 75 cents of model for everything that landed. Someone asked for "gta6 but in the browser" and got a 340-line driving game for 6 cents. A guest typed "Say hi Ella!!" on an empty tile and it shipped.
+Since Thursday: 73 asks, 24 live, 36 rejected, 15 failed, 75 cents of model for everything that landed. Someone asked for "gta6 but in the browser" and got a 340-line driving game for 6 cents. A guest typed "Say hi Ella!!" on an empty tile and it shipped.
 
 Agents will edit things people share. The question is whether they do it in a repo you can read, against rules you can read, with a number next to every change. The week, written up: [CHECK: article link]. Repo: github.com/gavinpola/anyone.build.

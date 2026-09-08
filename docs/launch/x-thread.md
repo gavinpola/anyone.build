@@ -2,7 +2,7 @@
 
 Video native (upload the file, never a link to it). No link in the post; the link goes in the first reply. Reply to every reply for the first hour. Pin the thread. Yash quote-posts at 9:02 and replies; ten replies from friends in the first fifteen minutes.
 
-Numbers below are as of Sunday night 2026-09-06. [CHECK: refresh every number from `stats:global` and `stats:outcomes` Tuesday night; the thread posts Wednesday.]
+Numbers below are as of Tuesday night 2026-09-08. Refreshed Tuesday night 2026-09-08 from `stats:global` / `stats:outcomes`.
 
 ## The post (video 2, "The loop", attached — no link)
 
@@ -10,7 +10,7 @@ I made a website anyone can change.
 
 Point at anything, say what should change, and an AI builds it and ships it, live, as a real pull request. Almost everything on it was asked for by strangers.
 
-(Said "almost": 8 of the 21 live changes were Gavin's own asks.)
+(Said "almost": 8 of the 24 live changes were Gavin's own asks.)
 
 ## First reply (the link)
 
@@ -46,10 +46,10 @@ Ten rules, public, enforced by a judge on every ask. Ads, links out, tracking, h
 
 Since Thursday:
 
-68 asks
-21 changes live
-35 rejected by the judge, 14 failed the checks
-1,246 lines written by an agent
+73 asks
+24 changes live
+36 rejected by the judge, 15 failed the checks
+1,541 lines written by an agent
 median build: 3 minutes
 
 The 21 that landed cost 75 cents of model, total. The 14 that didn't, 89 cents.
