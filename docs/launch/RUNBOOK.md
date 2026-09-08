@@ -29,6 +29,10 @@ Keep `/admin` open in a tab. Check it every hour. Everything below is a lever yo
 - One build per person at a time; sixty asks in line max (the composer says "the wall is full"); 300 guest asks an hour globally; per-block locks (25 min); reconcile cron every 10 min; sandbox 9 min; 8 concurrent sandbox builds (`concurrency` on `/admin`).
 - Guests: 30 store writes a minute per tab; erase 30 calls a minute; namespace caps 5,000 docs / 1 MB.
 
+## The one that already happened (2026-09-07 night)
+
+Every build died at **"starting sandbox"**: Vercel answered 402, *Hobby plan usage limit exceeded for Snapshots Storage*. Vercel keeps a ~0.4 GB snapshot per build and forty had piled up. Fixed by deleting them; the build now prunes after itself (keeps the configured snapshot plus the newest three). If it recurs: `node scripts/refresh-snapshot.mjs` prunes too, and **Vercel Pro removes the ceiling** — on Hobby the wall stops building again after about forty more builds.
+
 ## If it goes wrong
 
 1. **Everything failing**: look at the newest failure's log lines on `/admin`. A model outage shows as "judge attempt failed" or a coder timeout; the retry chain already falls back across vendors. If it persists, `fastPathEnabled` off, then wait 10 minutes.
