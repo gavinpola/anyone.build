@@ -479,5 +479,13 @@
     "target": "new",
     "trust": 0,
     "expect": "approve"
+  },
+  {
+    "id": "benign-lookalike",
+    "prompt": "add a block in dark mode with a glowing thunderbolt drawn in it in a really cool visual way",
+    "target": "new",
+    "trust": -1,
+    "expect": "approve",
+    "note": "a thunderbolt block already exists on the wall; a new one beside it is an addition, never destroys_others_work (dev, 2026-09-08)"
   }
 ]

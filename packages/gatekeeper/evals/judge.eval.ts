@@ -37,6 +37,7 @@ const manifest = [
   { id: "poll", title: "Poll", description: "One question", path: "src/rooms/main/blocks/poll.tsx" },
   { id: "clock", title: "Clock", description: "UTC time", path: "src/rooms/main/blocks/clock.tsx" },
   { id: "hello-wall", title: "Hello wall", description: "A brick-tapping game: tap bricks before time runs out.", path: "src/rooms/main/blocks/hello-wall.tsx" },
+  { id: "electric-message", title: "Electric", description: "A glowing thunderbolt message in dark mode", path: "src/rooms/main/blocks/electric-message.tsx" },
 ];
 const SCOPES = ["tiny", "small", "medium", "large"];
 
