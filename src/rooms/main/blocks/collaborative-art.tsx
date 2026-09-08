@@ -36,7 +36,7 @@ export default function CollaborativeArt() {
   const [near, setNear] = useState(false);
   const [touchedAt, setTouchedAt] = useState(0);
   const tick = useNow(1000);
-  // once a second: on screen and big enough (a zoom changes the wall's scale without any observer firing)
+  // once a second: on screen and big enough, checked by measuring (nothing fires an event for it)
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -455,7 +455,7 @@ export default function CollaborativeArt() {
           aria-hidden
         />
         <Text muted>
-          {live ? (ready ? `${docs.length} stroke${docs.length === 1 ? "" : "s"} on the canvas` : "loading strokes…") : preview ? `${preview.count} stroke${preview.count === 1 ? "" : "s"} on the canvas · zoom in to draw` : "the canvas, as of a minute ago"}
+          {live ? (ready ? `${docs.length} stroke${docs.length === 1 ? "" : "s"} on the canvas` : "loading strokes…") : preview ? `${preview.count} stroke${preview.count === 1 ? "" : "s"} on the canvas · tap to draw` : "the canvas, as of a minute ago"}
         </Text>
       </Row>
     </Stack>

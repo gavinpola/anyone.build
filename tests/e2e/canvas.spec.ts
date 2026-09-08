@@ -331,7 +331,7 @@ test("a signed-out visitor's stroke on the open canvas survives a reload", async
   const art = page.locator('[data-ab-block="collaborative-art"] canvas');
   await expect(art).toBeVisible();
   await expect(page.locator('[data-ab-block="collaborative-art"] [data-art-live]')).toHaveAttribute("data-art-live", "1", { timeout: 5_000 });
-  await expect(page.locator('[data-ab-block="collaborative-art"]')).not.toContainText(/zoom in to draw|loading strokes/, { timeout: 15_000 });
+  await expect(page.locator('[data-ab-block="collaborative-art"]')).not.toContainText(/tap to draw|loading strokes/, { timeout: 15_000 });
   const box = (await art.boundingBox())!;
   const before = (await page.locator('[data-ab-block="collaborative-art"]').innerText()).match(/(\d+) strokes?/)?.[1] ?? "0";
   await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.5);
@@ -378,7 +378,7 @@ test("anyone can erase anyone's stroke: a second visitor rubs out the first one'
     await page.waitForTimeout(500);
     // the live strokes, not the baked picture's count from a minute ago
     await expect(page.locator('[data-ab-block="collaborative-art"] [data-art-live]')).toHaveAttribute("data-art-live", "1", { timeout: 5_000 });
-    await expect(page.locator('[data-ab-block="collaborative-art"]')).not.toContainText(/zoom in to draw|loading strokes/, { timeout: 15_000 });
+    await expect(page.locator('[data-ab-block="collaborative-art"]')).not.toContainText(/tap to draw|loading strokes/, { timeout: 15_000 });
     return (await page.locator('[data-ab-block="collaborative-art"] canvas').boundingBox())!;
   };
   const boxA = await jump(a);
@@ -420,7 +420,7 @@ test("in pick mode a drag over the open canvas picks, it does not draw", async (
   await page.waitForTimeout(500);
   const block = page.locator('[data-ab-block="collaborative-art"]');
   await expect(block.locator("[data-art-live]")).toHaveAttribute("data-art-live", "1", { timeout: 5_000 });
-  await expect(block).not.toContainText(/zoom in to draw|loading strokes/, { timeout: 15_000 });
+  await expect(block).not.toContainText(/tap to draw|loading strokes/, { timeout: 15_000 });
   const before = (await block.innerText()).match(/(\d+) strokes?/)?.[1] ?? "0";
   await page.locator("[data-canvas-bar]").getByRole("button", { name: /change something/i }).click();
   const box = (await block.locator("canvas").boundingBox())!;
