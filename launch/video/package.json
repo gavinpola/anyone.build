@@ -1,0 +1,21 @@
+{
+  "name": "everyones-launch-video",
+  "private": true,
+  "description": "The launch clips as code: Remotion compositions over the footage launch/record.mjs recorded. Kept out of the app's workspace on purpose.",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "node ../render.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/media-utils": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.0.0"
+  }
+}
