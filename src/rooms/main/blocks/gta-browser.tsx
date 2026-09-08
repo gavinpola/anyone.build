@@ -294,6 +294,9 @@ export default function GtaBrowser() {
         A tiny overhead city cruise. Steer with the arrow keys (or the buttons), dodge the buildings —
         three crashes and you're busted.
       </Text>
+      <Text muted className="text-[13px]">
+        Arrow keys steer, don't hit the buildings.
+      </Text>
       <div className="relative w-full cursor-pointer select-none overflow-hidden rounded-lg border border-line">
         <canvas ref={canvasRef} width={W} height={H} className="block h-auto w-full" />
         {phase !== "playing" && (
