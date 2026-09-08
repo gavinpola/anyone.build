@@ -5,6 +5,7 @@
  *
  *   node launch/time-ask.mjs --ask "…" --block gta-browser
  */
+/* global localStorage */
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { chromium } = require("@playwright/test");

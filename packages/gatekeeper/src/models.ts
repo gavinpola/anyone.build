@@ -270,7 +270,7 @@ export function reviewNote(review: DiffReview): string {
 }
 
 /** One plain-text completion: the fast path's whole-file rewrite. The caller parses and validates the reply. */
-export async function fastRewrite(cfg: Pick<ModelConfig, "apiKey" | "baseURL">, input: { model: string; system: string; prompt: string; maxOutputTokens?: number }): Promise<{ text: string; usage: Usage }> {
+export async function fastRewrite(cfg: Pick<ModelConfig, "apiKey" | "baseURL">, input: { model: string; system: string; prompt: string; maxOutputTokens?: number; abortSignal?: AbortSignal }): Promise<{ text: string; usage: Usage }> {
   const or = provider(cfg);
   const r = await generateText({
     model: or.chat(input.model),
@@ -279,6 +279,7 @@ export async function fastRewrite(cfg: Pick<ModelConfig, "apiKey" | "baseURL">, 
     temperature: 0,
     maxOutputTokens: input.maxOutputTokens ?? 8000, // a 400-line block is ~4k tokens
     maxRetries: 2,
+    abortSignal: input.abortSignal, // a stuck connection must not outlive the action (10 min); the caller hands the ask to the sandbox
   });
   return { text: r.text, usage: usageOf(r, input.model) };
 }

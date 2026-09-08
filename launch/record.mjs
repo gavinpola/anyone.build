@@ -11,6 +11,7 @@
  * Two scenes ask the wall for something real (a small useful ask that lands; a promo ask the judge
  * refuses, which stays private). Everything else only reads.
  */
+/* global navigator, localStorage */
 import { createRequire } from "node:module";
 import { mkdirSync, writeFileSync, renameSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";

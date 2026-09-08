@@ -71,6 +71,12 @@ export const reconcile = internalMutation({
     for (const status of ["building", "validating", "reviewing"] as const) {
       for (const r of await older(status, 20 * 60 * 1000)) {
         if (now - r.updatedAt < 20 * 60 * 1000) continue;
+        // a fast-path action that died (a stuck model connection outliving the 10-minute action limit) gets the sandbox, once
+        if (r.run?.fast && !r.run?.fastFailed) {
+          await ctx.scheduler.runAfter(0, internal.pipeline.state.requeue, { id: r._id, fastFailed: true });
+          touched++;
+          continue;
+        }
         await ctx.scheduler.runAfter(0, internal.pipeline.state.fail, { id: r._id, category: "build_failed", hint: "The build stalled. Ask again; it's usually fine the second time.", error: `reconcile: stuck in ${status}` });
         touched++;
       }

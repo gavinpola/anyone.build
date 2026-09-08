@@ -6,7 +6,7 @@ import { roomRules } from "./packages/gatekeeper/src/lint/room-rules.js";
 import { backendRules } from "./packages/gatekeeper/src/lint/backend-rules.js";
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules", "convex/_generated", "src/routeTree.gen.ts", "playwright-report", "test-results", ".secrets", ".vercel"] },
+  { ignores: ["dist", "node_modules", "convex/_generated", "src/routeTree.gen.ts", "playwright-report", "test-results", ".secrets", ".vercel", "launch/video/**"] },
   // the embeddable widget and its demo page run in browsers, not Node
   {
     files: ["public/**/*.js"],
@@ -27,7 +27,7 @@ export default tseslint.config(
   },
   // Node scripts (plain ESM, no build step)
   {
-    files: ["scripts/**/*.mjs", "sandbox/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "sandbox/**/*.mjs", "launch/*.mjs"],
     languageOptions: {
       globals: { console: "readonly", process: "readonly", Buffer: "readonly", URL: "readonly", fetch: "readonly", setTimeout: "readonly", clearTimeout: "readonly", AbortSignal: "readonly", AbortController: "readonly", TextEncoder: "readonly", TextDecoder: "readonly", crypto: "readonly" },
     },

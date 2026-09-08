@@ -66,7 +66,7 @@ export const run = internalAction({
       if (!source) return back("no source", 0);
       if (source.split("\n").length > MAX_BLOCK_LINES) return back("file too long", 0);
 
-      await set("building", "fast path · rewriting one file", { startedAt: Date.now() });
+      await set("building", "fast path · rewriting one file", { startedAt: Date.now(), fast: true });
       const cfg: ModelConfig = {
         apiKey: modelKey,
         baseURL: process.env.MODEL_BASE_URL || undefined,
@@ -75,7 +75,8 @@ export const run = internalAction({
         reviewModel: process.env.REVIEW_MODEL || config.reviewModel,
         securityModel: process.env.SECURITY_MODEL || config.securityModel,
       };
-      const out = await fastRewrite(cfg, { model, system: fastSystemPrompt(), prompt: fastUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target, source }) });
+      // 150 s is three times a slow rewrite; past that the connection is stuck and the sandbox should have the ask
+      const out = await fastRewrite(cfg, { model, system: fastSystemPrompt(), prompt: fastUserPrompt({ prompt: request.prompt, plan: verdict.plan, target: request.target, source }), abortSignal: AbortSignal.timeout(150_000) });
       cost += costCents(out.usage, priceFor(model));
       const rw = extractRewrite(out.text);
       if (!rw) return back("no file in the reply", cost);
