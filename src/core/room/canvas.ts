@@ -194,7 +194,10 @@ export function camCentredOn(px: { x: number; y: number }, viewport: World): Cam
 /** The camera that centres a tile rectangle (a block, or one tile). */
 export function camForTiles(r: TileRect, viewport: World): Cam {
   const g = tileGround(r);
-  return camCentredOn({ x: g.x + g.w / 2, y: g.y + g.h / 2 }, viewport);
+  // a block taller than the screen is not centred (its label would sit above the top, under the header):
+  // its top lands 60 px below the viewport's top instead, label included
+  const dy = Math.min(g.h / 2, viewport.h / 2 - 60);
+  return camCentredOn({ x: g.x + g.w / 2, y: g.y + Math.max(dy, 0) }, viewport);
 }
 
 /**
