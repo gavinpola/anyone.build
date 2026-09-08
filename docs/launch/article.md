@@ -42,7 +42,7 @@ The first change landed on Thursday, September 3rd, at five in the morning Easte
 
 [IMAGE: a ledger row — the Changes ledger on https://everyones.lol/leaderboard, one row showing the summary, who, +lines −lines, the cents, and the PR link]
 
-By Tuesday night, the numbers: 73 asks. 24 changes live. 36 rejected by the judge (9 not for everyone, 9 unclear, 7 too big, 5 unsafe code, 3 out of bounds, 3 slow down). 15 failed the checks. 1,541 lines written by an agent, 76 removed. Median build time: three minutes and four seconds. The 21 live changes cost 75 cents of model in total. The 14 that failed cost another 89 cents. Call it a dollar sixty-four for the week, plus 631 pageviews and three signed-in builders. [CHECK: 68 asks is `stats:global`; the outcome counts sum to 71. Say which.]
+By Tuesday night, the numbers: 73 asks. 24 changes live. 36 rejected by the judge (9 not for everyone, 9 unclear, 7 too big, 5 unsafe code, 3 out of bounds, 3 slow down). 15 failed the checks. 1,541 lines written by an agent, 77 removed. Median build time: three minutes and six seconds. The 24 live changes cost 85 cents of model in total. The 15 that failed cost another 98 cents. Call it a dollar eighty-three for the week, plus 713 pageviews and three signed-in builders.
 
 Three asks I keep coming back to.
 
