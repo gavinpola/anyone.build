@@ -8,9 +8,9 @@ Numbers below are as of Sunday night 2026-09-06. [CHECK: refresh every number fr
 
 I made a website anyone can change.
 
-Point at anything, say what should change, and an AI builds it and ships it, live, as a real pull request. Everything on it was asked for by strangers.
+Point at anything, say what should change, and an AI builds it and ships it, live, as a real pull request. Almost everything on it was asked for by strangers.
 
-[CHECK: "Everything on it was asked for by strangers" is the plan's line, but 8 of the 21 live changes are Gavin's and gavin-mill's. Honest alternative for the second line: "Almost everything on it was asked for by strangers."]
+(Said "almost": 8 of the 21 live changes were Gavin's own asks.)
 
 ## First reply (the link)
 
