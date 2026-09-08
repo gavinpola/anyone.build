@@ -73,18 +73,23 @@ export const Clip: React.FC<ClipSpec> = (spec) => {
         // a desktop recording on a vertical canvas sits in the middle band, at full width; the captions live below it
         const srcIsWide = /desktop/.test(s.src);
         const bandH = vertical && srcIsWide ? Math.round((width * 9) / 16) : height;
+        // the recorder pads the page into the frame's top-left (viewport 1536×864 in a 1920×1080 file, 405×720 in
+        // 1080×1920): scale the file by that ratio from its corner so the page fills the band
+        const pad = srcIsWide ? 1920 / 1536 : 1080 / 405;
         return (
           <Sequence key={i} from={fromF} durationInFrames={durF}>
             <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
               <div style={{ width, height: bandH, overflow: "hidden", position: "relative", background: "#000" }}>
-                <OffthreadVideo
-                  src={staticFile(s.src)}
-                  startFrom={Math.round(s.from * fps)}
-                  endAt={Math.round(s.to * fps)}
-                  playbackRate={s.speed ?? 1}
-                  muted
-                  style={{ width: "100%", height: "100%", objectFit: "cover", transform: `translate(${ox}%, ${oy}%) scale(${z})`, transformOrigin: "center" }}
-                />
+                <div style={{ width: "100%", height: "100%", transform: `translate(${ox}%, ${oy}%) scale(${z})`, transformOrigin: "center" }}>
+                  <OffthreadVideo
+                    src={staticFile(s.src)}
+                    startFrom={Math.round(s.from * fps)}
+                    endAt={Math.round(s.to * fps)}
+                    playbackRate={s.speed ?? 1}
+                    muted
+                    style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${pad})`, transformOrigin: "0 0" }}
+                  />
+                </div>
               </div>
             </AbsoluteFill>
           </Sequence>
