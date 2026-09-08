@@ -1,11 +1,35 @@
 "use node";
-import { Sandbox } from "@vercel/sandbox";
+import { Sandbox, Snapshot } from "@vercel/sandbox";
+
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import { coderSystemPrompt, coderUserPrompt, reviewDiff, reviewBlocks, reviewNote, securityReview, securityBlocks, resourceOnly, validateDiff, costCents, priceFor, type ModelConfig } from "../../packages/gatekeeper/src/index";
 import { octokit, headSha, commitFiles, openPullRequest } from "./github";
 import { lintFiles } from "../../packages/gatekeeper/src/lint/lint-files.js";
+
+/**
+ * Vercel keeps a ~0.4 GB snapshot around for every build (forty of them exhausted the Hobby plan's
+ * snapshot storage on 2026-09-07 and every build died at "starting sandbox" with a 402). After each
+ * build, keep the one we start from and the newest three; delete the rest. Best effort, never fatal.
+ */
+async function pruneSnapshots(creds: { token: string; teamId: string; projectId: string }, keepId: string | undefined) {
+  try {
+    const page = await Snapshot.list({ ...creds, limit: 50 });
+    const all = (page.snapshots ?? []).filter((o) => o.status !== "deleted").sort((a, b) => b.createdAt - a.createdAt);
+    const keep = new Set([keepId, ...all.slice(0, 3).map((o) => o.id)].filter(Boolean));
+    let pruned = 0;
+    for (const o of all) {
+      if (keep.has(o.id)) continue;
+      const old = await Snapshot.get({ ...creds, snapshotId: o.id });
+      await old.delete();
+      pruned++;
+    }
+    if (pruned) console.log(`[snapshots] pruned ${pruned}, kept ${keep.size}`);
+  } catch (e) {
+    console.log("[snapshots] prune skipped: " + String(e instanceof Error ? e.message : e).slice(0, 120));
+  }
+}
 
 type RunnerResult = { ok: boolean; summary: string; files: string[]; steps: number; inputTokens: number; outputTokens: number; checks: Record<string, boolean>; error?: string };
 
@@ -214,6 +238,7 @@ export const run = internalAction({
       await fail("build_failed", timedOut ? "The build took too long. Try again; it's usually faster the second time." : "Something broke while building. Try again in a minute.", msg, cost);
     } finally {
       await sandbox.stop().catch(() => {});
+      await pruneSnapshots({ token: process.env.VERCEL_TOKEN ?? "", teamId: process.env.VERCEL_TEAM_ID ?? "", projectId: process.env.VERCEL_PROJECT_ID ?? "" }, snapshotId);
     }
   },
 });
