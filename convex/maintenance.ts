@@ -74,6 +74,8 @@ export const reconcile = internalMutation({
         // a fast-path action that died (a stuck model connection outliving the 10-minute action limit) gets the sandbox, once
         if (r.run?.fast && !r.run?.fastFailed) {
           await ctx.scheduler.runAfter(0, internal.pipeline.state.requeue, { id: r._id, fastFailed: true });
+          // the dead run still holds its locks and nothing would pump: release frees them and starts the queue
+          await ctx.scheduler.runAfter(500, internal.pipeline.executor.release, { requestId: r._id });
           touched++;
           continue;
         }
