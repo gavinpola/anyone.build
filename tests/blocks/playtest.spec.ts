@@ -117,7 +117,12 @@ for (const id of blockIds()) {
       const b2 = (await block.boundingBox()) ?? box!;
       await page.mouse.click(b2.x + b2.width / 2, b2.y + b2.height / 2).catch(() => {});
       await page.keyboard.press("Space").catch(() => {});
-      await page.keyboard.press("ArrowUp").catch(() => {});
+      // hold the key the way a hand does: a driving game moves visibly over a second, not on one tap
+      for (let i = 0; i < 6; i++) {
+        await page.keyboard.down("ArrowUp").catch(() => {});
+        await page.waitForTimeout(160);
+        await page.keyboard.up("ArrowUp").catch(() => {});
+      }
       await page.mouse.move(b2.x + b2.width * 0.3, b2.y + b2.height * 0.5);
       await page.mouse.down();
       await page.mouse.move(b2.x + b2.width * 0.7, b2.y + b2.height * 0.6, { steps: 8 });

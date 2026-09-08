@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 
 /** A segment of recorded footage: which file, which seconds of it, at what speed, framed how. */
 export type Segment = {
@@ -143,7 +143,6 @@ export const Clip: React.FC<ClipSpec> = (spec) => {
       </AbsoluteFill>
 
       {spec.audio && !spec.silent ? <Audio src={staticFile(spec.audio)} /> : null}
-      <Img src={staticFile("blank.png")} style={{ display: "none" }} />
     </AbsoluteFill>
   );
 };

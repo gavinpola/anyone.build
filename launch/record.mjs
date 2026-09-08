@@ -13,7 +13,7 @@
  */
 /* global navigator, localStorage */
 import { createRequire } from "node:module";
-import { mkdirSync, writeFileSync, renameSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, renameSync, existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,7 +32,10 @@ const URL_ = (arg("url", "https://everyones.lol")).replace(/\/$/, "");
 const CONVEX = arg("convex", "https://hushed-ladybug-141.convex.cloud");
 const only = arg("only", null);
 
-const marks = [];
+const MARKS = join(OUT, "marks.json");
+const prior = existsSync(MARKS) ? JSON.parse(readFileSync(MARKS, "utf8")) : { marks: [] };
+const marks = prior.marks ?? [];
+const saveMarks = (extra = {}) => writeFileSync(MARKS, JSON.stringify({ ...prior, ...extra, url: URL_, at: new Date().toISOString(), marks }, null, 2));
 const mark = (scene, note, t0) => {
   const t = (Date.now() - t0) / 1000;
   marks.push({ scene, t: Number(t.toFixed(2)), note });
@@ -52,8 +55,15 @@ const SIZES = {
 };
 
 /** Run one scene in a fresh context that records itself. */
+const redo = process.argv.includes("--redo");
 async function scene(browser, name, kind, fn, { firstVisit = false } = {}) {
   if (only && !name.includes(only)) return;
+  if (!redo && existsSync(join(OUT, `${name}.webm`)) && marks.some((m) => m.scene === name)) {
+    console.log(`\n▷ ${name}: already recorded (pass --redo to record again)`);
+    return;
+  }
+  // a re-take replaces the old marks for this scene
+  for (let i = marks.length - 1; i >= 0; i--) if (marks[i].scene === name) marks.splice(i, 1);
   const s = SIZES[kind];
   console.log(`\n▶ ${name} (${kind})`);
   const ctx = await browser.newContext({
@@ -87,6 +97,7 @@ async function scene(browser, name, kind, fn, { firstVisit = false } = {}) {
     renameSync(p, dest);
     console.log(`  → ${dest}`);
   }
+  saveMarks();
 }
 
 const ready = async (page) => {
@@ -157,16 +168,16 @@ let askedId = null;
 await scene(browser, "desktop-loop", "desktop", async (page, m) => {
   await page.goto(URL_);
   await ready(page);
-  await goToBlock(page, "gta-browser");
+  await goToBlock(page, "thanks-for-visiting");
   m("at the game");
   await sleep(900);
-  const target = page.locator('[data-ab-block="gta-browser"]').first();
+  const target = page.locator('[data-ab-block="thanks-for-visiting"]').first();
   await chordClick(page, target);
   m("pointed");
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await box.waitFor({ state: "visible", timeout: 8000 });
   await sleep(900);
-  await typeSlow(page, "Make the how-to-play hint under the game a little brighter so it reads at a glance.");
+  await typeSlow(page, "Make this thank everyone who changed something this week, in one warm line.");
   m("typed");
   await sleep(700);
   await box.getByRole("button", { name: /^send/i }).first().click();
@@ -178,11 +189,12 @@ await scene(browser, "desktop-loop", "desktop", async (page, m) => {
   await sleep(2500);
   // find the request so the live scene can come back to it
   const active = (await q("requests:active", { roomId: "main" })) ?? [];
-  const mine = active.find((r) => /hint under the game a little brighter/i.test(r.prompt ?? ""));
+  const mine = active.find((r) => /thank everyone who changed something/i.test(r.prompt ?? ""));
   askedId = mine?.id ?? null;
   m(`request ${askedId ?? "?"}`);
 });
 
+if (!askedId && prior.asked) askedId = prior.asked;
 if (askedId && !(only && !"desktop-live".includes(only))) {
   // wait, without recording, for the change to land (a real build: about two minutes)
   console.log("\n… waiting for the change to land");
@@ -212,7 +224,7 @@ await scene(browser, "desktop-live", "desktop", async (page, m) => {
   await page.goto(`${URL_}/leaderboard`);
   await page.waitForSelector("text=Changes", { timeout: 20_000 }).catch(() => {});
   await sleep(800);
-  const row = page.locator("li", { hasText: /hint|brighter/i }).first();
+  const row = page.locator("li", { hasText: /thank/i }).first();
   if ((await row.count()) > 0) {
     await row.scrollIntoViewIfNeeded();
     const b = await row.boundingBox();
@@ -405,5 +417,5 @@ await scene(browser, "phone-change", "phone", async (page, m) => {
 });
 
 await browser.close();
-writeFileSync(join(OUT, "marks.json"), JSON.stringify({ url: URL_, at: new Date().toISOString(), gta: gta?.requestId ?? null, asked: askedId, marks }, null, 2));
+saveMarks({ gta: gta?.requestId ?? null, asked: askedId ?? prior.asked ?? null });
 console.log(`\nmarks → ${join(OUT, "marks.json")}`);

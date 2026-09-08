@@ -90,7 +90,6 @@ const RECIPES = {
       ["phone-landing", "landed", "card closed"],
       ["phone-landing", "swiped", "long-pressed"],
       ["phone-landing", "long-pressed", "end"],
-      ["phone-change", "change", "end"],
     ],
     lines: ["A world of tiles.", "Swipe to walk.", "Hold an object to move it.", "Tap Change, tap anything, say it."],
   },

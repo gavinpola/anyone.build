@@ -1,1 +1,945 @@
-[]
+[
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "Someone asked this website for GTA 6.",
+    "segments": [
+      {
+        "src": "desktop-gta.webm",
+        "from": 1.71,
+        "to": 4.72,
+        "speed": 1
+      },
+      {
+        "src": "desktop-gta.webm",
+        "from": 4.75,
+        "to": 11.010000000000002,
+        "speed": 1
+      },
+      {
+        "src": "desktop-ledger.webm",
+        "from": 0.37,
+        "to": 4.64,
+        "speed": 1
+      }
+    ],
+    "id": "gta-voiced",
+    "duration": 16.164,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 3.259,
+        "text": "Someone asked this website to turn"
+      },
+      {
+        "from": 3.144,
+        "to": 4.8500000000000005,
+        "text": "a block into GTA six."
+      },
+      {
+        "from": 5.025,
+        "to": 6.812000000000001,
+        "text": "That's the ask, from a stranger,"
+      },
+      {
+        "from": 6.836,
+        "to": 7.752000000000001,
+        "text": "on a Sunday."
+      },
+      {
+        "from": 7.927,
+        "to": 8.751000000000001,
+        "text": "It built it."
+      },
+      {
+        "from": 8.926,
+        "to": 9.9,
+        "text": "In the browser."
+      },
+      {
+        "from": 9.808,
+        "to": 11.084,
+        "text": "It cost six cents."
+      },
+      {
+        "from": 11.376,
+        "to": 12.756,
+        "text": "Every change is a real pull"
+      },
+      {
+        "from": 12.664,
+        "to": 14.161,
+        "text": "request, with the price on it."
+      },
+      {
+        "from": 14.522,
+        "to": 15.914,
+        "text": "What would you ask for?"
+      }
+    ],
+    "audio": "voice-gta.mp3",
+    "silent": false
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "Someone asked this website for GTA 6.",
+    "segments": [
+      {
+        "src": "desktop-gta.webm",
+        "from": 1.71,
+        "to": 4.72,
+        "speed": 1
+      },
+      {
+        "src": "desktop-gta.webm",
+        "from": 4.75,
+        "to": 11.010000000000002,
+        "speed": 1
+      },
+      {
+        "src": "desktop-ledger.webm",
+        "from": 0.37,
+        "to": 4.64,
+        "speed": 1
+      }
+    ],
+    "id": "gta-silent",
+    "duration": 15.14,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 4.885000000000001,
+        "text": "\"turn this into gta6 but in the browser\""
+      },
+      {
+        "from": 4.985,
+        "to": 8.270000000000001,
+        "text": "It built it. In the browser."
+      },
+      {
+        "from": 8.370000000000001,
+        "to": 11.655000000000001,
+        "text": "It cost six cents."
+      },
+      {
+        "from": 11.755,
+        "to": 15.040000000000001,
+        "text": "What would you ask for?"
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1080,
+    "height": 1920,
+    "hook": "Someone asked this website for GTA 6.",
+    "segments": [
+      {
+        "src": "desktop-gta.webm",
+        "from": 1.71,
+        "to": 4.72,
+        "speed": 1
+      },
+      {
+        "src": "desktop-gta.webm",
+        "from": 4.75,
+        "to": 11.010000000000002,
+        "speed": 1
+      },
+      {
+        "src": "desktop-ledger.webm",
+        "from": 0.37,
+        "to": 4.64,
+        "speed": 1
+      }
+    ],
+    "id": "gta-silent-vertical",
+    "duration": 15.14,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 4.885000000000001,
+        "text": "\"turn this into gta6 but in the browser\""
+      },
+      {
+        "from": 4.985,
+        "to": 8.270000000000001,
+        "text": "It built it. In the browser."
+      },
+      {
+        "from": 8.370000000000001,
+        "to": 11.655000000000001,
+        "text": "It cost six cents."
+      },
+      {
+        "from": 11.755,
+        "to": 15.040000000000001,
+        "text": "What would you ask for?"
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "This website does whatever you ask it to.",
+    "segments": [
+      {
+        "src": "desktop-loop.webm",
+        "from": 2.27,
+        "to": 3.9,
+        "speed": 1
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 3.9,
+        "to": 7.88,
+        "speed": 1,
+        "zoom": {
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 1.35
+        }
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 7.88,
+        "to": 9.39,
+        "speed": 1
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 9.39,
+        "to": 12.18,
+        "speed": 2
+      },
+      {
+        "src": "",
+        "from": 0,
+        "to": 1.4,
+        "card": "2 minutes later"
+      },
+      {
+        "src": "desktop-live.webm",
+        "from": 1.76,
+        "to": 5.27,
+        "speed": 1
+      },
+      {
+        "src": "desktop-live.webm",
+        "from": 6.74,
+        "to": 11.49,
+        "speed": 1
+      }
+    ],
+    "id": "loop-voiced",
+    "duration": 21.923,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 3.3409999999999997,
+        "text": "This website does whatever you ask"
+      },
+      {
+        "from": 3.249,
+        "to": 3.898,
+        "text": "it to."
+      },
+      {
+        "from": 4.131,
+        "to": 5.245000000000001,
+        "text": "Point at anything."
+      },
+      {
+        "from": 5.304,
+        "to": 6.707000000000001,
+        "text": "Say what should change."
+      },
+      {
+        "from": 6.941000000000001,
+        "to": 8.135,
+        "text": "A judge reads it."
+      },
+      {
+        "from": 8.311,
+        "to": 9.691,
+        "text": "If it's good for everyone, an"
+      },
+      {
+        "from": 9.622,
+        "to": 10.632,
+        "text": "agent builds it."
+      },
+      {
+        "from": 11.434,
+        "to": 13.337,
+        "text": "Two minutes later, it's live."
+      },
+      {
+        "from": 13.698,
+        "to": 14.556,
+        "text": "For everyone."
+      },
+      {
+        "from": 14.789,
+        "to": 16.646,
+        "text": "As a real pull request, with"
+      },
+      {
+        "from": 16.519000000000002,
+        "to": 17.865,
+        "text": "the cost in cents."
+      },
+      {
+        "from": 18.318,
+        "to": 20.489,
+        "text": "It's called everyone's dot lol."
+      },
+      {
+        "from": 20.547,
+        "to": 21.673,
+        "text": "Go change it."
+      }
+    ],
+    "audio": "voice-loop.mp3",
+    "silent": false
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "This website does whatever you ask it to.",
+    "segments": [
+      {
+        "src": "desktop-loop.webm",
+        "from": 2.27,
+        "to": 3.9,
+        "speed": 1
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 3.9,
+        "to": 7.88,
+        "speed": 1,
+        "zoom": {
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 1.35
+        }
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 7.88,
+        "to": 9.39,
+        "speed": 1
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 9.39,
+        "to": 12.18,
+        "speed": 2
+      },
+      {
+        "src": "",
+        "from": 0,
+        "to": 1.4,
+        "card": "2 minutes later"
+      },
+      {
+        "src": "desktop-live.webm",
+        "from": 1.76,
+        "to": 5.27,
+        "speed": 1
+      },
+      {
+        "src": "desktop-live.webm",
+        "from": 6.74,
+        "to": 11.49,
+        "speed": 1
+      }
+    ],
+    "id": "loop-silent",
+    "duration": 19.775,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 5.135,
+        "text": "Point at anything."
+      },
+      {
+        "from": 5.234999999999999,
+        "to": 8.77,
+        "text": "Say what should change."
+      },
+      {
+        "from": 8.87,
+        "to": 12.404999999999998,
+        "text": "If it's good for everyone, an AI builds it."
+      },
+      {
+        "from": 12.504999999999997,
+        "to": 16.039999999999996,
+        "text": "Live. For everyone."
+      },
+      {
+        "from": 16.139999999999997,
+        "to": 19.674999999999997,
+        "text": "As a real pull request."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1080,
+    "height": 1920,
+    "hook": "This website does whatever you ask it to.",
+    "segments": [
+      {
+        "src": "desktop-loop.webm",
+        "from": 2.27,
+        "to": 3.9,
+        "speed": 1
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 3.9,
+        "to": 7.88,
+        "speed": 1,
+        "zoom": {
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 1.35
+        }
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 7.88,
+        "to": 9.39,
+        "speed": 1
+      },
+      {
+        "src": "desktop-loop.webm",
+        "from": 9.39,
+        "to": 12.18,
+        "speed": 2
+      },
+      {
+        "src": "",
+        "from": 0,
+        "to": 1.4,
+        "card": "2 minutes later"
+      },
+      {
+        "src": "desktop-live.webm",
+        "from": 1.76,
+        "to": 5.27,
+        "speed": 1
+      },
+      {
+        "src": "desktop-live.webm",
+        "from": 6.74,
+        "to": 11.49,
+        "speed": 1
+      }
+    ],
+    "id": "loop-silent-vertical",
+    "duration": 19.775,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 5.135,
+        "text": "Point at anything."
+      },
+      {
+        "from": 5.234999999999999,
+        "to": 8.77,
+        "text": "Say what should change."
+      },
+      {
+        "from": 8.87,
+        "to": 12.404999999999998,
+        "text": "If it's good for everyone, an AI builds it."
+      },
+      {
+        "from": 12.504999999999997,
+        "to": 16.039999999999996,
+        "text": "Live. For everyone."
+      },
+      {
+        "from": 16.139999999999997,
+        "to": 19.674999999999997,
+        "text": "As a real pull request."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "Every change anyone ever made, in ten seconds.",
+    "segments": [
+      {
+        "src": "desktop-timelapse.webm",
+        "from": 1.88,
+        "to": 14.180000000000001,
+        "speed": 1
+      }
+    ],
+    "id": "timelapse-voiced",
+    "duration": 13.9,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 3.4330000000000003,
+        "text": "Every change anyone ever made to"
+      },
+      {
+        "from": 3.33,
+        "to": 5.535,
+        "text": "this website, in ten seconds."
+      },
+      {
+        "from": 5.8260000000000005,
+        "to": 6.870000000000001,
+        "text": "Nobody made this."
+      },
+      {
+        "from": 7.161,
+        "to": 8.530000000000001,
+        "text": "Everybody made this."
+      }
+    ],
+    "audio": "voice-timelapse.mp3",
+    "silent": false
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "Every change anyone ever made, in ten seconds.",
+    "segments": [
+      {
+        "src": "desktop-timelapse.webm",
+        "from": 1.88,
+        "to": 14.180000000000001,
+        "speed": 1
+      }
+    ],
+    "id": "timelapse-silent",
+    "duration": 13.9,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 7.65,
+        "text": "Nobody made this."
+      },
+      {
+        "from": 7.75,
+        "to": 13.8,
+        "text": "Everybody made this."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1080,
+    "height": 1920,
+    "hook": "Every change anyone ever made, in ten seconds.",
+    "segments": [
+      {
+        "src": "desktop-timelapse.webm",
+        "from": 1.88,
+        "to": 14.180000000000001,
+        "speed": 1
+      }
+    ],
+    "id": "timelapse-silent-vertical",
+    "duration": 13.9,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 7.65,
+        "text": "Nobody made this."
+      },
+      {
+        "from": 7.75,
+        "to": 13.8,
+        "text": "Everybody made this."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "So why isn't it a mess?",
+    "segments": [
+      {
+        "src": "desktop-rules.webm",
+        "from": 1.43,
+        "to": 5.43,
+        "speed": 1
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 10.91,
+        "to": 70.95,
+        "speed": 1.5
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 70.95,
+        "to": 74.59,
+        "speed": 1
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 74.59,
+        "to": 75.39,
+        "speed": 1
+      }
+    ],
+    "id": "rules-voiced",
+    "duration": 50.06666666666667,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 2.8409999999999997,
+        "text": "Anyone can change it."
+      },
+      {
+        "from": 3.295,
+        "to": 4.78,
+        "text": "So why isn't it a mess?"
+      },
+      {
+        "from": 5.234,
+        "to": 7.752000000000001,
+        "text": "Ten rules, written down, that anyone"
+      },
+      {
+        "from": 7.6370000000000005,
+        "to": 8.344000000000001,
+        "text": "can read."
+      },
+      {
+        "from": 8.891,
+        "to": 9.761,
+        "text": "No ads."
+      },
+      {
+        "from": 9.785,
+        "to": 10.794,
+        "text": "No links out."
+      },
+      {
+        "from": 11.456999999999999,
+        "to": 12.362,
+        "text": "Nothing hidden."
+      },
+      {
+        "from": 12.908,
+        "to": 14.277,
+        "text": "Keep it working on a phone."
+      },
+      {
+        "from": 14.824,
+        "to": 16.204,
+        "text": "Ask it to plug your startup"
+      },
+      {
+        "from": 16.089000000000002,
+        "to": 17.724999999999998,
+        "text": "and it says no, and tells"
+      },
+      {
+        "from": 17.645000000000003,
+        "to": 18.422,
+        "text": "you why."
+      },
+      {
+        "from": 18.713,
+        "to": 20.593,
+        "text": "Big asks go to a vote."
+      },
+      {
+        "from": 21.14,
+        "to": 22.881,
+        "text": "Every three hours, the most wanted"
+      },
+      {
+        "from": 22.789,
+        "to": 23.763,
+        "text": "one gets built."
+      },
+      {
+        "from": 24.054000000000002,
+        "to": 25.214,
+        "text": "There is no human in the"
+      },
+      {
+        "from": 25.111,
+        "to": 25.644,
+        "text": "loop."
+      },
+      {
+        "from": 25.819000000000003,
+        "to": 27.733,
+        "text": "There's a rulebook, a judge, and"
+      },
+      {
+        "from": 27.630000000000003,
+        "to": 28.685,
+        "text": "a sandbox."
+      }
+    ],
+    "audio": "voice-rules.mp3",
+    "silent": false
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "hook": "So why isn't it a mess?",
+    "segments": [
+      {
+        "src": "desktop-rules.webm",
+        "from": 1.43,
+        "to": 5.43,
+        "speed": 1
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 10.91,
+        "to": 70.95,
+        "speed": 1.5
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 70.95,
+        "to": 74.59,
+        "speed": 1
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 74.59,
+        "to": 75.39,
+        "speed": 1
+      }
+    ],
+    "id": "rules-silent",
+    "duration": 50.06666666666667,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 11.193333333333333,
+        "text": "Ten rules anyone can read."
+      },
+      {
+        "from": 11.293333333333333,
+        "to": 20.886666666666667,
+        "text": "No ads. No links out. Nothing hidden."
+      },
+      {
+        "from": 20.986666666666668,
+        "to": 30.58,
+        "text": "Big asks go to a vote."
+      },
+      {
+        "from": 30.68,
+        "to": 40.27333333333333,
+        "text": "Every three hours the most-wanted one is built."
+      },
+      {
+        "from": 40.373333333333335,
+        "to": 49.96666666666667,
+        "text": "No human in the loop."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1080,
+    "height": 1920,
+    "hook": "So why isn't it a mess?",
+    "segments": [
+      {
+        "src": "desktop-rules.webm",
+        "from": 1.43,
+        "to": 5.43,
+        "speed": 1
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 10.91,
+        "to": 70.95,
+        "speed": 1.5
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 70.95,
+        "to": 74.59,
+        "speed": 1
+      },
+      {
+        "src": "desktop-rules.webm",
+        "from": 74.59,
+        "to": 75.39,
+        "speed": 1
+      }
+    ],
+    "id": "rules-silent-vertical",
+    "duration": 50.06666666666667,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 11.193333333333333,
+        "text": "Ten rules anyone can read."
+      },
+      {
+        "from": 11.293333333333333,
+        "to": 20.886666666666667,
+        "text": "No ads. No links out. Nothing hidden."
+      },
+      {
+        "from": 20.986666666666668,
+        "to": 30.58,
+        "text": "Big asks go to a vote."
+      },
+      {
+        "from": 30.68,
+        "to": 40.27333333333333,
+        "text": "Every three hours the most-wanted one is built."
+      },
+      {
+        "from": 40.373333333333335,
+        "to": 49.96666666666667,
+        "text": "No human in the loop."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  },
+  {
+    "width": 1080,
+    "height": 1920,
+    "hook": "It works on your phone.",
+    "segments": [
+      {
+        "src": "phone-landing.webm",
+        "from": 1.42,
+        "to": 4.49,
+        "speed": 1
+      },
+      {
+        "src": "phone-landing.webm",
+        "from": 7.55,
+        "to": 8.26,
+        "speed": 1
+      },
+      {
+        "src": "phone-landing.webm",
+        "from": 8.26,
+        "to": 9.06,
+        "speed": 1
+      }
+    ],
+    "id": "phone-voiced",
+    "duration": 12.403,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 3.166,
+        "text": "It works on your phone too."
+      },
+      {
+        "from": 3.26,
+        "to": 4.687,
+        "text": "It's a world of tiles."
+      },
+      {
+        "from": 4.862,
+        "to": 5.976000000000001,
+        "text": "Swipe to walk."
+      },
+      {
+        "from": 6.151,
+        "to": 7.474,
+        "text": "Hold an object to see who"
+      },
+      {
+        "from": 7.393000000000001,
+        "to": 8.809000000000001,
+        "text": "made it, or to move it."
+      },
+      {
+        "from": 8.984,
+        "to": 11.131,
+        "text": "Tap change, tap anything, say what"
+      },
+      {
+        "from": 11.016,
+        "to": 12.153,
+        "text": "should be different."
+      }
+    ],
+    "audio": "voice-phone.mp3",
+    "silent": false
+  },
+  {
+    "width": 1080,
+    "height": 1920,
+    "hook": "It works on your phone.",
+    "segments": [
+      {
+        "src": "phone-landing.webm",
+        "from": 1.42,
+        "to": 4.49,
+        "speed": 1
+      },
+      {
+        "src": "phone-landing.webm",
+        "from": 7.55,
+        "to": 8.26,
+        "speed": 1
+      },
+      {
+        "src": "phone-landing.webm",
+        "from": 8.26,
+        "to": 9.06,
+        "speed": 1
+      }
+    ],
+    "id": "phone-silent",
+    "duration": 6.180000000000001,
+    "captions": [
+      {
+        "from": 1.6,
+        "to": 2.645,
+        "text": "A world of tiles."
+      },
+      {
+        "from": 2.745,
+        "to": 3.79,
+        "text": "Swipe to walk."
+      },
+      {
+        "from": 3.89,
+        "to": 4.9350000000000005,
+        "text": "Hold an object to move it."
+      },
+      {
+        "from": 5.035,
+        "to": 6.08,
+        "text": "Tap Change, tap anything, say it."
+      }
+    ],
+    "audio": null,
+    "silent": true
+  }
+]
