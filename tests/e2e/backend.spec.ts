@@ -15,6 +15,9 @@ test("a signed-in visitor votes once through a room function and the tally updat
     await expect(page.getByRole("button", { name: /sign out/i })).toBeVisible({ timeout: 20_000 });
   }
   const block = page.locator('[data-ab-block="vote-once"]');
+  // the wall lands where the action is, not on this block: jump to it through the map (a tile world has no fit-all)
+  await page.locator('[data-map-block="vote-once"]').dispatchEvent("pointerdown");
+  await page.waitForTimeout(500);
   await expect(block).toBeVisible();
   await expect(block.getByText(/votes?$/)).toBeVisible({ timeout: 15_000 });
   const before = Number(((await block.getByText(/votes?$/).innerText()).match(/(\d+)/) ?? [])[1] ?? "0");
@@ -35,6 +38,8 @@ test("a guest is told to sign in", async ({ browser }) => {
   await page.goto(url + "/");
   await ready(page);
   const block = page.locator('[data-ab-block="vote-once"]');
+  await page.locator('[data-map-block="vote-once"]').dispatchEvent("pointerdown");
+  await page.waitForTimeout(500);
   await expect(block.getByText(/sign in to vote/i)).toBeVisible({ timeout: 15_000 });
   await block.getByRole("button", { name: /^neither/ }).click();
   await expect(block.getByRole("alert")).toContainText(/sign in/i, { timeout: 15_000 });

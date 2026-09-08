@@ -27,14 +27,22 @@ test("a guest's medium ask just goes; a genuinely large one goes up for a vote",
   const tag = Math.random().toString(36).slice(2, 6);
 
   // medium: a real visual restyle of one block — should be approved outright, not voted on
-  // no random token in a natural-language ask: the judge (rightly) asks what a nonsense word means
-  const medium = await guestAsk(page, `add a block in dark mode with a glowing thunderbolt drawn in it in a really cool visual way`);
+  // no random token in a natural-language ask (the judge, rightly, asks what a nonsense word means); a colour
+  // varies the text instead, so a run within twenty minutes of the last one isn't folded into it as a duplicate
+  // (a thunderbolt block has lived on the wall since 09-04, and the judge reads a new one as replacing it)
+  const colour = ["blue", "gold", "violet", "teal", "white", "crimson"][Math.floor(Math.random() * 6)];
+  const medium = await guestAsk(page, `add a block with a slowly drifting ${colour} starfield drawn on a dark canvas, with a shooting star now and then`);
   expect(medium).toMatch(/approved/);
   expect(medium).not.toMatch(/up for a vote|couldn.t tell|smaller|big project/);
 
-  // large: a whole multiplayer system — up for a vote, never a dead reject
-  const large = await guestAsk(page, `build a full online multiplayer chess ${tag} with accounts, matchmaking, every piece rule, check and checkmate, a rated AI opponent, and a tournament system`);
+  // large: a whole multiplayer system — up for a vote, never a dead reject. A second visitor asks it: one
+  // build per person at a time, and the first visitor's medium ask is still building.
+  await page.context().close();
+  const page2 = await (await browser.newContext()).newPage();
+  await page2.goto(url);
+  await expect(page2.locator('html[data-convex="ready"]')).toBeAttached({ timeout: 20_000 });
+  const large = await guestAsk(page2, `build a full online multiplayer chess ${tag} with accounts, matchmaking, every piece rule, check and checkmate, a rated AI opponent, and a tournament system`);
   expect(large).toMatch(/up for a vote/);
   expect(large).not.toMatch(/couldn.t tell|smaller|big project/);
-  await page.context().close();
+  await page2.context().close();
 });
