@@ -13,17 +13,17 @@ The plan's title is 88 characters; HN cuts at 80. Use the trimmed one.
 
 ## Text
 
-everyones.lol is a website anyone can change. Hold shift-cmd and click anything on it (or tap it on a phone), say what should change, and if it's good for everyone an AI agent builds it and ships it as a real pull request. No human in the loop.
+everyones.lol is a website anyone can change. Hold shift-cmd and click anything on it, say what should change, and if it's good for everyone an AI agent builds it and ships it as a real pull request. No human in the loop.
 
-How it works: a judge (Gemini Flash) reads the ask against a ten-rule constitution and scopes it; a red team on another model argues against it. The coder (DeepSeek V4 Flash) runs in a Vercel Sandbox with deny-by-default egress; the model key is injected at the firewall, the GitHub token never enters the box, and it can only write under src/rooms/. A deterministic validator and the same AST rules as ESLint run in the sandbox, before commit, and in CI: no fetch, storage, scripts, iframes, eval, or invisible unicode. A reviewer (Qwen) and a security pass read the diff. The patch is committed through the Git Data API and a PR opens with the ask and the cost in cents. CI runs typecheck, lint, build, and a playtest that mounts each touched block, presses it, and asks a vision model whether it plausibly works. Green merges and deploys. Cost caps by scope, a public daily budget, one build per person at a time, a seven-day decay on anything nobody touches.
+How it works: a judge (Gemini Flash) reads the ask against a ten-rule constitution and scopes it; a red team on another model argues against it. The coder (DeepSeek V4 Flash) runs in a Vercel Sandbox with deny-by-default egress, no secrets in the box, and can only write under src/rooms/. A deterministic validator runs in the sandbox, before commit, and in CI: no fetch, storage, scripts, or eval. A reviewer (Qwen) and a security pass read the diff. A PR opens with the ask and the cost in cents. CI runs typecheck, lint, build, and a playtest that mounts each touched block, presses it, and asks a vision model whether it plausibly works. Green merges and deploys. Cost caps by scope, a public daily budget, a seven-day decay on anything nobody touches.
 
 Since Thursday: 68 asks, 21 live, 35 rejected, 14 failed; 1,246 lines written by the agent; median build three minutes. The 21 live changes cost 75¢ of model, the 14 failures 89¢. Someone asked for "gta6 but in the browser" and got a 340-line driving game for 6¢.
 
-What went wrong: the dino game compiled and never jumped (wrong sign on the jump), which is why the playtest gate exists; then the gate itself wasn't gating (Playwright piped through tee). The sandbox's dependency snapshot drifted from the lockfile and every build failed typecheck until it resynced. The runner's 8k output cap truncated whole-file writes and the model dumped code as prose: "the agent made no changes", five times. The security pass flagged one change for unbounded growth of a shared collection.
+What went wrong: the dino game compiled and never jumped, so now there's a playtest gate; then the gate itself wasn't gating (Playwright piped through tee). The sandbox's dependency snapshot drifted from the lockfile and every build failed typecheck until it resynced. The runner's 8k output cap truncated whole-file writes and the model dumped code as prose: "the agent made no changes", five times. The security pass flagged one change for unbounded growth of a shared collection.
 
 What it can't do: links out, ads, personal data, off-site calls, or an agent-written backend yet.
 
-Repo: github.com/gavinpola/anyone.build, MIT, including every prompt and the judge's eval set. Built by me, Yash, and a Claude Code session that ran most of the loop.
+Repo: github.com/gavinpola/anyone.build, MIT, prompts and eval set included. Built by me, Yash, and a Claude Code session that ran most of the loop.
 
 We'd like to know how you'd break it.
 

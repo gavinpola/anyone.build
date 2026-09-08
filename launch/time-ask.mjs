@@ -52,7 +52,8 @@ const stamp = (label) => console.log(`${((Date.now() - t0) / 1000).toFixed(1).pa
 stamp("sent");
 await dlg.getByText(/judging/i).waitFor({ state: "visible", timeout: 20_000 }).catch(() => {});
 stamp("judging");
-const verdict = dlg.getByText(/approved|building|up for a vote|not this time|didn't make it/i).first();
+// the composer's own outcome lines, exactly, so the ask's text can never match ("buildings" did once)
+const verdict = dlg.getByText(/^(Approved\. Building now\.|It's live\.|Up for a vote\.|Not this time\.|It didn't make it\.)$/).first();
 await verdict.waitFor({ state: "visible", timeout: 90_000 }).catch(() => {});
 stamp(`verdict: ${(await verdict.textContent().catch(() => "?"))?.trim().slice(0, 60)}`);
 await sleep(1500);

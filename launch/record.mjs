@@ -165,19 +165,19 @@ await scene(browser, "desktop-loop", "desktop", async (page, m) => {
   const box = page.getByRole("dialog", { name: /ask for a change/i });
   await box.waitFor({ state: "visible", timeout: 8000 });
   await sleep(900);
-  await typeSlow(page, "Add a one-line how-to-play hint under the game: arrow keys steer, don't hit the buildings.");
+  await typeSlow(page, "Make the how-to-play hint under the game a little brighter so it reads at a glance.");
   m("typed");
   await sleep(700);
   await box.getByRole("button", { name: /^send/i }).first().click();
   m("sent");
   await box.getByText(/judging/i).waitFor({ state: "visible", timeout: 15_000 }).catch(() => {});
   m("judging");
-  await box.getByText(/approved|building|up for a vote|not this time/i).first().waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
+  await box.getByText(/^(Approved\. Building now\.|It's live\.|Up for a vote\.|Not this time\.|It didn't make it\.)$/).first().waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
   m("verdict");
   await sleep(2500);
   // find the request so the live scene can come back to it
   const active = (await q("requests:active", { roomId: "main" })) ?? [];
-  const mine = active.find((r) => /how-to-play hint/i.test(r.prompt ?? ""));
+  const mine = active.find((r) => /hint under the game a little brighter/i.test(r.prompt ?? ""));
   askedId = mine?.id ?? null;
   m(`request ${askedId ?? "?"}`);
 });
@@ -211,7 +211,7 @@ await scene(browser, "desktop-live", "desktop", async (page, m) => {
   await page.goto(`${URL_}/leaderboard`);
   await page.waitForSelector("text=Changes", { timeout: 20_000 }).catch(() => {});
   await sleep(800);
-  const row = page.locator("li", { hasText: /how-to-play|hint/i }).first();
+  const row = page.locator("li", { hasText: /hint|brighter/i }).first();
   if ((await row.count()) > 0) {
     await row.scrollIntoViewIfNeeded();
     const b = await row.boundingBox();
@@ -286,7 +286,7 @@ await scene(browser, "desktop-rules", "desktop", async (page, m) => {
   m("typed promo");
   await box.getByRole("button", { name: /^send/i }).first().click();
   m("sent promo");
-  await box.getByText(/not this time|up for a vote|approved/i).first().waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
+  await box.getByText(/^(Approved\. Building now\.|It's live\.|Up for a vote\.|Not this time\.|It didn't make it\.)$/).first().waitFor({ state: "visible", timeout: 60_000 }).catch(() => {});
   m("verdict");
   await sleep(3200);
   await page.goto(`${URL_}/leaderboard`);

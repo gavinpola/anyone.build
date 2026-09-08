@@ -1,0 +1,382 @@
+{
+  "clip": "rules",
+  "text": "Anyone can change it. So why isn't it a mess? Ten rules, written down, that anyone can read. No ads. No links out. Nothing hidden. Keep it working on a phone. Ask it to plug your startup and it says no, and tells you why. Big asks go to a vote. Every three hours, the most wanted one gets built. There is no human in the loop. There's a rulebook, a judge, and a sandbox.",
+  "duration": 26.935,
+  "words": [
+    {
+      "text": "Anyone",
+      "start": 0,
+      "end": 0.372
+    },
+    {
+      "text": "can",
+      "start": 0.406,
+      "end": 0.511
+    },
+    {
+      "text": "change",
+      "start": 0.557,
+      "end": 0.824
+    },
+    {
+      "text": "it.",
+      "start": 0.859,
+      "end": 1.091
+    },
+    {
+      "text": "So",
+      "start": 1.695,
+      "end": 1.858
+    },
+    {
+      "text": "why",
+      "start": 1.927,
+      "end": 2.113
+    },
+    {
+      "text": "isn't",
+      "start": 2.183,
+      "end": 2.368
+    },
+    {
+      "text": "it",
+      "start": 2.392,
+      "end": 2.45
+    },
+    {
+      "text": "a",
+      "start": 2.485,
+      "end": 2.508
+    },
+    {
+      "text": "mess?",
+      "start": 2.566,
+      "end": 3.03
+    },
+    {
+      "text": "Ten",
+      "start": 3.634,
+      "end": 3.889
+    },
+    {
+      "text": "rules,",
+      "start": 3.971,
+      "end": 4.4
+    },
+    {
+      "text": "written",
+      "start": 4.516,
+      "end": 4.807
+    },
+    {
+      "text": "down,",
+      "start": 4.853,
+      "end": 5.259
+    },
+    {
+      "text": "that",
+      "start": 5.375,
+      "end": 5.538
+    },
+    {
+      "text": "anyone",
+      "start": 5.619,
+      "end": 6.002
+    },
+    {
+      "text": "can",
+      "start": 6.037,
+      "end": 6.165
+    },
+    {
+      "text": "read.",
+      "start": 6.235,
+      "end": 6.594
+    },
+    {
+      "text": "No",
+      "start": 7.291,
+      "end": 7.454
+    },
+    {
+      "text": "ads.",
+      "start": 7.546,
+      "end": 8.011
+    },
+    {
+      "text": "No",
+      "start": 8.185,
+      "end": 8.336
+    },
+    {
+      "text": "links",
+      "start": 8.417,
+      "end": 8.649
+    },
+    {
+      "text": "out.",
+      "start": 8.696,
+      "end": 9.044
+    },
+    {
+      "text": "Nothing",
+      "start": 9.857,
+      "end": 10.17
+    },
+    {
+      "text": "hidden.",
+      "start": 10.228,
+      "end": 10.612
+    },
+    {
+      "text": "Keep",
+      "start": 11.308,
+      "end": 11.505
+    },
+    {
+      "text": "it",
+      "start": 11.552,
+      "end": 11.598
+    },
+    {
+      "text": "working",
+      "start": 11.633,
+      "end": 11.889
+    },
+    {
+      "text": "on",
+      "start": 11.923,
+      "end": 11.981
+    },
+    {
+      "text": "a",
+      "start": 12.016,
+      "end": 12.04
+    },
+    {
+      "text": "phone.",
+      "start": 12.086,
+      "end": 12.527
+    },
+    {
+      "text": "Ask",
+      "start": 13.224,
+      "end": 13.479
+    },
+    {
+      "text": "it",
+      "start": 13.526,
+      "end": 13.584
+    },
+    {
+      "text": "to",
+      "start": 13.618,
+      "end": 13.665
+    },
+    {
+      "text": "plug",
+      "start": 13.723,
+      "end": 13.92
+    },
+    {
+      "text": "your",
+      "start": 13.967,
+      "end": 14.06
+    },
+    {
+      "text": "startup",
+      "start": 14.106,
+      "end": 14.454
+    },
+    {
+      "text": "and",
+      "start": 14.489,
+      "end": 14.559
+    },
+    {
+      "text": "it",
+      "start": 14.594,
+      "end": 14.652
+    },
+    {
+      "text": "says",
+      "start": 14.687,
+      "end": 14.907
+    },
+    {
+      "text": "no,",
+      "start": 15,
+      "end": 15.441
+    },
+    {
+      "text": "and",
+      "start": 15.534,
+      "end": 15.685
+    },
+    {
+      "text": "tells",
+      "start": 15.732,
+      "end": 15.975
+    },
+    {
+      "text": "you",
+      "start": 16.045,
+      "end": 16.138
+    },
+    {
+      "text": "why.",
+      "start": 16.208,
+      "end": 16.672
+    },
+    {
+      "text": "Big",
+      "start": 17.113,
+      "end": 17.334
+    },
+    {
+      "text": "asks",
+      "start": 17.415,
+      "end": 17.845
+    },
+    {
+      "text": "go",
+      "start": 17.961,
+      "end": 18.1
+    },
+    {
+      "text": "to",
+      "start": 18.17,
+      "end": 18.228
+    },
+    {
+      "text": "a",
+      "start": 18.309,
+      "end": 18.333
+    },
+    {
+      "text": "vote.",
+      "start": 18.391,
+      "end": 18.843
+    },
+    {
+      "text": "Every",
+      "start": 19.54,
+      "end": 19.795
+    },
+    {
+      "text": "three",
+      "start": 19.853,
+      "end": 20.062
+    },
+    {
+      "text": "hours,",
+      "start": 20.109,
+      "end": 20.434
+    },
+    {
+      "text": "the",
+      "start": 20.457,
+      "end": 20.527
+    },
+    {
+      "text": "most",
+      "start": 20.596,
+      "end": 20.794
+    },
+    {
+      "text": "wanted",
+      "start": 20.852,
+      "end": 21.131
+    },
+    {
+      "text": "one",
+      "start": 21.189,
+      "end": 21.316
+    },
+    {
+      "text": "gets",
+      "start": 21.363,
+      "end": 21.537
+    },
+    {
+      "text": "built.",
+      "start": 21.583,
+      "end": 22.013
+    },
+    {
+      "text": "There",
+      "start": 22.454,
+      "end": 22.64
+    },
+    {
+      "text": "is",
+      "start": 22.675,
+      "end": 22.744
+    },
+    {
+      "text": "no",
+      "start": 22.802,
+      "end": 22.907
+    },
+    {
+      "text": "human",
+      "start": 22.988,
+      "end": 23.267
+    },
+    {
+      "text": "in",
+      "start": 23.302,
+      "end": 23.36
+    },
+    {
+      "text": "the",
+      "start": 23.394,
+      "end": 23.464
+    },
+    {
+      "text": "loop.",
+      "start": 23.511,
+      "end": 23.894
+    },
+    {
+      "text": "There's",
+      "start": 24.219,
+      "end": 24.439
+    },
+    {
+      "text": "a",
+      "start": 24.463,
+      "end": 24.486
+    },
+    {
+      "text": "rulebook,",
+      "start": 24.544,
+      "end": 25.101
+    },
+    {
+      "text": "a",
+      "start": 25.159,
+      "end": 25.24
+    },
+    {
+      "text": "judge,",
+      "start": 25.322,
+      "end": 25.728
+    },
+    {
+      "text": "and",
+      "start": 25.844,
+      "end": 25.983
+    },
+    {
+      "text": "a",
+      "start": 26.03,
+      "end": 26.053
+    },
+    {
+      "text": "sandbox.",
+      "start": 26.1,
+      "end": 26.935
+    }
+  ]
+}
