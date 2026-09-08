@@ -28,7 +28,7 @@ All times Eastern. Who: **Gavin**, **Yash**, **Claude** (this session; posts onl
 1. **Free the disk** (≥ 10 GB): Downloads, Creative Cloud logs, browser/Spotify caches, the staged macOS update; empty the Trash. Nothing else tonight was blocked by anything but this.
 2. Tell Claude **"record"** — it runs `node launch/record.mjs` (footage from the real site, one real ask), `node launch/cut.mjs`, installs `launch/video`, renders every clip to `docs/launch/clips/final/` (voiced and silent masters, 9:16 and 16:9), and shows you the list. Or run those four yourself.
 3. Paste both Turnstile keys into `.secrets/keys.txt` (`TURNSTILE_SITE_KEY=`, `TURNSTILE_SECRET=`); Claude wires them.
-4. X Premium on your account ($8), Premium+ ($40) only if the article stays an X Article; Convex Pro; Vercel Pro; OpenRouter ≥ $150.
+4. **Vercel Pro first** (on Hobby the wall's builds die again after ~40 more, the snapshot-storage cap that hit tonight), then Convex Pro, X Premium on your account ($8) or Premium+ ($40) if the article stays an X Article, OpenRouter ≥ $150.
 5. Log into X and TikTok in Chrome and leave the tabs open.
 6. Read `x-thread.md` and `article.md` once for voice; every number marked [CHECK] gets refreshed Tuesday night.
 
