@@ -20,3 +20,4 @@ test-results
 docs/launch/clips/
 launch/video/node_modules/
 launch/video/out/
+launch/video/public/
