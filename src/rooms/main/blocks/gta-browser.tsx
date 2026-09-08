@@ -304,7 +304,7 @@ export default function GtaBrowser() {
             <p className="font-display text-xl text-white drop-shadow">
               {phase === "ready" ? "GTA: browser edition" : "Busted!"}
             </p>
-            <p className="text-sm text-white/90 drop-shadow">
+            <p className="text-sm text-white drop-shadow">
               {phase === "ready"
                 ? "tap or press an arrow key to start driving"
                 : `you drove ${lastScore} blocks — tap to go again`}
