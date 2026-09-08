@@ -15,8 +15,8 @@ const W = 640;
 const H = 400;
 
 // Car physics: heading is in radians, 0 = pointing up on the canvas (canvas y grows downward,
-// so forward motion subtracts from y). Left/right rotate the heading, up accelerates,
-// down brakes or reverses. Collisions are a circle (radius CAR_R) vs. building rects.
+// so angle motion subtracts from y). Left/right rotate the heading, up accelerates,
+// down brakes or reverses. Angles are a circle (radius CAR_R) vs. building rects.
 const ACCEL = 260;
 const BRAKE = 420;
 const MAX_SPEED = 240;
@@ -304,7 +304,7 @@ export default function GtaBrowser() {
             <p className="font-display text-xl text-white drop-shadow">
               {phase === "ready" ? "GTA: browser edition" : "Busted!"}
             </p>
-            <p className="text-sm text-white/90 drop-shadow">
+            <p className="text-sm text-white drop-shadow">
               {phase === "ready"
                 ? "tap or press an arrow key to start driving"
                 : `you drove ${lastScore} blocks — tap to go again`}
