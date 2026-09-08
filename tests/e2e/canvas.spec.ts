@@ -259,7 +259,7 @@ test("the label is the handle: it opens the object sheet, Change opens the compo
   const label = page.locator(`[data-object-label="${id}"]`);
   await expect(label).toBeVisible();
   await expect(label).toContainText(/\d×\d/);
-  await label.click();
+  await label.click({ force: true }); // the first block is a game with a ticking clock; its label never sits "stable" for the actionability check
   const sheet = page.locator(`[data-object-sheet="${id}"]`);
   await expect(sheet).toBeVisible();
   await expect(sheet.locator("[data-sheet-facts]")).toHaveText(/(@[\w·\- ]+|someone) made this.*(stays|faded|fades today|days? left)/);

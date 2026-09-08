@@ -45,7 +45,7 @@ describe("tiles: the world's unit", () => {
     expect(tilesWide({ size: "sm", span: 9 })).toBe(2);
     expect(tilesTall(100)).toBe(1);
     expect(tilesTall(300)).toBe(2);
-    expect(tilesTall(9000)).toBe(3);
+    expect(tilesTall(9000)).toBe(4); // the cap; taller content is clipped by the body
   });
   it("reads a place in tiles, and migrates an old pixel place", () => {
     expect(placeOf({ x: 4, y: -2 })).toEqual({ x: 4, y: -2, w: 1, h: 0 });

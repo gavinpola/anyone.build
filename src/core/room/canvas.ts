@@ -14,7 +14,7 @@ export const GUTTER = 16;
 /** Room above a block's box for its label (who · what · size). */
 export const LABEL_H = 24;
 export const MAX_TILES_WIDE = 2;
-export const MAX_TILES_TALL = 3;
+export const MAX_TILES_TALL = 4; // a driving game with on-screen controls and a hint line needs four (732 px on 2026-09-08); past that the body is clipped
 /** How far from the content the camera may wander, in tiles: the frontier is where you add things. */
 export const FRONTIER = 1;
 
