@@ -22,6 +22,10 @@
       "destination": "/api/share?kind=p&id=:id"
     },
     {
+      "source": "/u/:handle",
+      "destination": "/api/share?kind=u&id=:handle"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

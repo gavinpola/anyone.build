@@ -13,7 +13,9 @@ export type ShareData = {
   reverted: boolean;
 };
 
-export type ShareMeta = { title: string; description: string; url: string; image: string; kind: "c" | "p" };
+export type ShareBuilder = { handle: string; avatarUrl: string | null; liveChanges: number; firstAt: number | null; latestSummary: string | null };
+
+export type ShareMeta = { title: string; description: string; url: string; image: string; kind: "c" | "p" | "u" };
 
 export function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -56,6 +58,50 @@ export function shareMeta(kind: "c" | "p", id: string, d: ShareData | null, orig
     url,
     image,
   };
+}
+
+/** A builder's page: who, how much, what last. */
+export function builderMeta(handle: string, b: ShareBuilder | null, origin: string): ShareMeta {
+  const h = (b?.handle ?? handle).toLowerCase();
+  const url = `${origin}/u/${h}`;
+  const image = `${origin}/api/og?kind=u&id=${encodeURIComponent(h)}`;
+  if (!b) {
+    return { kind: "u", title: `@${tidy(h, 40)} · everyones.lol`, description: "Nobody by that name has built here yet. everyones.lol is the website anyone can change: point at something, say what should change, watch it ship.", url, image };
+  }
+  const n = b.liveChanges;
+  const what = b.latestSummary ? ` Latest: ${tidy(b.latestSummary, 100)}` : "";
+  return {
+    kind: "u",
+    title: `@${b.handle} on everyones.lol`,
+    description: `${n} change${n === 1 ? "" : "s"} on the website anyone can change.${what}`,
+    url,
+    image,
+  };
+}
+
+/** A safe GitHub-style handle for a builder page, or null. */
+export function cleanHandle(raw: string | null | undefined): string | null {
+  const h = (raw ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 39);
+  return h.length ? h : null;
+}
+
+/** Read one builder card through Convex's HTTP query endpoint. Null on any problem. */
+export async function fetchBuilder(convexUrl: string, handle: string, fetchImpl: typeof fetch = fetch): Promise<ShareBuilder | null> {
+  const h = cleanHandle(handle);
+  if (!h) return null;
+  try {
+    const res = await fetchImpl(`${convexUrl.replace(/\/$/, "")}/api/query`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ path: "share:builder", args: { handle: h }, format: "json" }),
+      signal: AbortSignal.timeout(3500),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { status?: string; value?: ShareBuilder | null };
+    return json.status === "success" && json.value ? json.value : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Replace the page's title and preview tags with this share's. Leaves everything else untouched. */

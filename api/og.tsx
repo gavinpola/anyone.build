@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { createElement as h } from "react";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import { byLine, fetchShare, tidy } from "./_share.js";
+import { byLine, cleanHandle, fetchBuilder, fetchShare, tidy } from "./_share.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -19,14 +19,27 @@ const FONT = readFileSync(fileURLToPath(new URL("./_fonts/Geist-Regular.ttf", im
 // request object, whose url is a bare path).
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const kind = url.searchParams.get("kind") === "p" ? "p" : "c";
-  const id = (url.searchParams.get("id") ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 64);
-  const d = await fetchShare(CONVEX_URL, id);
+  const k = url.searchParams.get("kind");
+  const kind = k === "p" ? "p" : k === "u" ? "u" : "c";
+  const raw = url.searchParams.get("id") ?? "";
+  const id = kind === "u" ? (cleanHandle(raw) ?? "") : raw.replace(/[^a-z0-9]/gi, "").slice(0, 64);
+  const b = kind === "u" ? await fetchBuilder(CONVEX_URL, id) : null;
+  const d = kind === "u" ? null : await fetchShare(CONVEX_URL, id);
 
-  const label = !d ? "THE WEBSITE ANYONE CAN CHANGE" : kind === "p" || d.status === "proposed" ? "UP FOR A VOTE" : d.status === "live" ? "LIVE ON THE WALL" : "BEING BUILT RIGHT NOW";
-  const ask = d ? tidy(d.ask, 140) : "Point at something. Say what should change. If it's good for everyone, it ships.";
-  const foot = d ? `asked by ${byLine(d)}${d.votes != null ? ` · ${d.votes} ${d.votes === 1 ? "vote" : "votes"}` : ""}` : "an experiment in building together";
-  const size = ask.length > 100 ? 44 : ask.length > 60 ? 54 : 64;
+  let label: string;
+  let ask: string;
+  let foot: string;
+  if (kind === "u") {
+    // a builder: their name in big type, what they've done underneath
+    label = b ? "BUILDER ON THE WALL" : "THE WEBSITE ANYONE CAN CHANGE";
+    ask = b ? `@${b.handle}` : `@${tidy(id, 30)}`;
+    foot = b ? `${b.liveChanges} change${b.liveChanges === 1 ? "" : "s"} on the wall${b.latestSummary ? ` · latest: ${tidy(b.latestSummary, 70)}` : ""}` : "nobody by that name has built here yet";
+  } else {
+    label = !d ? "THE WEBSITE ANYONE CAN CHANGE" : kind === "p" || d.status === "proposed" ? "UP FOR A VOTE" : d.status === "live" ? "LIVE ON THE WALL" : "BEING BUILT RIGHT NOW";
+    ask = d ? tidy(d.ask, 140) : "Point at something. Say what should change. If it's good for everyone, it ships.";
+    foot = d ? `asked by ${byLine(d)}${d.votes != null ? ` · ${d.votes} ${d.votes === 1 ? "vote" : "votes"}` : ""}` : "an experiment in building together";
+  }
+  const size = kind === "u" ? 72 : ask.length > 100 ? 44 : ask.length > 60 ? 54 : 64;
 
   const card = h(
     "div",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeHtml, fetchShare, injectMeta, shareMeta, tidy, type ShareData } from "../../api/_share";
+import { builderMeta, cleanHandle, escapeHtml, fetchBuilder, fetchShare, injectMeta, shareMeta, tidy, type ShareData } from "../../api/_share";
 
 const live: ShareData = {
   id: "kh7abc",
@@ -28,6 +28,42 @@ const HEAD = `<!doctype html>
   </head>
   <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>`;
+
+describe("builder previews", () => {
+  const b = { handle: "gavinpola", avatarUrl: null, liveChanges: 5, firstAt: 1, latestSummary: "Added a hello line at the top." };
+  it("a builder unfurls with their handle, their count, and their latest", () => {
+    const m = builderMeta("GavinPola", b, "https://everyones.lol");
+    expect(m.kind).toBe("u");
+    expect(m.title).toBe("@gavinpola on everyones.lol");
+    expect(m.description).toMatch(/^5 changes on the website anyone can change\. Latest: Added a hello line/);
+    expect(m.url).toBe("https://everyones.lol/u/gavinpola");
+    expect(m.image).toBe("https://everyones.lol/api/og?kind=u&id=gavinpola");
+  });
+  it("one change is singular; an unknown handle reads honest", () => {
+    expect(builderMeta("x", { ...b, liveChanges: 1, latestSummary: null }, "https://e.lol").description).toBe("1 change on the website anyone can change.");
+    const m = builderMeta("nobody-here", null, "https://e.lol");
+    expect(m.title).toBe("@nobody-here · everyones.lol");
+    expect(m.description).toMatch(/nobody by that name/i);
+  });
+  it("cleanHandle keeps GitHub's alphabet only", () => {
+    expect(cleanHandle("Gavin-Pola")).toBe("gavin-pola");
+    expect(cleanHandle("<script>")).toBe("script");
+    expect(cleanHandle("../..")).toBeNull(); // nothing of GitHub's alphabet survives
+    expect(cleanHandle("")).toBeNull();
+    expect(cleanHandle("a".repeat(60))!.length).toBe(39);
+  });
+  it("fetchBuilder refuses an empty handle without a network call and returns null on failure", async () => {
+    let calls = 0;
+    const f = (async () => {
+      calls++;
+      throw new Error("down");
+    }) as unknown as typeof fetch;
+    expect(await fetchBuilder("https://x.convex.cloud", "!!!", f)).toBeNull();
+    expect(calls).toBe(0);
+    expect(await fetchBuilder("https://x.convex.cloud", "gavinpola", f)).toBeNull();
+    expect(calls).toBe(1);
+  });
+});
 
 describe("share previews", () => {
   it("a live change unfurls with the ask, the summary, and who asked", () => {

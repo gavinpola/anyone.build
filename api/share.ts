@@ -5,7 +5,7 @@
  * block). Anything missing or failing degrades to the plain app, never to an error page.
  */
 import { INDEX_HTML } from "./_index.js";
-import { fetchShare, injectMeta, shareMeta } from "./_share.js";
+import { builderMeta, cleanHandle, fetchBuilder, fetchShare, injectMeta, shareMeta } from "./_share.js";
 
 export const config = { runtime: "edge" };
 
@@ -13,18 +13,19 @@ const CONVEX_URL = process.env.VITE_CONVEX_URL || "https://hushed-ladybug-141.co
 
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const kind = url.searchParams.get("kind") === "p" ? "p" : "c";
-  const id = (url.searchParams.get("id") ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 64);
-  const [html, data] = await Promise.all([
+  const k = url.searchParams.get("kind");
+  const kind = k === "p" ? "p" : k === "u" ? "u" : "c";
+  const raw = url.searchParams.get("id") ?? "";
+  const id = kind === "u" ? (cleanHandle(raw) ?? "") : raw.replace(/[^a-z0-9]/gi, "").slice(0, 64);
+  const [html, meta] = await Promise.all([
     INDEX_HTML
       ? Promise.resolve(INDEX_HTML)
       : fetch(new URL("/index.html", url.origin))
           .then((r) => (r.ok ? r.text() : ""))
           .catch(() => ""),
-    fetchShare(CONVEX_URL, id),
+    kind === "u" ? fetchBuilder(CONVEX_URL, id).then((b) => builderMeta(id, b, url.origin)) : fetchShare(CONVEX_URL, id).then((d) => shareMeta(kind, id, d, url.origin)),
   ]);
   if (!html) return Response.redirect(new URL("/", url.origin).toString(), 302);
-  const meta = shareMeta(kind, id, data, url.origin);
   return new Response(injectMeta(html, meta), {
     status: 200,
     headers: {

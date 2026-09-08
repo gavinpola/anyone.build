@@ -34,3 +34,32 @@ export const request = query({
     };
   },
 });
+
+/** A builder's card: what the leaderboard already shows about them, keyed by handle. */
+export const builder = query({
+  args: { handle: v.string() },
+  handler: async (ctx, { handle }) => {
+    const h = handle.toLowerCase();
+    if (!/^[a-z0-9-]{1,39}$/.test(h)) return null;
+    const u = await ctx.db
+      .query("users")
+      .withIndex("by_handle", (q) => q.eq("handle", h))
+      .unique();
+    if (!u) return null;
+    const changes = await ctx.db
+      .query("changes")
+      .withIndex("by_user", (q) => q.eq("userId", u._id))
+      .order("desc")
+      .take(200);
+    const live = changes.filter((c) => !c.revertedAt);
+    const latest = live[0] ?? null;
+    const first = live.length ? live[live.length - 1]! : null;
+    return {
+      handle: u.handle,
+      avatarUrl: u.avatarUrl ?? null,
+      liveChanges: live.length,
+      firstAt: first?.mergedAt ?? null,
+      latestSummary: latest?.summary ?? null,
+    };
+  },
+});
